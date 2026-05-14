@@ -1,0 +1,8 @@
+/* ========================================
+   퍼플스 인트라넷 — Tailwind 유틸리티 전용
+   기존 CSS는 layout.js에서 직접 import
+   ======================================== */
+
+/* Tailwind Components + Utilities만 로드 */
+@tailwind components;
+@tailwind utilities;
