@@ -19,7 +19,6 @@ export function renderHistoryTab(m) {
     .map(cat => {
       const info = HISTORY_CATEGORIES[cat];
       const count = cat === '전체' ? stats.total : (stats[cat] || 0);
-      if (cat !== '전체' && count === 0) return '';
       return `<button class="btn btn--${cat === '전체' ? 'primary' : 'outline'} btn--sm hist-cat-btn" 
                 data-category="${cat}" style="font-size:11px;padding:3px 10px;gap:4px;display:inline-flex;align-items:center">
                 ${cat}
@@ -30,17 +29,6 @@ export function renderHistoryTab(m) {
     .join('');
 
   return `
-    <!-- 히스토리 헤더 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:14px;font-weight:700;color:var(--text-primary)">회원 히스토리</span>
-        <span class="badge badge--accent" style="font-size:11px;padding:3px 10px">${stats.total}건</span>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn--primary btn--sm" id="btn-add-history">+ 히스토리 등록</button>
-        <button class="btn btn--outline btn--sm" id="btn-export-history" style="font-size:11px">내보내기</button>
-      </div>
-    </div>
 
     <!-- 필터 영역 -->
     <div style="background:var(--bg-secondary);padding:14px 16px;border-radius:var(--radius-lg);margin-bottom:16px">
@@ -105,7 +93,7 @@ function renderTimeline(memberId, filters) {
         <div class="hist-date-items">`;
 
     items.forEach(h => {
-      const cat = HISTORY_CATEGORIES[h.category] || HISTORY_CATEGORIES['메모'];
+      const cat = HISTORY_CATEGORIES[h.category] || HISTORY_CATEGORIES['상담매니저'];
       html += `
           <div class="hist-item" data-id="${h.id}">
             <div class="hist-item__icon" style="background:${cat.color}15;color:${cat.color};border:1.5px solid ${cat.color}30;font-size:11px;font-weight:700">
@@ -192,7 +180,7 @@ export function initHistoryEvents(memberId) {
 
     // 건수 업데이트
     const stats = getHistoryStats(memberId);
-    const badge = document.querySelector('#panel-history .badge.badge--accent');
+    const badge = document.querySelector('#toggle-history .badge.badge--accent') || document.querySelector('.badge.badge--accent');
     if (badge) badge.textContent = stats.total + '건';
   }
 

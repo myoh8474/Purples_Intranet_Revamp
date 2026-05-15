@@ -93,7 +93,7 @@ content.innerHTML = ''
   + '    <div class="card__body" style="padding:0">'
   + '      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
   + '        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">소개 프로필</span>'
-  + '        <button class="btn btn--primary btn--sm" id="btn-edit-intro">' + (m.introProfile ? '수정' : '등록') + '</button>'
+  + '        <button class="btn btn--outline btn--sm" id="btn-edit-intro">' + (m.introProfile ? '수정' : '등록') + '</button>'
   + '      </div>'
   + '      <div style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text-primary);min-height:80px">'
   + (m.introProfile ? m.introProfile : '<span style="color:var(--text-muted)">등록된 소개 프로필이 없습니다.</span>')
@@ -105,7 +105,7 @@ content.innerHTML = ''
   + '    <div class="card__body" style="padding:0">'
   + '      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
   + '        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">특이사항</span>'
-  + '        <button class="btn btn--primary btn--sm" id="btn-add-caution">+ 등록</button>'
+  + '        <button class="btn btn--outline btn--sm" id="btn-add-caution">+ 등록</button>'
   + '      </div>'
   + '      <div style="padding:10px 16px;min-height:80px" id="caution-area">'
   + (m.cautionMemo ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)">' + m.cautionMemo + '</div><button class="btn btn--ghost btn--sm caution-del-btn" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 특이사항이 없습니다.</div>')
@@ -120,11 +120,11 @@ content.innerHTML = ''
   + '    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0;cursor:pointer" id="toggle-history">'
   + '      <span style="font-size:13px;font-weight:700;color:var(--text-primary)">히스토리</span>'
   + '      <div style="display:flex;align-items:center;gap:8px">'
-  + '        <button class="btn btn--primary btn--sm" id="btn-add-history">+ 등록</button>'
+  + '        <button class="btn btn--outline btn--sm" id="btn-add-history">+ 등록</button>'
   + '        <span id="toggle-history-icon" style="font-size:12px;color:var(--text-muted)">▼</span>'
   + '      </div>'
   + '    </div>'
-  + '    <div id="history-body" style="padding:10px 16px">'
+  + '    <div id="history-body" style="padding:10px 16px;max-height:500px;overflow-y:auto">'
   + renderHistoryTab(m)
   + '    </div>'
   + '  </div>'
@@ -159,12 +159,10 @@ document.getElementById('detail-tabs').addEventListener('click', function(e) {
   document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
   btn.classList.add('active');
   document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-  // 히스토리 탭 최초 진입 시 이벤트 바인딩
-  if (btn.dataset.tab === 'history' && !historyInitialized) {
-    historyInitialized = true;
-    initHistoryEvents(m.id);
-  }
 });
+
+// 히스토리 이벤트 바인딩 (상단 카드이므로 즉시 초기화)
+initHistoryEvents(m.id);
 
 /* ── 소개 프로필 등록/수정 모달 ── */
 var editIntroBtn = document.getElementById('btn-edit-intro');
@@ -422,31 +420,7 @@ if (payBtn) payBtn.addEventListener('click', function() {
   });
 });
 
-function openCommentModal(type) {
-  Modal.show({
-    title: type + '매니저 의견 등록',
-    size: 'md',
-    content: '<div style="margin-bottom:12px">'
-      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">내용</label>'
-      + '<textarea class="form-input" id="comment-content" rows="5" style="width:100%;font-size:13px;resize:vertical" placeholder="의견을 입력하세요..."></textarea></div>'
-      + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-submit-comment">등록</button></div>',
-  });
-  setTimeout(function() {
-    var submitBtn = document.getElementById('btn-submit-comment');
-    if (submitBtn) submitBtn.addEventListener('click', function() {
-      var content = document.getElementById('comment-content').value.trim();
-      if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
-      Modal.hide();
-      Toast.show(type + '매니저 의견이 등록되었습니다.', 'success');
-    });
-  }, 100);
-}
 
-var addMatchCommentBtn = document.getElementById('btn-add-match-comment');
-if (addMatchCommentBtn) addMatchCommentBtn.addEventListener('click', function(e) { e.stopPropagation(); openCommentModal('매칭'); });
-
-var addConsultCommentBtn = document.getElementById('btn-add-consult-comment');
-if (addConsultCommentBtn) addConsultCommentBtn.addEventListener('click', function(e) { e.stopPropagation(); openCommentModal('상담'); });
 
 // 접기/펼치기 토글
 function setupToggle(toggleId, bodyId, iconId) {
@@ -462,39 +436,9 @@ function setupToggle(toggleId, bodyId, iconId) {
     }
   });
 }
-setupToggle('toggle-consult-comment', 'consult-comment-body', 'toggle-consult-icon');
-setupToggle('toggle-match-comment', 'match-comment-body', 'toggle-match-icon');
 setupToggle('toggle-history', 'history-body', 'toggle-history-icon');
 
-// 특이사항 등록
-var addCautionBtn = document.getElementById('btn-add-caution');
-if (addCautionBtn) addCautionBtn.addEventListener('click', function() {
-  Modal.show({
-    title: '특이사항 등록',
-    size: 'md',
-    content: '<div style="margin-bottom:14px">'
-      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:8px">구분</label>'
-      + '<div style="display:flex;gap:16px;flex-wrap:wrap">'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="chk-no-event"' + (m.noEvent ? ' checked' : '') + '> 이벤트불가</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="chk-no-rejoin"' + (m.noRejoin ? ' checked' : '') + '> 재가입불가</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="chk-difficult"' + (m.difficultMatch ? ' checked' : '') + '> 난매칭</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="chk-special"' + (m.specialMember ? ' checked' : '') + '> 특별회원</label>'
-      + '</div></div>'
-      + '<div style="margin-bottom:12px">'
-      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">특이사항 메모</label>'
-      + '<textarea class="form-input" id="caution-content" rows="4" style="width:100%;font-size:13px;resize:vertical" placeholder="특이사항을 입력하세요..."></textarea></div>'
-      + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-submit-caution">등록</button></div>',
-  });
-  setTimeout(function() {
-    var submitBtn = document.getElementById('btn-submit-caution');
-    if (submitBtn) submitBtn.addEventListener('click', function() {
-      var content = document.getElementById('caution-content').value.trim();
-      if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
-      Modal.hide();
-      Toast.show('특이사항이 등록되었습니다.', 'success');
-    });
-  }, 100);
-});
+
 
 // 학력 추가
 var addEduBtn = document.getElementById('btn-add-edu');
@@ -551,9 +495,8 @@ if (addEduBtn) addEduBtn.addEventListener('click', function() {
   }, 100);
 });
 
-// 의견·특이사항·학력삭제 이벤트 위임
+// 학력삭제 이벤트 위임
 document.getElementById('panel-basic').addEventListener('click', function(ev) {
-  // 학력 삭제
   var eduDelBtn = ev.target.closest('.edu-del-btn');
   if (eduDelBtn) {
     if (confirm('해당 학력을 삭제하시겠습니까?')) {
@@ -564,18 +507,30 @@ document.getElementById('panel-basic').addEventListener('click', function(ev) {
   }
 });
 
-// 매니저 의견·특이사항 이벤트 위임 (탭 바깥이므로 document 레벨)
+// 특이사항 등록
+var addCautionBtn = document.getElementById('btn-add-caution');
+if (addCautionBtn) addCautionBtn.addEventListener('click', function() {
+  Modal.show({
+    title: '특이사항 등록',
+    size: 'md',
+    content: '<div style="margin-bottom:12px">'
+      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">특이사항 메모</label>'
+      + '<textarea class="form-input" id="caution-content" rows="4" style="width:100%;font-size:13px;resize:vertical" placeholder="특이사항을 입력하세요..."></textarea></div>'
+      + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-submit-caution">등록</button></div>',
+  });
+  setTimeout(function() {
+    var submitBtn = document.getElementById('btn-submit-caution');
+    if (submitBtn) submitBtn.addEventListener('click', function() {
+      var content = document.getElementById('caution-content').value.trim();
+      if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
+      Modal.hide();
+      Toast.show('특이사항이 등록되었습니다.', 'success');
+    });
+  }, 100);
+});
+
+// 특이사항 삭제 이벤트 위임
 document.addEventListener('click', function(ev) {
-  // 의견 삭제
-  var delBtn = ev.target.closest('.comment-del-btn');
-  if (delBtn) {
-    var type = delBtn.dataset.type;
-    if (confirm(type + '매니저 의견을 삭제하시겠습니까?')) {
-      delBtn.closest('div[style]').remove();
-      Toast.show(type + '매니저 의견이 삭제되었습니다.', 'info');
-    }
-  }
-  // 특이사항 삭제
   var cautionDelBtn = ev.target.closest('.caution-del-btn');
   if (cautionDelBtn) {
     if (confirm('특이사항을 삭제하시겠습니까?')) {
@@ -594,24 +549,23 @@ if (addLogBtn) addLogBtn.addEventListener('click', function() { Toast.show('컨�
 /* ── 히스토리 등록 모달 (이벤트 위임) ── */
 document.addEventListener('click', function(ev) {
   if (ev.target.id === 'btn-add-history') {
-    var catOpts = Object.keys(HISTORY_CATEGORIES).map(function(cat) {
-      var info = HISTORY_CATEGORIES[cat];
-      return '<option value="' + cat + '">' + cat + '</option>';
-    }).join('');
+    // 로그인 매니저 정보 (실서비스에서는 세션에서 가져옴)
+    var currentManager = m.consultantManager || '시스템';
     Modal.show({
       title: '히스토리 등록',
       size: 'lg',
       content: '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">'
-        + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">카테고리</label>'
-        + '<select class="form-input" id="hist-new-cat" style="width:100%">' + catOpts + '</select></div>'
+        + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">구분</label>'
+        + '<select class="form-input" id="hist-new-cat" style="width:100%">'
+        + '<option value="통화내역">통화내역</option>'
+        + '<option value="기타">기타 의견</option>'
+        + '</select></div>'
         + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">일시</label>'
         + '<input type="datetime-local" class="form-input" id="hist-new-date" style="width:100%" value="' + new Date().toISOString().substring(0,16) + '"></div>'
         + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">내용</label>'
-        + '<input type="text" class="form-input" id="hist-new-content" placeholder="히스토리 내용을 입력하세요..." style="width:100%"></div>'
-        + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">상세 (선택)</label>'
-        + '<textarea class="form-input" id="hist-new-detail" rows="3" style="width:100%;resize:vertical;font-size:13px" placeholder="상세 내용..."></textarea></div>'
+        + '<textarea class="form-input" id="hist-new-content" rows="4" style="width:100%;resize:vertical;font-size:13px" placeholder="내용을 입력하세요..."></textarea></div>'
         + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">담당자</label>'
-        + '<input type="text" class="form-input" id="hist-new-processor" value="' + (m.consultantManager || '') + '" style="width:100%"></div>'
+        + '<input type="text" class="form-input" id="hist-new-processor" value="' + currentManager + '" style="width:100%;background:var(--bg-secondary)" readonly></div>'
         + '</div>'
         + '<div style="text-align:right;margin-top:16px"><button class="btn btn--ghost btn--sm" id="hist-new-cancel" style="margin-right:8px">취소</button>'
         + '<button class="btn btn--primary btn--sm" id="hist-new-submit">등록</button></div>',
@@ -623,20 +577,24 @@ document.addEventListener('click', function(ev) {
       if (submitBtn) submitBtn.addEventListener('click', function() {
         var content = document.getElementById('hist-new-content').value.trim();
         if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
+        var selectedCat = document.getElementById('hist-new-cat').value;
+        // 매니저 역할에 따라 자동 분류
+        var finalCat = currentManager === m.matchingManager ? '매칭매니저' : '상담매니저';
         addHistory({
           memberId: m.id,
-          category: document.getElementById('hist-new-cat').value,
+          category: finalCat,
           content: content,
-          detail: document.getElementById('hist-new-detail').value.trim(),
-          processor: document.getElementById('hist-new-processor').value.trim() || '시스템',
+          detail: '',
+          processor: currentManager,
           date: new Date(document.getElementById('hist-new-date').value).toISOString(),
         });
         Modal.hide();
         Toast.show('히스토리가 등록되었습니다.', 'success');
-        // 히스토리 탭 새로고침
-        if (historyInitialized) {
-          var histEvents = initHistoryEvents(m.id);
-          if (histEvents && histEvents.refreshTimeline) histEvents.refreshTimeline();
+        // 히스토리 영역 전체 리렌더링
+        var histBody = document.getElementById('history-body');
+        if (histBody) {
+          histBody.innerHTML = renderHistoryTab(m);
+          initHistoryEvents(m.id);
         }
       });
     }, 100);

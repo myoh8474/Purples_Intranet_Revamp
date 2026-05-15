@@ -63,31 +63,5 @@ export function renderBasicInfo(m) {
       <tr><td style="${LBL}">직장전화</td><td style="${VAL}">${m.workPhone ? Formatters.phone(m.workPhone) : '-'}</td><td style="${LBL}">연소득</td><td style="${VAL}">${m.income||'-'}</td><td style="${LBL}"></td><td style="${VAL}"></td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
       <tr><td style="${LBL}">직장주소</td><td style="${VAL}" colspan="7">${m.workAddress || '-'}</td></tr>
     </tbody></table>
-
-    <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-top:24px">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-sm) var(--radius-sm) 0 0;cursor:pointer" id="toggle-consult-comment">
-        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">상담매니저 의견 <span class="badge badge--gray" style="font-size:10px;margin-left:6px">${m.consultComment ? '1건' : '0건'}</span></span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn--primary btn--sm" id="btn-add-consult-comment">+ 의견 등록</button>
-          <span id="toggle-consult-icon" style="font-size:12px;color:var(--text-muted)">▼</span>
-        </div>
-      </div>
-      <div id="consult-comment-body" style="padding:10px 16px">
-        ${m.consultComment ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)"><span style="color:var(--text-muted);font-size:10px;margin-right:6px">[' + Formatters.date(m.joinDate) + ' ' + m.consultantManager + ']</span>' + m.consultComment + '</div><button class="btn btn--ghost btn--sm comment-del-btn" data-type="상담" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 의견이 없습니다.</div>'}
-      </div>
-    </div>
-
-    <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-top:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-sm) var(--radius-sm) 0 0;cursor:pointer" id="toggle-match-comment">
-        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">매칭매니저 의견 <span class="badge badge--gray" style="font-size:10px;margin-left:6px">${m.matchComment ? '1건' : '0건'}</span></span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn--primary btn--sm" id="btn-add-match-comment">+ 의견 등록</button>
-          <span id="toggle-match-icon" style="font-size:12px;color:var(--text-muted)">▼</span>
-        </div>
-      </div>
-      <div id="match-comment-body" style="padding:10px 16px">
-        ${m.matchComment ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)"><span style="color:var(--text-muted);font-size:10px;margin-right:6px">[' + Formatters.date(m.joinDate) + ' ' + m.matchingManager + ']</span>' + m.matchComment + '</div><button class="btn btn--ghost btn--sm comment-del-btn" data-type="매칭" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 의견이 없습니다.</div>'}
-      </div>
-    </div>
   `;
 }

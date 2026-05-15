@@ -11,17 +11,16 @@ const STORAGE_KEY = 'purples_member_history';
  */
 export const HISTORY_CATEGORIES = {
   '상태변경':   { icon: '', color: '#6366f1', label: '상태변경' },
-  '컨텍':       { icon: '', color: '#0ea5e9', label: '컨텍' },
-  '상담':       { icon: '', color: '#8b5cf6', label: '상담' },
   '미팅':       { icon: '', color: '#22c55e', label: '미팅' },
-  '매칭':       { icon: '', color: '#f43f5e', label: '매칭' },
   '결제':       { icon: '', color: '#f59e0b', label: '결제' },
   '계약':       { icon: '', color: '#14b8a6', label: '계약' },
   '서류':       { icon: '', color: '#64748b', label: '서류' },
+  'SMS':        { icon: '', color: '#475569', label: 'SMS' },
   '클레임':     { icon: '', color: '#ef4444', label: '클레임' },
-  '메모':       { icon: '', color: '#94a3b8', label: '메모' },
-  '시스템':     { icon: '', color: '#475569', label: '시스템' },
-  '담당자변경': { icon: '', color: '#a855f7', label: '담당자변경' },
+  '탈회':       { icon: '', color: '#dc2626', label: '탈회' },
+  '특이사항':   { icon: '', color: '#e11d48', label: '특이사항' },
+  '상담매니저': { icon: '', color: '#7c3aed', label: '상담매니저' },
+  '매칭매니저': { icon: '', color: '#0891b2', label: '매칭매니저' },
 };
 
 /**
@@ -143,12 +142,12 @@ export function seedHistoryFromMember(member) {
     });
   }
 
-  // 컨텍 로그 변환
+  // 컨텍 로그 → 상담/매칭매니저로 변환
   if (member.contactLogs) {
     member.contactLogs.forEach(cl => {
       entries.push({
         memberId: member.id,
-        category: cl.type === '상담' ? '상담' : cl.type === '메모' ? '메모' : '컨텍',
+        category: cl.processor === member.matchingManager ? '매칭매니저' : '상담매니저',
         content: cl.content,
         detail: cl.type,
         processor: cl.processor,
@@ -171,13 +170,13 @@ export function seedHistoryFromMember(member) {
     });
   }
 
-  // 가입일 기준 시스템 이벤트
+  // 가입일 기준 SMS 이벤트
   entries.push({
     memberId: member.id,
-    category: '시스템',
-    content: '정회원 전산 생성',
-    detail: `${member.program} / ${member.contractType}`,
-    processor: '인포팀',
+    category: 'SMS',
+    content: '신규인사 문자 발송',
+    detail: `${member.program} 가입 환영 매니저 안내`,
+    processor: '시스템',
     date: member.joinDate,
   });
 
@@ -218,6 +217,42 @@ export function seedHistoryFromMember(member) {
         date: meetDate.toISOString(),
       });
     }
+  }
+
+  // 특이사항
+  if (member.cautionMemo) {
+    entries.push({
+      memberId: member.id,
+      category: '특이사항',
+      content: member.cautionMemo,
+      detail: '',
+      processor: member.consultantManager || '시스템',
+      date: new Date(new Date(member.joinDate).getTime() + 3 * 86400000).toISOString(),
+    });
+  }
+
+  // 상담매니저 의견
+  if (member.consultComment) {
+    entries.push({
+      memberId: member.id,
+      category: '상담매니저',
+      content: member.consultComment,
+      detail: '',
+      processor: member.consultantManager || '시스템',
+      date: new Date(new Date(member.joinDate).getTime() + 7 * 86400000).toISOString(),
+    });
+  }
+
+  // 매칭매니저 의견
+  if (member.matchComment) {
+    entries.push({
+      memberId: member.id,
+      category: '매칭매니저',
+      content: member.matchComment,
+      detail: '',
+      processor: member.matchingManager || '시스템',
+      date: new Date(new Date(member.joinDate).getTime() + 10 * 86400000).toISOString(),
+    });
   }
 
   // 일괄 저장
