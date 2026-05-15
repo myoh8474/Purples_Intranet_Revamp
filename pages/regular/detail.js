@@ -86,20 +86,51 @@ content.innerHTML = ''
   + '  </div>'
   + '</div>'
 
-  // ── 소개 프로필 ──
-  + '<div class="card" style="margin-bottom:20px">'
-  + '  <div class="card__body" style="padding:0">'
-  + '    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
-  + '      <span style="font-size:13px;font-weight:700;color:var(--text-primary)">📋 소개 프로필</span>'
-  + '      <button class="btn btn--primary btn--sm" id="btn-edit-intro">' + (m.introProfile ? '수정' : '등록') + '</button>'
-  + '    </div>'
-  + '    <div style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text-primary);min-height:40px">'
+  // ── 소개 프로필 + 특이사항 (2단) ──
+  + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">'
+  // 좌: 소개 프로필
+  + '  <div class="card" style="margin:0">'
+  + '    <div class="card__body" style="padding:0">'
+  + '      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
+  + '        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">소개 프로필</span>'
+  + '        <button class="btn btn--primary btn--sm" id="btn-edit-intro">' + (m.introProfile ? '수정' : '등록') + '</button>'
+  + '      </div>'
+  + '      <div style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text-primary);min-height:80px">'
   + (m.introProfile ? m.introProfile : '<span style="color:var(--text-muted)">등록된 소개 프로필이 없습니다.</span>')
+  + '      </div>'
+  + '    </div>'
+  + '  </div>'
+  // 우: 특이사항
+  + '  <div class="card" style="margin:0">'
+  + '    <div class="card__body" style="padding:0">'
+  + '      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
+  + '        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">특이사항</span>'
+  + '        <button class="btn btn--primary btn--sm" id="btn-add-caution">+ 등록</button>'
+  + '      </div>'
+  + '      <div style="padding:10px 16px;min-height:80px" id="caution-area">'
+  + (m.cautionMemo ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)">' + m.cautionMemo + '</div><button class="btn btn--ghost btn--sm caution-del-btn" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 특이사항이 없습니다.</div>')
+  + '      </div>'
   + '    </div>'
   + '  </div>'
   + '</div>'
 
-  // ── 6탭 구조 ──
+  // ── 히스토리 (접기/펼치기) ──
+  + '<div class="card" style="margin-bottom:20px">'
+  + '  <div class="card__body" style="padding:0">'
+  + '    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0;cursor:pointer" id="toggle-history">'
+  + '      <span style="font-size:13px;font-weight:700;color:var(--text-primary)">히스토리</span>'
+  + '      <div style="display:flex;align-items:center;gap:8px">'
+  + '        <button class="btn btn--primary btn--sm" id="btn-add-history">+ 등록</button>'
+  + '        <span id="toggle-history-icon" style="font-size:12px;color:var(--text-muted)">▼</span>'
+  + '      </div>'
+  + '    </div>'
+  + '    <div id="history-body" style="padding:10px 16px">'
+  + renderHistoryTab(m)
+  + '    </div>'
+  + '  </div>'
+  + '</div>'
+
+  // ── 5탭 구조 ──
   + '<div class="card">'
   + '  <div class="card__header" style="padding-bottom:0;border-bottom:none">'
   + '    <div class="tabs__nav" id="detail-tabs" style="width:100%">'
@@ -108,7 +139,6 @@ content.innerHTML = ''
   + '      <button class="tabs__btn" data-tab="payment">결제정보</button>'
   + '      <button class="tabs__btn" data-tab="matching">소개관리</button>'
   + '      <button class="tabs__btn" data-tab="meeting">미팅관리</button>'
-  + '      <button class="tabs__btn" data-tab="history">히스토리</button>'
   + '    </div>'
   + '  </div>'
   + '  <div class="card__body">'
@@ -117,7 +147,6 @@ content.innerHTML = ''
   + '    <div class="tab-panel" id="panel-payment">' + renderPayment(m) + '</div>'
   + '    <div class="tab-panel" id="panel-matching">' + renderMatchingInfo(m) + '</div>'
   + '    <div class="tab-panel" id="panel-meeting">' + renderMeetingTab(m) + '</div>'
-  + '    <div class="tab-panel" id="panel-history">' + renderHistoryTab(m) + '</div>'
   + '  </div>'
   + '</div>';
 
@@ -414,16 +443,34 @@ function openCommentModal(type) {
 }
 
 var addMatchCommentBtn = document.getElementById('btn-add-match-comment');
-if (addMatchCommentBtn) addMatchCommentBtn.addEventListener('click', function() { openCommentModal('매칭'); });
+if (addMatchCommentBtn) addMatchCommentBtn.addEventListener('click', function(e) { e.stopPropagation(); openCommentModal('매칭'); });
 
 var addConsultCommentBtn = document.getElementById('btn-add-consult-comment');
-if (addConsultCommentBtn) addConsultCommentBtn.addEventListener('click', function() { openCommentModal('상담'); });
+if (addConsultCommentBtn) addConsultCommentBtn.addEventListener('click', function(e) { e.stopPropagation(); openCommentModal('상담'); });
 
-// 유의사항 등록
+// 접기/펼치기 토글
+function setupToggle(toggleId, bodyId, iconId) {
+  var toggle = document.getElementById(toggleId);
+  if (toggle) toggle.addEventListener('click', function(e) {
+    if (e.target.closest('.btn')) return;
+    var body = document.getElementById(bodyId);
+    var icon = document.getElementById(iconId);
+    if (body) {
+      var isHidden = body.style.display === 'none';
+      body.style.display = isHidden ? 'block' : 'none';
+      if (icon) icon.textContent = isHidden ? '▼' : '▶';
+    }
+  });
+}
+setupToggle('toggle-consult-comment', 'consult-comment-body', 'toggle-consult-icon');
+setupToggle('toggle-match-comment', 'match-comment-body', 'toggle-match-icon');
+setupToggle('toggle-history', 'history-body', 'toggle-history-icon');
+
+// 특이사항 등록
 var addCautionBtn = document.getElementById('btn-add-caution');
 if (addCautionBtn) addCautionBtn.addEventListener('click', function() {
   Modal.show({
-    title: '유의사항 등록',
+    title: '특이사항 등록',
     size: 'md',
     content: '<div style="margin-bottom:14px">'
       + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:8px">구분</label>'
@@ -434,8 +481,8 @@ if (addCautionBtn) addCautionBtn.addEventListener('click', function() {
       + '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="chk-special"' + (m.specialMember ? ' checked' : '') + '> 특별회원</label>'
       + '</div></div>'
       + '<div style="margin-bottom:12px">'
-      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">유의사항 메모</label>'
-      + '<textarea class="form-input" id="caution-content" rows="4" style="width:100%;font-size:13px;resize:vertical" placeholder="유의사항을 입력하세요..."></textarea></div>'
+      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">특이사항 메모</label>'
+      + '<textarea class="form-input" id="caution-content" rows="4" style="width:100%;font-size:13px;resize:vertical" placeholder="특이사항을 입력하세요..."></textarea></div>'
       + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-submit-caution">등록</button></div>',
   });
   setTimeout(function() {
@@ -444,69 +491,96 @@ if (addCautionBtn) addCautionBtn.addEventListener('click', function() {
       var content = document.getElementById('caution-content').value.trim();
       if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
       Modal.hide();
-      Toast.show('유의사항이 등록되었습니다.', 'success');
+      Toast.show('특이사항이 등록되었습니다.', 'success');
     });
   }, 100);
 });
 
-// 의견·유의사항 수정/삭제 이벤트 위임
-document.getElementById('panel-basic').addEventListener('click', function(ev) {
-  var editBtn = ev.target.closest('.comment-edit-btn');
-  if (editBtn) {
-    var type = editBtn.dataset.type;
-    var oldContent = editBtn.dataset.content || '';
-    Modal.show({
-      title: type + '매니저 의견 수정',
-      size: 'md',
-      content: '<div style="margin-bottom:12px">'
-        + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">내용</label>'
-        + '<textarea class="form-input" id="edit-comment-content" rows="5" style="width:100%;font-size:13px;resize:vertical">' + oldContent + '</textarea></div>'
-        + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-update-comment">수정</button></div>',
+// 학력 추가
+var addEduBtn = document.getElementById('btn-add-edu');
+if (addEduBtn) addEduBtn.addEventListener('click', function() {
+  var curYear = new Date().getFullYear();
+  var yearOpts = '<option value="">선택</option>';
+  for (var y = curYear; y >= 1960; y--) yearOpts += '<option>' + y + '</option>';
+  Modal.show({
+    title: '학력 추가',
+    size: 'md',
+    content: '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">구분 <span style="color:#e53e3e">*</span></label>'
+      + '<select class="form-input" id="edu-level" style="width:100%"><option value="">선택</option><option>고등학교</option><option>전문대학교</option><option>대학교</option><option>대학원(석사)</option><option>대학원(박사)</option><option>기타</option><option>유학</option><option>어학연수</option></select></div>'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">학교명 <span style="color:#e53e3e">*</span></label>'
+      + '<input type="text" class="form-input" id="edu-school" placeholder="학교명 입력" style="width:100%"></div>'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">전공</label>'
+      + '<input type="text" class="form-input" id="edu-major" placeholder="전공" style="width:100%"></div>'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">소재지</label>'
+      + '<input type="text" class="form-input" id="edu-location" placeholder="소재지" style="width:100%"></div>'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">졸업여부</label>'
+      + '<select class="form-input" id="edu-graduated" style="width:100%"><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></div>'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">입학년도</label>'
+      + '<select class="form-input" id="edu-enter-year" style="width:100%">' + yearOpts + '</select></div>'
+      + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">졸업년도</label>'
+      + '<select class="form-input" id="edu-grad-year" style="width:100%">' + yearOpts + '</select></div>'
+      + '</div>'
+      + '<div style="text-align:right;margin-top:16px"><button class="btn btn--ghost btn--sm" id="edu-cancel" style="margin-right:8px">취소</button><button class="btn btn--primary btn--sm" id="edu-submit">추가</button></div>',
+  });
+  setTimeout(function() {
+    var cancelBtn = document.getElementById('edu-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+    var submitBtn = document.getElementById('edu-submit');
+    if (submitBtn) submitBtn.addEventListener('click', function() {
+      var level = document.getElementById('edu-level').value;
+      var school = document.getElementById('edu-school').value.trim();
+      if (!level) { Toast.show('구분을 선택해주세요.', 'warning'); return; }
+      if (!school) { Toast.show('학교명을 입력해주세요.', 'warning'); return; }
+      var major = document.getElementById('edu-major').value.trim() || '-';
+      var location = document.getElementById('edu-location').value.trim() || '-';
+      var graduated = document.getElementById('edu-graduated').value;
+      if (graduated === '선택') graduated = '-';
+      var enterYear = document.getElementById('edu-enter-year').value || '-';
+      var gradYear = document.getElementById('edu-grad-year').value || '-';
+      var levelText = level + ' - ' + school;
+      var tbody = document.querySelector('#edu-table tbody');
+      if (tbody) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + levelText + '</td><td>' + major + '</td><td>' + location + '</td><td>' + graduated + '</td><td>' + enterYear + '</td><td>' + gradYear + '</td><td style="text-align:center"><button class="btn btn--ghost btn--sm edu-del-btn" style="font-size:10px;padding:1px 4px;color:var(--status-red)">삭제</button></td>';
+        tbody.appendChild(tr);
+      }
+      Modal.hide();
+      Toast.show('학력이 추가되었습니다.', 'success');
     });
-    setTimeout(function() {
-      var updateBtn = document.getElementById('btn-update-comment');
-      if (updateBtn) updateBtn.addEventListener('click', function() {
-        var content = document.getElementById('edit-comment-content').value.trim();
-        if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
-        Modal.hide();
-        Toast.show(type + '매니저 의견이 수정되었습니다.', 'success');
-      });
-    }, 100);
+  }, 100);
+});
+
+// 의견·특이사항·학력삭제 이벤트 위임
+document.getElementById('panel-basic').addEventListener('click', function(ev) {
+  // 학력 삭제
+  var eduDelBtn = ev.target.closest('.edu-del-btn');
+  if (eduDelBtn) {
+    if (confirm('해당 학력을 삭제하시겠습니까?')) {
+      eduDelBtn.closest('tr').remove();
+      Toast.show('학력이 삭제되었습니다.', 'info');
+    }
+    return;
   }
+});
+
+// 매니저 의견·특이사항 이벤트 위임 (탭 바깥이므로 document 레벨)
+document.addEventListener('click', function(ev) {
+  // 의견 삭제
   var delBtn = ev.target.closest('.comment-del-btn');
   if (delBtn) {
     var type = delBtn.dataset.type;
     if (confirm(type + '매니저 의견을 삭제하시겠습니까?')) {
+      delBtn.closest('div[style]').remove();
       Toast.show(type + '매니저 의견이 삭제되었습니다.', 'info');
     }
   }
-  // 유의사항 수정
-  var cautionEditBtn = ev.target.closest('.caution-edit-btn');
-  if (cautionEditBtn) {
-    var oldC = cautionEditBtn.dataset.content || '';
-    Modal.show({
-      title: '유의사항 수정',
-      size: 'md',
-      content: '<div style="margin-bottom:12px">'
-        + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">내용</label>'
-        + '<textarea class="form-input" id="edit-caution-content" rows="4" style="width:100%;font-size:13px;resize:vertical">' + oldC + '</textarea></div>'
-        + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-update-caution">수정</button></div>',
-    });
-    setTimeout(function() {
-      var updateBtn = document.getElementById('btn-update-caution');
-      if (updateBtn) updateBtn.addEventListener('click', function() {
-        var content = document.getElementById('edit-caution-content').value.trim();
-        if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
-        Modal.hide();
-        Toast.show('유의사항이 수정되었습니다.', 'success');
-      });
-    }, 100);
-  }
-  // 유의사항 삭제
+  // 특이사항 삭제
   var cautionDelBtn = ev.target.closest('.caution-del-btn');
   if (cautionDelBtn) {
-    if (confirm('유의사항을 삭제하시겠습니까?')) {
-      Toast.show('유의사항이 삭제되었습니다.', 'info');
+    if (confirm('특이사항을 삭제하시겠습니까?')) {
+      cautionDelBtn.closest('div[style]').remove();
+      Toast.show('특이사항이 삭제되었습니다.', 'info');
     }
   }
 });

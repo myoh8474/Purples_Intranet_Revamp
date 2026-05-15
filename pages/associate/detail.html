@@ -549,6 +549,28 @@
               '</tbody></table>' +
             '</div>' +
             '<div class="reg-section">' +
+              '<div class="reg-section__title">학력 / 직업</div>' +
+              '<table class="reg-table"><tbody>' +
+                '<tr>' +
+                  '<td class="lb">최종학력 <span style="color:#e53e3e;font-size:10px">*</span></td>' +
+                  '<td>' +
+                    '<select id="reg-education">' +
+                      '<option value="">선택</option>' +
+                      '<option>고졸</option><option>전문대졸</option><option>대졸</option><option>대학원졸(석사)</option><option>대학원졸(박사)</option>' +
+                    '</select>' +
+                  '</td>' +
+                  '<td class="lb">직업 <span style="color:#e53e3e;font-size:10px">*</span></td>' +
+                  '<td>' +
+                    '<select id="reg-job">' +
+                      '<option value="">선택</option>' +
+                      '<option>회사원</option><option>공무원</option><option>전문직</option><option>자영업</option><option>프리랜서</option><option>기타</option>' +
+                    '</select>' +
+                  '</td>' +
+                '</tr>' +
+              '</tbody></table>' +
+              '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;padding:6px 8px;background:var(--bg-secondary);border-radius:4px">※ 학력 상세 정보는 정회원 등록 후 회원정보 수정에서 입력할 수 있습니다.</div>' +
+            '</div>' +
+            '<div class="reg-section">' +
               '<div class="reg-section__title">담당 컨설턴트</div>' +
               '<table class="reg-table"><tbody>' +
                 '<tr>' +
@@ -624,122 +646,6 @@
               '</tbody></table>' +
             '</div>' +
 
-            '<div class="reg-section">' +
-              '<div class="reg-section__title">학력정보</div>' +
-              '<table class="reg-table"><tbody>' +
-                '<tr>' +
-                  '<td class="lb">학력선택 <span style="color:#e53e3e;font-size:10px">*</span></td>' +
-                  '<td>' +
-                    '<select id="reg-education">' +
-                      '<option value="">선택</option>' +
-                      '<option>고졸</option><option>전문대졸</option><option>대졸</option><option>대학원졸(석사)</option><option>대학원졸(박사)</option>' +
-                    '</select>' +
-                  '</td>' +
-                  '<td class="lb">직업선택 <span style="color:#e53e3e;font-size:10px">*</span></td>' +
-                  '<td>' +
-                    '<select id="reg-job">' +
-                      '<option value="">선택</option>' +
-                      '<option>회사원</option><option>공무원</option><option>전문직</option><option>자영업</option><option>프리랜서</option><option>기타</option>' +
-                    '</select>' +
-                  '</td>' +
-                '</tr>' +
-              '</tbody></table>' +
-              '<table class="reg-table" style="table-layout:fixed;margin-top:10px">' +
-                '<thead>' +
-                  '<tr style="background:var(--bg-secondary)">' +
-                    '<th style="width:100px;padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">구분</th>' +
-                    '<th style="padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">학교명</th>' +
-                    '<th style="width:100px;padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">전공</th>' +
-                    '<th style="width:90px;padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">소재지</th>' +
-                    '<th style="width:80px;padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">졸업여부</th>' +
-                    '<th style="width:70px;padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">입학년도</th>' +
-                    '<th style="width:70px;padding:5px 8px;border:1px solid var(--border-light);font-size:11px;font-weight:700;text-align:center">졸업년도</th>' +
-                  '</tr>' +
-                '</thead>' +
-                '<tbody>' +
-                  '<tr>' +
-                    '<td class="lb">고등학교</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">전문대학교</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>국내</option><option>해외</option></select></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">대학교</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>국내</option><option>해외</option></select></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">대학원(석사)</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>국내</option><option>해외</option></select></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">대학원(박사)</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>국내</option><option>해외</option></select></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">기타</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">유학</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                  '<tr>' +
-                    '<td class="lb">어학연수</td>' +
-                    '<td><input type="text" /></td>' +
-                    '<td colspan="2"><div style="display:flex;align-items:center;gap:4px;font-size:11px">가능외국어 <input type="text" /></div></td>' +
-                    '<td><select><option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option></select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                    '<td><select>' + yearOptions() + '</select></td>' +
-                  '</tr>' +
-                '</tbody>' +
-              '</table>' +
-              '<table class="reg-table" style="margin-top:8px"><tbody>' +
-                '<tr>' +
-                  '<td class="lb">학력선택</td>' +
-                  '<td><select><option>선택</option><option>고졸</option><option>전문대졸</option><option>대졸</option><option>석사</option><option>박사</option><option>기타</option></select></td>' +
-                  '<td class="lb">직업선택</td>' +
-                  '<td><select><option>선택</option><option>회사원</option><option>공무원</option><option>전문직</option><option>자영업</option><option>프리랜서</option><option>학생</option><option>무직</option><option>기타</option></select></td>' +
-                '</tr>' +
-              '</tbody></table>' +
-            '</div>' +
-            '</div>' +
           '</div>' +
           '<div class="modal__footer">' +
             '<button class="btn btn--secondary" onclick="closeModal()">취소</button>' +

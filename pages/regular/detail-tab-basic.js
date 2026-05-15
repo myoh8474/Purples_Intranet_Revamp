@@ -36,19 +36,22 @@ export function renderBasicInfo(m) {
       <tr><td style="${LBL}">흡연</td><td style="${VAL}">${m.smoking||'비흡연'}</td><td style="${LBL}">음주</td><td style="${VAL}">${m.drinking||'보통'}</td><td style="${LBL}"></td><td style="${VAL}"></td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
     </tbody></table>
 
-    <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin:24px 0 12px">학력</div>
-    <table class="data-table data-table--bordered" style="font-size:13px;table-layout:fixed;width:100%">
-      <colgroup><col style="width:22%"><col style="width:22%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px">
+      <div style="font-size:13px;font-weight:700;color:var(--text-primary)">학력</div>
+      <button class="btn btn--primary btn--sm" id="btn-add-edu">+ 학력추가</button>
+    </div>
+    <table class="data-table data-table--bordered" style="font-size:13px;table-layout:fixed;width:100%" id="edu-table">
+      <colgroup><col style="width:20%"><col style="width:20%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>
       <thead>
-        <tr><th>학력상세</th><th>전공</th><th>소재지</th><th>졸업여부</th><th>입학년도</th><th>졸업년도</th></tr>
+        <tr><th>학력상세</th><th>전공</th><th>소재지</th><th>졸업여부</th><th>입학년도</th><th>졸업년도</th><th>관리</th></tr>
       </thead>
       <tbody>
         ${(m.educationList || [
           { level: '고등학교 - ' + (m.school || '천안여자고등학교'), major: '-', location: '천안', graduated: '졸업', enterYear: '-', gradYear: '2017' },
           { level: '대학교 - ' + (m.school || '동국대학교'), major: m.major || '컴퓨터공학', location: '서울', graduated: '졸업', enterYear: '2018', gradYear: '2024' },
           { level: '대학원(석사) - 동국대대학원', major: m.major || '컴퓨터공학', location: '서울', graduated: '졸업', enterYear: '2024', gradYear: '2026' }
-        ]).map(function(e) {
-          return '<tr><td>' + e.level + '</td><td>' + (e.major || '-') + '</td><td>' + (e.location || '-') + '</td><td>' + e.graduated + '</td><td>' + (e.enterYear || '-') + '</td><td>' + (e.gradYear || '-') + '</td></tr>';
+        ]).map(function(e, i) {
+          return '<tr data-edu-idx="' + i + '"><td>' + e.level + '</td><td>' + (e.major || '-') + '</td><td>' + (e.location || '-') + '</td><td>' + e.graduated + '</td><td>' + (e.enterYear || '-') + '</td><td>' + (e.gradYear || '-') + '</td><td style="text-align:center"><button class="btn btn--ghost btn--sm edu-del-btn" style="font-size:10px;padding:1px 4px;color:var(--status-red)">삭제</button></td></tr>';
         }).join('')}
       </tbody>
     </table>
@@ -61,37 +64,30 @@ export function renderBasicInfo(m) {
       <tr><td style="${LBL}">직장주소</td><td style="${VAL}" colspan="7">${m.workAddress || '-'}</td></tr>
     </tbody></table>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px">
-      <div style="font-size:13px;font-weight:700;color:var(--text-primary)">유의사항</div>
-      <button class="btn btn--primary btn--sm" id="btn-add-caution">+ 등록</button>
+    <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-top:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-sm) var(--radius-sm) 0 0;cursor:pointer" id="toggle-consult-comment">
+        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">상담매니저 의견 <span class="badge badge--gray" style="font-size:10px;margin-left:6px">${m.consultComment ? '1건' : '0건'}</span></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn--primary btn--sm" id="btn-add-consult-comment">+ 의견 등록</button>
+          <span id="toggle-consult-icon" style="font-size:12px;color:var(--text-muted)">▼</span>
+        </div>
+      </div>
+      <div id="consult-comment-body" style="padding:10px 16px">
+        ${m.consultComment ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)"><span style="color:var(--text-muted);font-size:10px;margin-right:6px">[' + Formatters.date(m.joinDate) + ' ' + m.consultantManager + ']</span>' + m.consultComment + '</div><button class="btn btn--ghost btn--sm comment-del-btn" data-type="상담" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 의견이 없습니다.</div>'}
+      </div>
     </div>
-    <table class="data-table data-table--bordered" style="font-size:12px">
-      <thead><tr><th style="width:90px;white-space:nowrap">작성일</th><th style="width:80px;white-space:nowrap">작성자</th><th>내용</th><th style="width:90px;white-space:nowrap">관리</th></tr></thead>
-      <tbody>
-        ${m.cautionMemo ? '<tr><td style="white-space:nowrap">' + Formatters.date(m.joinDate) + '</td><td>' + m.consultantManager + '</td><td style="text-align:left">' + m.cautionMemo + '</td><td style="white-space:nowrap"><button class="btn btn--ghost btn--sm caution-edit-btn" data-content="' + (m.cautionMemo||'').replace(/"/g,'&quot;') + '" style="font-size:10px;padding:1px 4px">수정</button> <button class="btn btn--ghost btn--sm caution-del-btn" style="font-size:10px;padding:1px 4px;color:var(--danger)">삭제</button></td></tr>' : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px">등록된 유의사항이 없습니다.</td></tr>'}
-      </tbody>
-    </table>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px">
-      <div style="font-size:13px;font-weight:700;color:var(--text-primary)">매칭매니저 의견</div>
-      <button class="btn btn--primary btn--sm" id="btn-add-match-comment">+ 의견 등록</button>
+    <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-sm) var(--radius-sm) 0 0;cursor:pointer" id="toggle-match-comment">
+        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">매칭매니저 의견 <span class="badge badge--gray" style="font-size:10px;margin-left:6px">${m.matchComment ? '1건' : '0건'}</span></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn--primary btn--sm" id="btn-add-match-comment">+ 의견 등록</button>
+          <span id="toggle-match-icon" style="font-size:12px;color:var(--text-muted)">▼</span>
+        </div>
+      </div>
+      <div id="match-comment-body" style="padding:10px 16px">
+        ${m.matchComment ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)"><span style="color:var(--text-muted);font-size:10px;margin-right:6px">[' + Formatters.date(m.joinDate) + ' ' + m.matchingManager + ']</span>' + m.matchComment + '</div><button class="btn btn--ghost btn--sm comment-del-btn" data-type="매칭" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 의견이 없습니다.</div>'}
+      </div>
     </div>
-    <table class="data-table data-table--bordered" style="font-size:12px">
-      <thead><tr><th style="width:90px;white-space:nowrap">작성일</th><th style="width:80px;white-space:nowrap">작성자</th><th>내용</th><th style="width:90px;white-space:nowrap">관리</th></tr></thead>
-      <tbody>
-        ${m.matchComment ? '<tr><td style="white-space:nowrap">' + Formatters.date(m.joinDate) + '</td><td>' + m.matchingManager + '</td><td style="text-align:left">' + m.matchComment + '</td><td style="white-space:nowrap"><button class="btn btn--ghost btn--sm comment-edit-btn" data-type="매칭" data-content="' + (m.matchComment||'').replace(/"/g,'&quot;') + '" style="font-size:10px;padding:1px 4px">수정</button> <button class="btn btn--ghost btn--sm comment-del-btn" data-type="매칭" style="font-size:10px;padding:1px 4px;color:var(--danger)">삭제</button></td></tr>' : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px">등록된 의견이 없습니다.</td></tr>'}
-      </tbody>
-    </table>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px">
-      <div style="font-size:13px;font-weight:700;color:var(--text-primary)">상담매니저 의견</div>
-      <button class="btn btn--primary btn--sm" id="btn-add-consult-comment">+ 의견 등록</button>
-    </div>
-    <table class="data-table data-table--bordered" style="font-size:12px">
-      <thead><tr><th style="width:90px;white-space:nowrap">작성일</th><th style="width:80px;white-space:nowrap">작성자</th><th>내용</th><th style="width:90px;white-space:nowrap">관리</th></tr></thead>
-      <tbody>
-        ${m.consultComment ? '<tr><td style="white-space:nowrap">' + Formatters.date(m.joinDate) + '</td><td>' + m.consultantManager + '</td><td style="text-align:left">' + m.consultComment + '</td><td style="white-space:nowrap"><button class="btn btn--ghost btn--sm comment-edit-btn" data-type="상담" data-content="' + (m.consultComment||'').replace(/"/g,'&quot;') + '" style="font-size:10px;padding:1px 4px">수정</button> <button class="btn btn--ghost btn--sm comment-del-btn" data-type="상담" style="font-size:10px;padding:1px 4px;color:var(--danger)">삭제</button></td></tr>' : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px">등록된 의견이 없습니다.</td></tr>'}
-      </tbody>
-    </table>
   `;
 }
