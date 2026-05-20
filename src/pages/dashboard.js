@@ -6,9 +6,21 @@ import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { MockAssociates } from '@mock/associates.js';
 import { MockMonthlySales, MockTodos, MockStats, MockNotifications } from '@mock/stats.js';
+import { Auth } from '@core/auth.js';
 
 // 레이아웃 초기화
 initLayout({ pageId: 'dashboard', breadcrumbs: ['대시보드'] });
+
+// ── 브랜드 셀렉터 (최고관리자 전용) ──
+const BRANDS = {
+  purples: { name: '퍼플스', color: '#7c3aed', bg: 'linear-gradient(135deg,#7c3aed,#6d28d9)' },
+  lemarie: { name: '르매리', color: '#be185d', bg: 'linear-gradient(135deg,#be185d,#9d174d)' },
+  denoble: { name: '디노블', color: '#0e7490', bg: 'linear-gradient(135deg,#0e7490,#155e75)' },
+};
+const user = Auth.getUser();
+const isAdmin = user && user.role === 'admin';
+const savedBrand = localStorage.getItem('purples_dashboard_brand') || 'purples';
+let currentBrand = savedBrand;
 
 // ── 데이터 계산 ──
 const now = new Date();
@@ -30,6 +42,62 @@ const notices = [
   { id: 4, title: '개인정보처리방침 개정에 따른 동의서 변경', date: '2026-05-08' },
   { id: 5, title: '신규 CRM 시스템 도입 관련 교육 안내', date: '2026-05-05' },
 ];
+
+// ── 브랜드 셀렉터 HTML ──
+function buildBrandSelector() {
+  if (!isAdmin) return '';
+  const brand = BRANDS[currentBrand];
+  return `
+    <div style="position:relative;display:inline-block" id="brand-selector-wrap">
+      <button id="brand-selector-btn" style="
+        display:flex;align-items:center;gap:8px;padding:6px 14px;
+        border-radius:var(--radius-lg);border:1.5px solid ${brand.color};
+        background:white;cursor:pointer;font-size:13px;font-weight:700;
+        color:${brand.color};transition:all 0.2s;min-width:140px;justify-content:space-between;
+      ">
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${brand.color}"></span>
+          ${brand.name}
+        </span>
+        <span style="font-size:10px;transform:rotate(0deg);transition:transform 0.2s" id="brand-arrow">▼</span>
+      </button>
+      <div id="brand-dropdown" style="
+        display:none;position:absolute;top:calc(100% + 4px);left:0;
+        background:white;border:1px solid var(--border-light);border-radius:var(--radius-lg);
+        box-shadow:var(--shadow-lg);z-index:100;min-width:160px;overflow:hidden;
+      ">
+        ${Object.entries(BRANDS).map(([key, b]) => `
+          <div class="brand-option" data-brand="${key}" style="
+            display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:12px;
+            font-weight:${key === currentBrand ? '700' : '500'};cursor:pointer;
+            color:${key === currentBrand ? b.color : 'var(--text-primary)'};
+            background:${key === currentBrand ? b.color + '10' : 'transparent'};
+            transition:background 0.15s;
+          " onmouseover="this.style.background='${b.color}10'" onmouseout="this.style.background='${key === currentBrand ? b.color + '10' : 'transparent'}'">
+            <span style="width:8px;height:8px;border-radius:50%;background:${b.color}"></span>
+            ${b.name}
+            ${key === currentBrand ? '<span style="margin-left:auto;font-size:10px">✓</span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+// ── 페이지 렌더링 ──
+const content = document.getElementById('content');
+content.innerHTML = `
+  <!-- 상단: 월 업무 현황 -->
+  <div class="page-header" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:16px">
+      ${buildBrandSelector()}
+      <div>
+        <h1 class="page-header__title">${monthLabel} 업무 현황</h1>
+        <p class="page-header__subtitle">기준일시 ${now.toLocaleDateString('ko-KR')} ${now.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'})}</p>
+      </div>
+    </div>
+    <div class="page-header__date">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
+  </div>
+`;
 
 // ── 캘린더 생성 ──
 function buildCalendar(year, month) {
@@ -111,18 +179,7 @@ function buildGauge(rate, label) {
     </div>`;
 }
 
-// ── 페이지 렌더링 ──
-const content = document.getElementById('content');
-content.innerHTML = `
-  <!-- 상단: 월 업무 현황 -->
-  <div class="page-header" style="margin-bottom:16px">
-    <div>
-      <h1 class="page-header__title">${monthLabel} 업무 현황</h1>
-      <p class="page-header__subtitle">기준일시 ${now.toLocaleDateString('ko-KR')} ${now.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'})}</p>
-    </div>
-    <div class="page-header__date">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
-  </div>
-
+content.innerHTML += `
   <!-- 업무 현황 3열 카드 -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:24px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border-light);box-shadow:var(--shadow-sm)">
     <!-- 회원 -->
@@ -341,3 +398,35 @@ function renderCalendar() {
   });
 }
 renderCalendar();
+
+// ── 브랜드 셀렉터 이벤트 (admin 전용) ──
+if (isAdmin) {
+  const selectorBtn = document.getElementById('brand-selector-btn');
+  const dropdown = document.getElementById('brand-dropdown');
+  const arrow = document.getElementById('brand-arrow');
+
+  if (selectorBtn && dropdown) {
+    // 토글
+    selectorBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdown.style.display === 'block';
+      dropdown.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
+    // 옵션 선택
+    document.querySelectorAll('.brand-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const brand = opt.dataset.brand;
+        localStorage.setItem('purples_dashboard_brand', brand);
+        window.location.reload();
+      });
+    });
+
+    // 외부 클릭 시 닫기
+    document.addEventListener('click', () => {
+      dropdown.style.display = 'none';
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+    });
+  }
+}

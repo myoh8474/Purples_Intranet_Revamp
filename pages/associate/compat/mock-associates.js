@@ -1,4 +1,5 @@
-/* compat/mock-associates.js — MockAssociates를 전역 노출 */
+/* compat/mock-associates.js — MockAssociates를 전역 노출
+   Supabase / Mock 자동 전환 지원 */
 var BRANCH_LIST = ['본사','경기','부산','대구','대전','광주'];
 var BRANDS = ['퍼플스','디노블','르매리'];
 var CHANNELS = [
@@ -33,39 +34,101 @@ function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randomPhone() { return '010' + String(Math.floor(Math.random()*90000000)+10000000); }
 
 var MockAssociates = [];
-for (var i = 0; i < 25; i++) {
-  var gender = Math.random() > 0.45 ? '여' : '남';
-  var names = gender === '남' ? NAMES_M : NAMES_F;
-  var birth = randomDate(new Date(1985,0,1), new Date(2000,11,31));
-  var regDate = randomDate(new Date(2025,6,1), new Date(2026,3,15));
-  var distDate = new Date(regDate.getTime() + Math.random() * 3 * 86400000);
-  var lastContact = new Date(distDate.getTime() + Math.random() * 30 * 86400000);
-  var region = randomPick(REGIONS);
-  MockAssociates.push({
-    id: i + 1,
-    name: randomPick(names),
-    phone: randomPhone(),
-    gender: gender,
-    birthDate: birth.toISOString(),
-    age: Formatters.age(birth.toISOString()),
-    education: randomPick(EDUCATIONS),
-    school: randomPick(['서울대','연세대','고려대','성균관대','한양대','경희대','중앙대','건국대','이화여대','숙명여대']),
-    job: randomPick(JOBS),
-    company: randomPick(['삼성전자','LG전자','현대자동차','SK하이닉스','네이버','카카오','쿠팡','배민','토스','당근']),
-    region: region,
-    branch: regionToBranch(region),
-    brand: randomPick(BRANDS),
-    maritalStatus: Math.random() > 0.15 ? '초혼' : '재혼',
-    status: randomPick(ASSOC_STATUSES.slice(0, 8)),
-    channel: randomPick(CHANNELS),
-    consultant: randomPick(CONSULTANTS),
-    registeredAt: regDate.toISOString(),
-    distributedAt: distDate.toISOString(),
-    lastContactAt: lastContact.toISOString(),
-    duplicateEntries: [],
-    contactHistory: [
-      { date: lastContact.toISOString(), type: '통화', content: '초기 상담 진행. 관심도 높음.', result: '상담중' },
-    ],
-    sales: [],
+var _mockDataReady = false;
+
+/**
+ * Supabase에서 데이터 로드 (비 ES 모듈용)
+ */
+function _loadFromSupabase() {
+  var SUPABASE_URL = 'https://zjqeveciussillyvzyzz.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqcWV2ZWNpdXNzaWxseXZ6eXp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTYyNjQsImV4cCI6MjA5NDY5MjI2NH0.HnCHN6Z0YfsLOUTm7gHhr3wVaieYImm3sfab6jMepM0';
+
+  return fetch(SUPABASE_URL + '/rest/v1/associates?select=*&order=registered_at.desc', {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+    }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    MockAssociates.length = 0;
+    data.forEach(function(row) {
+      MockAssociates.push({
+        id: row.id,
+        name: row.name,
+        phone: row.phone,
+        gender: row.gender,
+        birthDate: row.birth_date,
+        age: row.birth_date ? Formatters.age(row.birth_date) : '',
+        education: row.education,
+        school: row.school,
+        job: row.job,
+        company: row.company,
+        region: row.region,
+        branch: row.branch,
+        brand: row.brand,
+        maritalStatus: row.marital_status,
+        status: row.status,
+        channel: row.channel,
+        consultant: row.consultant,
+        registeredAt: row.registered_at,
+        distributedAt: row.distributed_at,
+        lastContactAt: row.last_contact_at,
+        memo: row.memo,
+        duplicateEntries: [],
+        contactHistory: [],
+        sales: [],
+      });
+    });
+    _mockDataReady = true;
+    console.log('[compat] Supabase에서 준회원 ' + data.length + '건 로드 완료');
+  })
+  .catch(function(err) {
+    console.error('[compat] Supabase 로드 실패, MockData 사용:', err);
+    _generateMockData();
   });
+}
+
+/**
+ * Mock 데이터 생성 (기존 로직)
+ */
+function _generateMockData() {
+  MockAssociates.length = 0;
+  for (var i = 0; i < 25; i++) {
+    var gender = Math.random() > 0.45 ? '여' : '남';
+    var names = gender === '남' ? NAMES_M : NAMES_F;
+    var birth = randomDate(new Date(1985,0,1), new Date(2000,11,31));
+    var regDate = randomDate(new Date(2025,6,1), new Date(2026,3,15));
+    var distDate = new Date(regDate.getTime() + Math.random() * 3 * 86400000);
+    var lastContact = new Date(distDate.getTime() + Math.random() * 30 * 86400000);
+    var region = randomPick(REGIONS);
+    MockAssociates.push({
+      id: i + 1,
+      name: randomPick(names),
+      phone: randomPhone(),
+      gender: gender,
+      birthDate: birth.toISOString(),
+      age: Formatters.age(birth.toISOString()),
+      education: randomPick(EDUCATIONS),
+      school: randomPick(['서울대','연세대','고려대','성균관대','한양대','경희대','중앙대','건국대','이화여대','숙명여대']),
+      job: randomPick(JOBS),
+      company: randomPick(['삼성전자','LG전자','현대자동차','SK하이닉스','네이버','카카오','쿠팡','배민','토스','당근']),
+      region: region,
+      branch: regionToBranch(region),
+      brand: randomPick(BRANDS),
+      maritalStatus: Math.random() > 0.15 ? '초혼' : '재혼',
+      status: randomPick(ASSOC_STATUSES.slice(0, 8)),
+      channel: randomPick(CHANNELS),
+      consultant: randomPick(CONSULTANTS),
+      registeredAt: regDate.toISOString(),
+      distributedAt: distDate.toISOString(),
+      lastContactAt: lastContact.toISOString(),
+      duplicateEntries: [],
+      contactHistory: [
+        { date: lastContact.toISOString(), type: '통화', content: '초기 상담 진행. 관심도 높음.', result: '상담중' },
+      ],
+      sales: [],
+    });
+  }
+  _mockDataReady = true;
 }

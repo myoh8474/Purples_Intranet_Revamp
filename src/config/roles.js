@@ -7,6 +7,7 @@ export const ROLES = {
   DIRECTOR: 'director',     // 본부장 — 통계/인사 포함
   MANAGER: 'manager',       // 매니저 — 회원관리 중심
   CONSULTANT: 'consultant', // 컨설턴트 — 본인 담당 회원만
+  LEGAL: 'legal',           // 법무팀 — 성혼/소송 전담
   VIEWER: 'viewer',         // 열람자 — 읽기 전용
 };
 
@@ -33,6 +34,8 @@ export const ROLE_PERMISSIONS = {
     'perf-ranking', 'perf-weekly-visit', 'perf-contact-stats', 'perf-matching-meeting',
     'hr-performance', 'hr-salary', 'hr-evaluation', 'hr-attendance',
     'user-permission',
+    // 성혼 관리
+    'marriage-list', 'marriage-detail',
   ],
   manager: [
     'dashboard',
@@ -52,6 +55,12 @@ export const ROLE_PERMISSIONS = {
     'regular-list', 'regular-detail',
     'matching-search',
     'meeting-calendar', 'meeting-schedule',
+  ],
+  legal: [
+    'dashboard',
+    'marriage-list', 'marriage-detail',
+    'regular-list', 'regular-detail',
+    'contract-billing',
   ],
   viewer: ['dashboard'],
 };

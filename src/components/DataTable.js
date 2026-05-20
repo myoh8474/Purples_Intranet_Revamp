@@ -82,7 +82,7 @@ export const DataTable = {
           }
 
           columns.forEach(col => {
-            const value = col.render ? col.render(row[col.key], row) : (row[col.key] ?? '-');
+            const value = col.render ? col.render(row[col.key], row, start + idx) : (row[col.key] ?? '-');
             html += `<td>${value}</td>`;
           });
           html += '</tr>';

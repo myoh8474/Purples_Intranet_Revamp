@@ -92,7 +92,7 @@ function render() {
       { key: 'lastContactAt', label: '최종컨텍', render: v => Formatters.date(v), width: '100px' },
     ],
     data: allData,
-    pageSize: 15,
+    pageSize: 20,
     checkbox: true,
     onRowClick: r => { window.open(`detail.html?id=${r.id}`, '_blank'); },
   });

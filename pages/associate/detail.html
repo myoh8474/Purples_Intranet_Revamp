@@ -61,7 +61,7 @@
     .info-table td { padding: 6px 10px; border: 1px solid var(--border-light); vertical-align: middle; }
     .info-table .label {
       background: var(--bg-secondary);
-      font-weight: 600;
+      font-weight: 700;
       white-space: nowrap;
       color: var(--text-secondary);
       text-align: center;
@@ -173,8 +173,7 @@
   <script>
     // URL 파라미터에서 회원 ID 가져오기
     const params = new URLSearchParams(window.location.search);
-    const memberId = parseInt(params.get('id'));
-    const member = MockAssociates.find(m => m.id === memberId);
+    const memberId = params.get('id');
 
     // 미팅상담 데이터
     var meetingList = [];
@@ -191,19 +190,86 @@
     var selectedProgram = '골드(사파이어)';
     var selectedGrade = '';
     var regIdCheckPassed = false;
+    var member = null;
 
+    // Supabase에서 직접 해당 회원 1건 조회
+    function fetchMemberFromSupabase(id) {
+      var SUPABASE_URL = 'https://zjqeveciussillyvzyzz.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqcWV2ZWNpdXNzaWxseXZ6eXp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTYyNjQsImV4cCI6MjA5NDY5MjI2NH0.HnCHN6Z0YfsLOUTm7gHhr3wVaieYImm3sfab6jMepM0';
 
-    if (!member) {
-      document.getElementById('detail-content').innerHTML = `
-        <div class="empty-state" style="padding:60px">
-          <div style="font-size:24px;margin-bottom:12px">⚠️</div>
-          <div style="font-size:16px;font-weight:600">회원을 찾을 수 없습니다.</div>
-          <p style="margin-top:8px">ID: ${memberId || '없음'}</p>
-        </div>
-      `;
+      return fetch(SUPABASE_URL + '/rest/v1/associates?id=eq.' + id + '&select=*', {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+        }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.length > 0) {
+          var row = data[0];
+          return {
+            id: row.id,
+            name: row.name,
+            phone: row.phone,
+            gender: row.gender,
+            birthDate: row.birth_date,
+            age: row.birth_date ? Formatters.age(row.birth_date) : '',
+            education: row.education,
+            school: row.school,
+            job: row.job,
+            company: row.company,
+            region: row.region,
+            branch: row.branch,
+            brand: row.brand,
+            maritalStatus: row.marital_status,
+            status: row.status,
+            channel: row.channel,
+            consultant: row.consultant,
+            registeredAt: row.registered_at,
+            distributedAt: row.distributed_at,
+            lastContactAt: row.last_contact_at,
+            memo: row.memo,
+            duplicateEntries: [],
+            contactHistory: [],
+            sales: [],
+          };
+        }
+        return null;
+      });
+    }
+
+    // 페이지 초기화
+    function initPage(m) {
+      member = m;
+      if (!member) {
+        document.getElementById('detail-content').innerHTML =
+          '<div class="empty-state" style="padding:60px">' +
+            '<div style="font-size:24px;margin-bottom:12px">⚠️</div>' +
+            '<div style="font-size:16px;font-weight:600">회원을 찾을 수 없습니다.</div>' +
+            '<p style="margin-top:8px">ID: ' + (memberId || '없음') + '</p>' +
+          '</div>';
+      } else {
+        document.title = '준회원 상세 - ' + member.name + ' | 퍼플스 인트라넷';
+        setTimeout(function(){ renderDetail(member); }, 0);
+      }
+    }
+
+    // UUID 형식이면 Supabase 조회, 아니면 Mock에서 찾기
+    var isUUID = memberId && memberId.length > 10 && memberId.indexOf('-') > -1;
+    if (isUUID) {
+      fetchMemberFromSupabase(memberId).then(function(m) {
+        initPage(m);
+      }).catch(function(err) {
+        console.error('Supabase 조회 실패:', err);
+        // Mock에서 폴백
+        var found = MockAssociates.find(function(x) { return String(x.id) === memberId; });
+        initPage(found || null);
+      });
     } else {
-      document.title = `준회원 상세 - ${member.name} | 퍼플스 인트라넷`;
-      setTimeout(function(){ renderDetail(member); }, 0);
+      // 기존 숫자 ID Mock 호환
+      var numId = parseInt(memberId);
+      var found = MockAssociates.find(function(x) { return x.id === numId; });
+      initPage(found || null);
     }
 
     /* ── 모달 유틸 ── */
@@ -1193,6 +1259,35 @@
           statusUpdates[member.id] = { status: '방문상담', updatedAt: new Date().toISOString() };
           localStorage.setItem('purples_status_updates', JSON.stringify(statusUpdates));
         } catch(e) {}
+
+        // ── 방문상담 관리(visit.html) 데이터 연동 ──
+        try {
+          var visitData = JSON.parse(localStorage.getItem('purples_visit_data') || '[]');
+          // 새 방문상담 ID: 기존 최대 ID + 1
+          var maxVisitId = visitData.reduce(function(max, v) { return v.id > max ? v.id : max; }, 0);
+          // 날짜·시간 파싱 (datetime-local: "2026-05-20T14:30")
+          var parsedDate = new Date(dateVal);
+          var visitHours = String(parsedDate.getHours()).padStart(2, '0');
+          var visitMins = String(parsedDate.getMinutes()).padStart(2, '0');
+          var visitTimeStr = visitHours + ':' + visitMins;
+
+          visitData.unshift({
+            id: maxVisitId + 1,
+            branch: member.branch || '본사',
+            consultant: member.consultant || '',
+            memberName: member.name,
+            memberId: member.id,
+            date: parsedDate.toISOString(),
+            time: visitTimeStr,
+            visitStatus: '방문예정',
+            content: '미팅예약 등록 (준회원 상세에서 등록)',
+            result: '',
+            resultNote: '',
+            amount: 0
+          });
+          localStorage.setItem('purples_visit_data', JSON.stringify(visitData));
+        } catch(e2) { console.error('방문상담 데이터 연동 실패:', e2); }
+
         // 상태 뱃지 UI 업데이트
         var statusCells = document.querySelectorAll('.info-table td');
         statusCells.forEach(function(td) {
@@ -1280,6 +1375,27 @@
       }
 
       renderMeetingList();
+
+      // ── 방문상담 관리(visit.html) 결과 동기화 ──
+      try {
+        var visitData = JSON.parse(localStorage.getItem('purples_visit_data') || '[]');
+        // 해당 회원의 가장 최근 미결과 방문상담 찾기
+        var meetingDateStr = meetingList[idx].meetingDate;
+        for (var vi = 0; vi < visitData.length; vi++) {
+          if (visitData[vi].memberId === member.id && !visitData[vi].result) {
+            // 결과 매핑: 미팅취소→취소, 가입보류→보류, 가입중→가입
+            var resultMap = { '미팅취소': '취소', '가입보류': '보류', '가입중': '가입' };
+            visitData[vi].result = resultMap[sel] || '기타';
+            visitData[vi].resultNote = detail || sel;
+            if (sel === '가입중') {
+              visitData[vi].amount = [2000000, 3000000, 5000000][Math.floor(Math.random() * 3)];
+            }
+            break;
+          }
+        }
+        localStorage.setItem('purples_visit_data', JSON.stringify(visitData));
+      } catch(e3) { console.error('방문상담 결과 동기화 실패:', e3); }
+
       Toast.show('방문상담 결과가 저장되었습니다. 상태: "' + (newStatus || member.status) + '"', 'success');
       closeModal();
     }

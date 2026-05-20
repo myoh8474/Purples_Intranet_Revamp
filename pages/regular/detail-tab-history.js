@@ -8,7 +8,7 @@ import { HISTORY_CATEGORIES, getHistory, addHistory, deleteHistory, seedHistoryF
 /**
  * 히스토리 탭 렌더링 (초기 HTML)
  */
-export function renderHistoryTab(m) {
+export async function renderHistoryTab(m) {
   // 최초 진입 시 Mock → 히스토리 시딩
   seedHistoryFromMember(m);
 
@@ -53,7 +53,7 @@ export function renderHistoryTab(m) {
 
     <!-- 타임라인 목록 -->
     <div id="hist-timeline-wrap">
-      ${renderTimeline(m.id, {})}
+      ${await renderTimeline(m.id, {})}
     </div>
   `;
 }
@@ -61,8 +61,8 @@ export function renderHistoryTab(m) {
 /**
  * 타임라인 렌더링 (필터 적용)
  */
-function renderTimeline(memberId, filters) {
-  const list = getHistory(memberId, filters);
+async function renderTimeline(memberId, filters) {
+  const list = await getHistory(memberId, filters);
 
   if (list.length === 0) {
     return `
@@ -165,13 +165,13 @@ export function initHistoryEvents(memberId) {
   const wrap = document.getElementById('hist-timeline-wrap');
   if (!wrap) return;
 
-  function refreshTimeline() {
+  async function refreshTimeline() {
     const category = document.querySelector('.hist-cat-btn.active-cat')?.dataset.category || '전체';
     const startDate = document.getElementById('hist-start-date')?.value || '';
     const endDate = document.getElementById('hist-end-date')?.value || '';
     const keyword = document.getElementById('hist-keyword')?.value || '';
 
-    wrap.innerHTML = renderTimeline(memberId, {
+    wrap.innerHTML = await renderTimeline(memberId, {
       category: category !== '전체' ? category : null,
       startDate,
       endDate,
@@ -250,8 +250,8 @@ export function initHistoryEvents(memberId) {
   // 내보내기
   const exportBtn = document.getElementById('btn-export-history');
   if (exportBtn) {
-    exportBtn.addEventListener('click', function () {
-      const list = getHistory(memberId);
+    exportBtn.addEventListener('click', async function () {
+      const list = await getHistory(memberId);
       const csv = [
         '날짜,카테고리,내용,상세,담당자',
         ...list.map(h =>

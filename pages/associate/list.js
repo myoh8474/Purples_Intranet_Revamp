@@ -75,6 +75,7 @@ ${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-ite
 
   table=DataTable.render('tbl',{
     columns:[
+      {key:'_no',label:'No.',width:'45px',render:(v,r,i)=>i+1},
       {key:'name',label:'이름',render:(v,r)=>`<a href="detail.html?id=${r.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none" onclick="event.stopPropagation()">${v}</a>`},
       {key:'phone',label:'연락처',render:v=>Formatters.phone(v)},
       {key:'gender',label:'성별',width:'50px'},
@@ -88,7 +89,7 @@ ${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-ite
       {key:'registeredAt',label:'등록일',render:v=>Formatters.date(v),width:'100px'},
       {key:'lastContactAt',label:'최종컨텍',render:v=>Formatters.date(v),width:'100px'},
     ],
-    data:initData, pageSize:15, checkbox:true,
+    data:initData, pageSize:20, checkbox:true,
     onRowClick:r=>{ window.open(`detail.html?id=${r.id}`, '_blank'); },
   });
 

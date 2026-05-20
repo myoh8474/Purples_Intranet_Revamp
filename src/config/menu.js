@@ -67,6 +67,8 @@ export function getMenuItems(basePath = '/') {
         { id: 'cert-register', text: '서류인증 등록', href: `${basePath}pages/management/cert-register.html` },
         { type: 'group', text: '특별회원 관리' },
         { id: 'regular-trinity', text: '트리니티 관리', href: `${basePath}pages/regular/trinity.html` },
+        { type: 'group', text: '성혼관리' },
+        { id: 'marriage-list', text: '성혼 현황', href: `${basePath}pages/marriage/list.html` },
       ],
     },
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase 연결 테스트</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Pretendard', sans-serif; background: #0f172a; color: #e2e8f0; padding: 40px; }
+    h1 { color: #38bdf8; margin-bottom: 24px; }
+    .card { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #334155; }
+    .card h2 { color: #94a3b8; font-size: 14px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .status.ok { background: #064e3b; color: #34d399; }
+    .status.err { background: #7f1d1d; color: #fca5a5; }
+    .status.loading { background: #1e3a5f; color: #93c5fd; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #334155; font-size: 13px; }
+    th { color: #94a3b8; }
+    pre { background: #0f172a; padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; max-height: 200px; }
+    #log { margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <h1>🔌 Supabase 연결 테스트</h1>
+
+  <div class="card">
+    <h2>1. 연결 상태</h2>
+    <p>URL: <code id="url">-</code></p>
+    <p>상태: <span id="conn-status" class="status loading">확인 중...</span></p>
+  </div>
+
+  <div class="card">
+    <h2>2. 준회원 데이터 (associates)</h2>
+    <p>건수: <span id="assoc-count">-</span></p>
+    <table id="assoc-table"><thead><tr><th>이름</th><th>전화</th><th>지사</th><th>상태</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>3. 정회원 데이터 (regulars)</h2>
+    <p>건수: <span id="reg-count">-</span></p>
+    <table id="reg-table"><thead><tr><th>전산ID</th><th>이름</th><th>브랜드</th><th>프로그램</th><th>상태</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>4. 히스토리 데이터 (member_history)</h2>
+    <p>건수: <span id="hist-count">-</span></p>
+  </div>
+
+  <div class="card" id="log">
+    <h2>콘솔 로그</h2>
+    <pre id="log-output"></pre>
+  </div>
+
+  <script type="module">
+    import { supabase } from '/src/services/supabase.js';
+
+    const log = (msg) => {
+      const el = document.getElementById('log-output');
+      el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+    };
+
+    async function test() {
+      // URL 표시
+      document.getElementById('url').textContent = import.meta.env.VITE_SUPABASE_URL || '(미설정)';
+      log('Supabase 연결 테스트 시작...');
+
+      try {
+        // 1. 준회원
+        const { data: assocs, error: e1 } = await supabase.from('associates').select('*');
+        if (e1) throw new Error('associates 조회 실패: ' + e1.message);
+        document.getElementById('assoc-count').textContent = assocs.length + '건';
+        const tbody1 = document.querySelector('#assoc-table tbody');
+        assocs.forEach(r => {
+          tbody1.innerHTML += `<tr><td>${r.name}</td><td>${r.phone}</td><td>${r.branch}</td><td>${r.status}</td></tr>`;
+        });
+        log(`✅ 준회원 ${assocs.length}건 조회 성공`);
+
+        // 2. 정회원
+        const { data: regs, error: e2 } = await supabase.from('regulars').select('*');
+        if (e2) throw new Error('regulars 조회 실패: ' + e2.message);
+        document.getElementById('reg-count').textContent = regs.length + '건';
+        const tbody2 = document.querySelector('#reg-table tbody');
+        regs.forEach(r => {
+          tbody2.innerHTML += `<tr><td>${r.member_id}</td><td>${r.name}</td><td>${r.brand}</td><td>${r.program}</td><td>${r.status}</td></tr>`;
+        });
+        log(`✅ 정회원 ${regs.length}건 조회 성공`);
+
+        // 3. 히스토리
+        const { data: hist, error: e3 } = await supabase.from('member_history').select('*');
+        if (e3) throw new Error('member_history 조회 실패: ' + e3.message);
+        document.getElementById('hist-count').textContent = hist.length + '건';
+        log(`✅ 히스토리 ${hist.length}건 조회 성공`);
+
+        // 연결 성공
+        const el = document.getElementById('conn-status');
+        el.textContent = '연결 성공 ✓';
+        el.className = 'status ok';
+        log('🎉 Supabase 연결 테스트 완료! 모든 테이블 정상 작동.');
+
+      } catch (err) {
+        const el = document.getElementById('conn-status');
+        el.textContent = '연결 실패 ✗';
+        el.className = 'status err';
+        log(`❌ 에러: ${err.message}`);
+        console.error(err);
+      }
+    }
+
+    test();
+  </script>
+</body>
+</html>

@@ -13,6 +13,7 @@ import { renderMatchingInfo } from './detail-tab-matching.js';
 import { renderMeetingTab } from './detail-tab-meeting.js';
 import { renderHistoryTab, initHistoryEvents } from './detail-tab-history.js';
 import { addHistory, HISTORY_CATEGORIES } from '@services/history.js';
+import { supabase } from '@services/supabase.js';
 
 // Toast를 전역에 노출 (히스토리 탭에서 참조)
 window.__Toast = Toast;
@@ -21,8 +22,138 @@ initLayout({ pageId: 'regular-detail', breadcrumbs: ['정회원 관리', '정회
 
 var content = document.getElementById('content');
 var params = new URLSearchParams(window.location.search);
-var memberId = parseInt(params.get('id')) || 1;
-var m = MockRegulars.find(function(r) { return r.id === memberId; }) || MockRegulars[0];
+var rawId = params.get('id');
+
+// UUID 판별
+var isUUID = rawId && rawId.length > 10 && rawId.indexOf('-') > -1;
+
+async function loadMember() {
+  try {
+    if (isUUID) {
+      // Supabase에서 직접 조회
+      const { data, error } = await supabase
+        .from('regulars')
+        .select('*')
+        .eq('id', rawId)
+        .single();
+
+      if (!error && data) {
+        // snake_case → camelCase 변환
+        const prefs = typeof data.preferences === 'string' ? JSON.parse(data.preferences || '{}') : (data.preferences || {});
+        return {
+          id: data.id,
+          memberId: data.member_id,
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          gender: data.gender,
+          birthDate: data.birth_date,
+          age: data.birth_date ? Formatters.age(data.birth_date) : '',
+          brand: data.brand,
+          branch: data.branch,
+          education: data.education,
+          school: data.school,
+          job: data.job,
+          company: data.company,
+          region: data.region,
+          religion: data.religion,
+          height: data.height,
+          weight: data.weight,
+          maritalHistory: data.marital_history,
+          income: data.income,
+          bloodType: data.blood_type,
+          smoking: data.smoking,
+          drinking: data.drinking,
+          position: data.position,
+          childCare: data.child_care,
+          hometown: data.hometown,
+          overseas: data.overseas,
+          residenceFlexible: data.residence_flexible,
+          jobFlexible: data.job_flexible,
+          familyWealth: data.family_wealth,
+          personalWealth: data.personal_wealth,
+          realEstate: data.real_estate,
+          vehicle: data.vehicle,
+          program: data.program,
+          contractType: data.contract_type,
+          contractCount: data.contract_count,
+          esignComplete: data.esign_complete,
+          programFee: data.program_fee,
+          marriageFee: data.marriage_fee,
+          rejoinCount: data.rejoin_count,
+          rejoinFee: data.rejoin_fee,
+          status: data.status,
+          consultantManager: data.consultant_manager,
+          matchingManager: data.matching_manager,
+          meetingCount: data.meeting_count,
+          lastMeetingDate: data.last_meeting_date,
+          lastContactDate: data.last_contact_date,
+          joinDate: data.join_date,
+          expiryDate: data.expiry_date,
+          expiryStatus: data.expiry_status,
+          docReauth: data.doc_reauth,
+          marriageConfirm: data.marriage_confirm,
+          difficultMatch: data.difficult_match,
+          totalContractAmount: data.total_contract_amount,
+          paidAmount: data.paid_amount,
+          balance: data.balance,
+          unpaidReason: data.unpaid_reason,
+          matchComment: data.match_comment,
+          consultComment: data.consult_comment,
+          selfAppeal: data.self_appeal,
+          preferAge: prefs.preferAge || '-',
+          preferHeight: prefs.preferHeight || '-',
+          preferEdu: prefs.preferEdu || '-',
+          preferReligion: prefs.preferReligion || '-',
+          preferJob: prefs.preferJob || '-',
+          preferRegion: prefs.preferRegion || '-',
+          preferMarital: prefs.preferMarital || '-',
+          preferEtc: prefs.preferEtc || '',
+          introProfile: '',
+          statusHistory: [],
+          payments: [],
+          contactLogs: [],
+          matchHistory: [],
+          photo: [],
+        };
+      } else {
+        console.error('[Regular Detail] Supabase 조회 오류:', error);
+      }
+    }
+  } catch (e) {
+    console.error('[Regular Detail] loadMember 오류:', e);
+  }
+  // Mock 폴백
+  var numId = parseInt(rawId) || 1;
+  return MockRegulars.find(function(r) { return r.id === numId || String(r.id) === rawId; }) || MockRegulars[0] || { name: '데이터 없음', memberId: '-', status: '-', brand: '-', program: '-', photo: [] };
+}
+
+var m = await loadMember();
+console.log('[Regular Detail] 로드된 회원:', m?.name);
+
+// ── 소송중 블라인드 처리 (법무팀/admin 제외) ──
+const currentUserRole = localStorage.getItem('purples_user_role') || 'admin';
+const LEGAL_SAFE_ROLES = ['admin', 'legal', 'director'];
+if (m.marriageConfirm === '소송중' && !LEGAL_SAFE_ROLES.includes(currentUserRole)) {
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+      <div style="background:#fff;border:2px solid #dc2626;border-radius:16px;padding:48px;text-align:center;max-width:480px;box-shadow:0 8px 32px rgba(220,38,38,.15)">
+        <div style="font-size:48px;margin-bottom:16px">🔒</div>
+        <div style="font-size:20px;font-weight:800;color:#dc2626;margin-bottom:12px">법무팀 전담 응대 회원</div>
+        <div style="font-size:14px;color:#991b1b;line-height:1.8;margin-bottom:24px">
+          해당 회원은 현재 <strong>법무팀 전담 관리</strong> 상태입니다.<br>
+          <strong>연락 및 결제 진행을 즉시 중단</strong>하시고,<br>
+          법무팀에 문의해 주세요.
+        </div>
+        <div style="background:#fef2f2;border-radius:8px;padding:12px;font-size:12px;color:#b91c1c;margin-bottom:24px">
+          ⚠️ 무단 응대 시 사규에 따라 조치될 수 있습니다.
+        </div>
+        <button class="btn btn--primary" onclick="history.back()" style="background:#dc2626;border-color:#dc2626">← 목록으로 돌아가기</button>
+      </div>
+    </div>
+  `;
+  throw new Error('LEGAL_BLOCK');
+}
 
 // 프로필 사진
 var photos = Array.isArray(m.photo) ? m.photo : (m.photo ? [m.photo] : []);
@@ -46,6 +177,9 @@ if (m.expiryDate) {
   }
 }
 
+// 히스토리 HTML 미리 로드 (async)
+var historyHtml = await renderHistoryTab(m);
+
 // 전체 HTML
 content.innerHTML = ''
   // ── 헤더: 사진 + 이름/ID + 뱃지 + 버튼 ──
@@ -60,6 +194,7 @@ content.innerHTML = ''
   + '        <div>'
   + '          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
   + '            <h2 style="font-size:var(--font-size-lg);font-weight:700;margin:0">' + m.name + '</h2>'
+  + (m.status === '활동' && m.marriageConfirm !== '소송중' ? '            <span style="color:#ef4444;font-size:11px;font-weight:700;border:1px solid #ef4444;padding:1px 6px;border-radius:4px">● 미팅중</span>' : '')
   + '            <span style="color:var(--text-muted);font-size:var(--font-size-sm)">' + m.memberId + '</span>'
   + '          </div>'
   + '          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
@@ -125,7 +260,7 @@ content.innerHTML = ''
   + '      </div>'
   + '    </div>'
   + '    <div id="history-body" style="padding:10px 16px;max-height:500px;overflow-y:auto">'
-  + renderHistoryTab(m)
+  + historyHtml
   + '    </div>'
   + '  </div>'
   + '</div>'
@@ -593,8 +728,10 @@ document.addEventListener('click', function(ev) {
         // 히스토리 영역 전체 리렌더링
         var histBody = document.getElementById('history-body');
         if (histBody) {
-          histBody.innerHTML = renderHistoryTab(m);
-          initHistoryEvents(m.id);
+          renderHistoryTab(m).then(function(html) {
+            histBody.innerHTML = html;
+            initHistoryEvents(m.id);
+          });
         }
       });
     }, 100);

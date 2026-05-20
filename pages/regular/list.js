@@ -7,7 +7,7 @@ import { Formatters } from '@utils/formatters.js';
 import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { MockRegulars, BRANDS, MATCH_MANAGERS, REGIONS, BRANCHES, CONSULTANTS } from '@mock/regulars.js';
-import { REGULAR_STATUSES, PROGRAMS_FLAT, MARRIAGE_CONFIRM_STATUSES } from '@config/constants.js';
+import { REGULAR_STATUSES, PROGRAMS_FLAT } from '@config/constants.js';
 
 initLayout({ pageId: 'regular-list', breadcrumbs: ['정회원 관리', '정회원 목록'] });
 
@@ -20,10 +20,27 @@ const RELIGION_OPTIONS = ['무교','기독교','천주교','불교','기타'];
 const WEALTH_OPTIONS = ['10억미만','10~20억','20~30억','30~50억','50~100억','100~200억','200~300억','300~500억','500억이상'];
 const OVERSEAS_OPTIONS = ['없음','시민권자','영주권자'];
 const REJOIN_OPTIONS = [1,2,3,4,5,6];
-const JOB_OPTIONS = ['회사원','공무원','전문직','자영업','프리랜서','교육직','의료직','금융직','IT/개발','연구직','법조인','회계사','대기업','공기업','사업가','방송인','예체능','간호사','약사','교수','공군','기타','직업상관없음'];
+const JOB_TREE = {
+  '전문직': ['의사','치과의사','한의사','약사','변호사','판검사','회계사','세무사','변리사','법무사','감정평가사','관세사','노무사','건축사','수의사'],
+  '의료직': ['간호사','물리치료사','방사선사','임상병리사','치위생사','작업치료사','의료기사'],
+  '교육직': ['교수','교사','강사','학원장','유치원교사','특수교육교사'],
+  '금융직': ['은행원','증권사','보험사','자산운용','펀드매니저','애널리스트','보험설계사'],
+  '공무원': ['일반행정','경찰','소방','군인','외교관','검찰','교정','세관','우정'],
+  '대기업': ['삼성','LG','현대','SK','롯데','포스코','한화','GS','CJ','두산','KT','네이버','카카오'],
+  '공기업': ['한전','가스공사','수자원공사','도로공사','철도공사','토지공사','인천공항'],
+  'IT/개발': ['SW개발','프론트엔드','백엔드','데이터분석','AI/ML','보안','DBA','PM/PO','UX/UI'],
+  '자영업': ['자영업','프랜차이즈','온라인쇼핑몰','요식업','카페','병원경영','학원경영'],
+  '사업가': ['대표이사','이사','법인대표','스타트업','투자'],
+  '방송/예체능': ['방송인','배우','모델','음악가','체육인','무용가','디자이너','사진작가'],
+  '연구직': ['연구원','박사후연구원','국책연구소','기업연구소'],
+  '일반사무': ['회사원','사무직','경리','인사','영업','마케팅','무역','비서','총무'],
+  '기타': ['프리랜서','주부','무직','기타'],
+};
+const JOB_OPTIONS = Object.values(JOB_TREE).flat();
+const JOB_CATEGORIES = Object.keys(JOB_TREE);
 
 function selectHtml(id, label, options, w) {
-  return `<select class="form-select form-input--sm" id="${id}" style="width:auto;font-size:11px">
+  return `<select class="form-select form-input--sm" id="${id}" style="width:auto;font-size:12px">
       <option value="">${label} 전체</option>
       ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
     </select>`;
@@ -31,11 +48,27 @@ function selectHtml(id, label, options, w) {
 
 function multiSelectHtml(id, label, options) {
   return `<div class="multi-select" id="${id}-wrap" style="position:relative">
-    <button type="button" class="form-select form-input--sm" id="${id}-btn" style="width:auto;font-size:11px;text-align:left;cursor:pointer;min-width:100px">${label} 전체</button>
-    <div class="multi-select__dropdown" id="${id}-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:240px;overflow-y:auto;min-width:160px;padding:6px 0;margin-top:2px">
-      ${options.map(o => `<label style="display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:11px;cursor:pointer;white-space:nowrap" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
+    <button type="button" class="form-select form-input--sm" id="${id}-btn" style="width:auto;font-size:12px;text-align:left;cursor:pointer;min-width:100px">${label} 전체</button>
+    <div class="multi-select__dropdown" id="${id}-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:320px;overflow-y:auto;min-width:200px;padding:6px 0;margin-top:2px">
+      ${options.map(o => `<label style="display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
         <input type="checkbox" class="${id}-chk" value="${o}" style="accent-color:var(--accent)">${o}
       </label>`).join('')}
+    </div>
+  </div>`;
+}
+
+function jobTreeSelectHtml() {
+  let inner = '';
+  for (const [cat, jobs] of Object.entries(JOB_TREE)) {
+    inner += `<div style="padding:4px 12px 2px;font-size:11px;font-weight:700;color:var(--accent);margin-top:4px;border-top:1px solid var(--border-light)">${cat}</div>`;
+    inner += jobs.map(j => `<label style="display:flex;align-items:center;gap:6px;padding:3px 12px 3px 20px;font-size:12px;cursor:pointer;white-space:nowrap" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
+      <input type="checkbox" class="rf-job-chk" value="${j}" style="accent-color:var(--accent)">${j}
+    </label>`).join('');
+  }
+  return `<div class="multi-select" id="rf-job-wrap" style="position:relative">
+    <button type="button" class="form-select form-input--sm" id="rf-job-btn" style="width:auto;font-size:12px;text-align:left;cursor:pointer;min-width:120px">직업 전체</button>
+    <div class="multi-select__dropdown" id="rf-job-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:360px;overflow-y:auto;min-width:220px;padding:6px 0;margin-top:2px">
+      ${inner}
     </div>
   </div>`;
 }
@@ -99,7 +132,7 @@ content.innerHTML = `
       <div class="filter-bar__row">
         ${selectHtml('rf-edu','학력',EDUCATION_OPTIONS)}
         ${selectHtml('rf-religion','종교',RELIGION_OPTIONS)}
-        ${multiSelectHtml('rf-job','직업',JOB_OPTIONS)}
+        ${jobTreeSelectHtml()}
         ${selectHtml('rf-overseas','해외',OVERSEAS_OPTIONS)}
       </div>
     </div>
@@ -111,7 +144,6 @@ content.innerHTML = `
         ${selectHtml('rf-program','프로그램명',PROGRAMS_FLAT)}
         ${selectHtml('rf-rejoin','재가입횟수',REJOIN_OPTIONS.map(n => n+'가입'))}
         ${selectHtml('rf-difficult','난매칭여부',['해당','미해당'])}
-        ${selectHtml('rf-marriage-confirm','성혼확인',MARRIAGE_CONFIRM_STATUSES)}
       </div>
     </div>
 
@@ -137,10 +169,11 @@ content.innerHTML = `
   <div style="font-size:12px;font-weight:600;margin:16px 0 8px;color:var(--text-secondary)" id="reg-count"></div>
 
   <div style="background:#fff;border:1px solid var(--border-light);border-radius:var(--radius-lg);overflow-x:auto">
-    <table class="data-table" style="font-size:11px;white-space:nowrap">
+    <table class="data-table" style="font-size:12px;white-space:nowrap">
       <thead>
         <tr>
           <th style="width:28px"><input type="checkbox" id="reg-check-all"></th>
+          <th style="width:45px">No.</th>
           <th>사진</th>
           <th>이름/ID</th>
           <th>성별</th>
@@ -148,18 +181,18 @@ content.innerHTML = `
           <th>브랜드</th>
           <th>상태</th>
           <th>회원종류</th>
-          <th>계약형태</th>
+          <th>가입차수</th>
           <th>지역</th>
           <th>결혼</th>
           <th>지사</th>
           <th>매칭매니저</th>
           <th>상담자</th>
           <th id="th-join" style="cursor:pointer">가입일 ▼</th>
-          <th>누적미팅</th>
+          <th>계약</th>
+          <th>미팅(횟수)</th>
           <th>최종미팅</th>
           <th>만료</th>
           <th>서류재인증</th>
-          <th>성혼확인</th>
         </tr>
       </thead>
       <tbody id="reg-tbody"></tbody>
@@ -200,6 +233,7 @@ let sortDesc = true; // 가입일 최신순
 function applyFilters(resetPage) {
   if (resetPage) currentPage = 1;
   let data = [...MockRegulars];
+  console.log('[DEBUG] 활동(미팅중) 회원:', data.filter(d => d.status === '활동').map(d => d.name + '/' + d.status));
 
   // 기본 필터
   const brand = document.getElementById('rf-brand').value;
@@ -263,10 +297,6 @@ function applyFilters(resetPage) {
   if (pWealth) data = data.filter(d => d.personalWealth === pWealth);
   if (fWealth) data = data.filter(d => d.familyWealth === fWealth);
 
-  // 성혼확인 필터
-  const marriageConfirm = document.getElementById('rf-marriage-confirm')?.value;
-  if (marriageConfirm) data = data.filter(d => d.marriageConfirm === marriageConfirm);
-
   // 가입일 정렬
   data.sort((a, b) => {
     const diff = new Date(a.joinDate) - new Date(b.joinDate);
@@ -282,7 +312,7 @@ function applyFilters(resetPage) {
   if (!tbody) return;
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center;padding:30px;color:var(--text-muted)">조건에 맞는 회원이 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;padding:30px;color:var(--text-muted)">조건에 맞는 회원이 없습니다.</td></tr>';
     document.getElementById('reg-pagination').innerHTML = '';
     return;
   }
@@ -311,28 +341,42 @@ function applyFilters(resetPage) {
     return `<div style="width:28px;height:28px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);cursor:pointer" class="photo-thumb" data-mid="${m.id}">${m.gender === '남' ? '👨' : '👩'}</div>`;
   };
 
-  tbody.innerHTML = paged.map((m, i) => `<tr data-id="${m.id}">
+  const isMeeting = (m) => m.status === '활동' && m.marriageConfirm !== '소송중';
+
+  tbody.innerHTML = paged.map((m, i) => `<tr data-id="${m.id}" class="${isMeeting(m) ? 'meeting-active' : ''}" style="${m.marriageConfirm === '소송중' ? 'background:#fef2f2' : ''}">
     <td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="reg-check" value="${m.id}"></td>
+    <td style="text-align:center">${start + i + 1}</td>
     <td style="text-align:center">${photoHtml(m)}</td>
-    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" onclick="event.stopPropagation()"><div style="font-weight:600;color:var(--accent);line-height:1.3">${m.name}</div><div style="font-size:10px;color:var(--text-muted)">${m.memberId}</div></a></td>
+    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><div style="font-weight:600;color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};line-height:1.3">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="color:#ef4444;font-size:10px;font-weight:700">● 미팅중</span>' : ''}</div><div style="font-size:11px;color:var(--text-muted)">${m.memberId}</div></a></td>
     <td style="text-align:center">${m.gender}</td>
     <td style="text-align:center">${m.age}세</td>
-    <td><span style="font-size:10px;font-weight:600;color:${m.brand==='퍼플스'?'#7c3aed':m.brand==='디노블'?'#b8860b':'#db2777'}">${m.brand}</span></td>
+    <td><span style="font-weight:600;color:${m.brand==='퍼플스'?'#7c3aed':m.brand==='디노블'?'#b8860b':'#db2777'}">${m.brand}</span></td>
     <td>${Formatters.statusBadge(m.status, 'regular')}</td>
     <td><span class="badge badge--blue">${m.program}</span></td>
-    <td style="text-align:center;font-size:10px">${m.contractType}</td>
-    <td>${m.region}</td>
-    <td>${m.maritalHistory}</td>
-    <td>${m.branch}</td>
-    <td>${m.matchingManager}</td>
-    <td>${m.consultantManager}</td>
+    <td style="text-align:center"><span class="badge badge--${(m.rejoinCount || 1) >= 2 ? 'orange' : 'gray'}" style="font-size:11px">${m.rejoinCount || 1}가입</span></td>
+    <td>${m.region || '-'}</td>
+    <td>${m.maritalHistory || '-'}</td>
+    <td>${m.branch || '-'}</td>
+    <td>${m.matchingManager || '-'}</td>
+    <td>${m.consultantManager || '-'}</td>
     <td>${Formatters.date(m.joinDate)}</td>
-    <td style="text-align:center">${m.meetingCount}회</td>
+    <td style="text-align:center;font-weight:600">${m.contractType === '기간제' ? `${m.contractCount || 12}개월` : `${m.contractCount || '-'}회`}</td>
+    <td style="text-align:center;font-weight:600;color:${(m.meetingCount || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)'}">${m.meetingCount || 0}회</td>
     <td>${m.lastMeetingDate ? Formatters.date(m.lastMeetingDate) : '-'}</td>
-    <td style="text-align:center">${m.expiryStatus === '없음' ? '-' : `<span style="color:var(--danger);font-weight:600">${m.expiryStatus}</span>`}</td>
+    <td style="text-align:center">${m.expiryStatus === '없음' || !m.expiryStatus ? '-' : `<span style="color:var(--danger);font-weight:600">${m.expiryStatus}</span>`}</td>
     <td style="text-align:center">${m.docReauth ? '<span style="color:var(--warning);font-weight:600">필요</span>' : '-'}</td>
-    <td style="text-align:center">${m.marriageConfirm === '확인전' ? '<span style="color:var(--text-muted)">확인전</span>' : `<span style="color:${m.marriageConfirm === '성혼' ? 'var(--success)' : m.marriageConfirm === '소송중' ? 'var(--danger)' : m.marriageConfirm === '외부결혼' ? 'var(--info,#3b82f6)' : 'var(--warning)'};font-weight:600">${m.marriageConfirm}</span>`}</td>
   </tr>`).join('');
+
+  // 소송중 회원 클릭 시 경고 팝업
+  tbody.querySelectorAll('.member-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      if (link.dataset.confirm === '소송중') {
+        e.preventDefault();
+        e.stopPropagation();
+        showLegalWarning(link.dataset.name);
+      }
+    });
+  });
 
   // 사진 클릭 → 모달 오버레이
   tbody.querySelectorAll('.photo-thumb').forEach(el => {
@@ -355,6 +399,60 @@ function applyFilters(resetPage) {
   pagEl.querySelectorAll('button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => { currentPage = parseInt(btn.dataset.page); applyFilters(); });
   });
+}
+
+// ── 소송중 경고 팝업 ──
+function showLegalWarning(name) {
+  const existing = document.getElementById('legal-warning-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'legal-warning-overlay';
+  Object.assign(overlay.style, {
+    position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+    background: 'rgba(0,0,0,.6)', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', zIndex: '9999',
+    opacity: '0', transition: 'opacity .2s ease',
+  });
+
+  const card = document.createElement('div');
+  Object.assign(card.style, {
+    background: '#fff', borderRadius: '16px', padding: '40px',
+    textAlign: 'center', maxWidth: '440px', width: '90%',
+    border: '2px solid #dc2626',
+    boxShadow: '0 20px 60px rgba(220,38,38,.25)',
+    transform: 'scale(.9)', transition: 'transform .2s ease',
+  });
+
+  card.innerHTML = `
+    <div style="font-size:48px;margin-bottom:12px">⛔</div>
+    <div style="font-size:18px;font-weight:800;color:#dc2626;margin-bottom:16px">법무팀 전담 응대 회원</div>
+    <div style="font-size:14px;color:#1f2937;line-height:1.8;margin-bottom:8px">
+      <strong>${name}</strong> 회원은 현재 <strong style="color:#dc2626">소송중</strong>으로<br>
+      <strong>법무팀 전담 응대 회원</strong>입니다.
+    </div>
+    <div style="background:#fef2f2;border-radius:8px;padding:14px;margin:16px 0;font-size:13px;color:#991b1b;font-weight:600;line-height:1.6">
+      연락 및 결제 진행을 즉시 중단하세요.
+    </div>
+    <button id="legal-warn-close" style="margin-top:8px;padding:10px 32px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">확인</button>
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    card.style.transform = 'scale(1)';
+  });
+
+  function close() {
+    overlay.style.opacity = '0';
+    card.style.transform = 'scale(.9)';
+    setTimeout(() => overlay.remove(), 200);
+  }
+
+  document.getElementById('legal-warn-close').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 }
 
 applyFilters(true);
