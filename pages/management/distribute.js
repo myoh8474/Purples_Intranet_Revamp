@@ -311,6 +311,10 @@ function renderTable(filtered) {
   tbody.innerHTML = paged.map((m, i) => {
     const screening = getScreening(m);
     const no = start + i + 1;
+    const isRecontact = m.channel === '기간만료(재컨텍)';
+    const typeBadge = isRecontact
+      ? '<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;margin-left:4px;white-space:nowrap">🔄 재컨텍</span>'
+      : '<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;margin-left:4px;white-space:nowrap">🆕 신규</span>';
 
     if (currentTab === 'blocked') {
       const reasonHtml = screening.reasons.map(r =>
@@ -321,7 +325,7 @@ function renderTable(filtered) {
         : '';
       return `<tr style="background:#fef2f2">
         <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#333;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a></td>
+        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#333;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
         <td style="text-align:center">${m.gender}</td>
         <td style="text-align:center">${m.age}세</td>
         <td>${Formatters.phone(m.phone)}</td>
@@ -338,7 +342,7 @@ function renderTable(filtered) {
       return `<tr style="background:#fffbeb">
         <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
         <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#333;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a></td>
+        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#333;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
         <td style="text-align:center">${m.gender}</td>
         <td style="text-align:center">${m.age}세</td>
         <td>${Formatters.phone(m.phone)}</td>
@@ -351,7 +355,7 @@ function renderTable(filtered) {
     if (currentTab === 'dist') {
       return `<tr style="background:#f0f9ff;opacity:0.8">
         <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#0369a1;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a></td>
+        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#0369a1;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
         <td style="text-align:center">${m.gender}</td>
         <td style="text-align:center">${m.age}세</td>
         <td>${Formatters.phone(m.phone)}</td>
@@ -366,7 +370,7 @@ function renderTable(filtered) {
     return `<tr>
       <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
       <td style="text-align:center">${no}</td>
-      <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a></td>
+      <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
       <td style="text-align:center">${m.gender}</td>
       <td style="text-align:center">${m.age}세</td>
       <td>${Formatters.phone(m.phone)}</td>

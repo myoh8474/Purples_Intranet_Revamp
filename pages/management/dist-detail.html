@@ -194,6 +194,73 @@
       var savedOpinion = localStorage.getItem(opinionKey) || '';
       var inquiry = m.memo || '랜딩페이지 나의 이상형 만나러 갈까요?, 연애 할때 포기 못하는 것=성격, 나의 최종 학력=' + (m.education || '-') + ', 지역=' + (m.region || '-');
 
+      // 재컨텍 여부 판별
+      var isRecontact = m.channel === '기간만료(재컨텍)';
+      var typeBadgeHtml = isRecontact
+        ? '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;margin-left:8px">🔄 재컨텍</span>'
+        : '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;margin-left:8px">🆕 신규</span>';
+
+      // 재컨텍 이전 가입이력 (Mock에서 동일 전화번호의 다른 레코드 탐색)
+      var prevHistoryHtml = '';
+      if (isRecontact) {
+        var cleaned = (m.phone || '').replace(/[^0-9]/g, '');
+        var prevRecords = MockAssociates.filter(function(x) {
+          if (x.id === m.id) return false;
+          var xPhone = (x.phone || '').replace(/[^0-9]/g, '');
+          return xPhone === cleaned;
+        });
+
+        if (prevRecords.length > 0) {
+          var prev = prevRecords[0];
+          prevHistoryHtml = '<tr style="background:#eff6ff">' +
+            '<td class="label" style="vertical-align:top;background:#dbeafe;color:#1d4ed8">이전<br>가입이력</td>' +
+            '<td colspan="7" style="line-height:1.8">' +
+              '<strong style="color:#1d4ed8">🔄 정회원 기간만료 재유입</strong><br>' +
+              '이전 담당: <strong>' + (prev.consultant || '-') + '</strong> · ' +
+              '이전 상태: <strong>' + (prev.status || '-') + '</strong> · ' +
+              '최초 등록: <strong>' + (prev.registeredAt ? Formatters.date(prev.registeredAt) : '-') + '</strong> · ' +
+              '프로그램: <strong>플래티늄(루비) C</strong> · ' +
+              '유입경로: <strong>' + (prev.channel || '-') + '</strong>' +
+            '</td>' +
+          '</tr>';
+        } else {
+          prevHistoryHtml = '<tr style="background:#eff6ff">' +
+            '<td class="label" style="vertical-align:top;background:#dbeafe;color:#1d4ed8">이전<br>가입이력</td>' +
+            '<td colspan="7" style="line-height:1.8">' +
+              '<strong style="color:#1d4ed8">🔄 정회원 기간만료 재유입</strong><br>' +
+              '<span style="color:var(--text-muted)">이전 가입 상세 이력은 정회원 DB에서 확인해 주세요.</span>' +
+            '</td>' +
+          '</tr>';
+        }
+      }
+
+      // 중복 이력 체크 (동일 전화번호, 현재 진행 중인 다른 회원)
+      var dupHistoryHtml = '';
+      var cleaned2 = (m.phone || '').replace(/[^0-9]/g, '');
+      var dupMembers = MockAssociates.filter(function(x) {
+        if (x.id === m.id) return false;
+        var xPhone = (x.phone || '').replace(/[^0-9]/g, '');
+        return xPhone === cleaned2 && ['컨텍전', '높음(컨텍)', '보통', '낮음', '정회원'].indexOf(x.status) > -1;
+      });
+
+      if (dupMembers.length > 0) {
+        var dupInfo = dupMembers.map(function(d) {
+          return '담당: <strong>' + (d.consultant || '-') + '</strong> / 상태: <strong>' + d.status + '</strong> / 등록: ' + Formatters.date(d.registeredAt);
+        }).join('<br>');
+        dupHistoryHtml = '<tr style="background:#fef2f2">' +
+          '<td class="label" style="vertical-align:top;background:#fee2e2;color:#dc2626">중복이력</td>' +
+          '<td colspan="7" style="line-height:1.8">' +
+            '<strong style="color:#dc2626">⚠ 기존 회원 존재 (' + dupMembers.length + '건)</strong><br>' +
+            dupInfo +
+          '</td>' +
+        '</tr>';
+      } else {
+        dupHistoryHtml = '<tr>' +
+          '<td class="label">중복이력</td>' +
+          '<td colspan="7" style="color:var(--text-muted)">중복 이력 없음</td>' +
+        '</tr>';
+      }
+
       document.getElementById('detail-content').innerHTML = `
         <!-- 헤더 -->
         <div class="detail-header">
@@ -201,6 +268,7 @@
             <div class="detail-header__name">${m.name}</div>
             <div class="detail-header__meta">${m.gender} · ${m.age || ''}세 · ${m.region || '-'}</div>
             <span class="badge badge--${m.status === '컨텍전' ? 'red' : 'blue'}" style="font-size:11px;padding:3px 10px">${m.status || '컨텍전'}</span>
+            ${typeBadgeHtml}
           </div>
           <div class="detail-header__actions">
             <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="window.location.href='distribute.html'">← 리스트</button>
@@ -251,6 +319,8 @@
                 <td class="label">분배상태</td><td>${m.consultant ? '분배완료' : '미분배'}</td>
                 <td class="label">분배일</td><td>${m.distributedAt ? Formatters.date(m.distributedAt) : '-'}</td>
               </tr>
+              ${prevHistoryHtml}
+              ${dupHistoryHtml}
               <tr>
                 <td class="label" style="vertical-align:top">문의사항</td>
                 <td colspan="7" style="line-height:1.6">${inquiry}</td>
