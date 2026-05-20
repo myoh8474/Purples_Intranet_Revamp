@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>유입DB 상세 - 퍼플스 인트라넷</title>
+  <link rel="stylesheet" href="../../src/styles/variables.css">
+  <link rel="stylesheet" href="../../src/styles/base.css">
+  <link rel="stylesheet" href="../../src/styles/layout.css">
+  <link rel="stylesheet" href="../../src/styles/components.css">
+  <script src="../associate/compat/layout.js"></script>
+  <style>
+    body {
+      overflow-y: auto;
+      min-height: 100vh;
+      background: var(--bg-primary);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #detail-content {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px 48px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 24px;
+    }
+    .detail-header__left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .detail-header__name {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+    }
+    .detail-header__meta {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    .detail-header__actions {
+      display: flex;
+      gap: 8px;
+    }
+    .section { margin-bottom: 28px; }
+    .section__title {
+      font-size: var(--font-size-base);
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+    }
+    .info-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+    .info-table td { padding: 6px 10px; border: 1px solid var(--border-light); vertical-align: middle; }
+    .info-table .label {
+      background: var(--bg-secondary);
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      text-align: center;
+      font-size: 12px;
+    }
+    .empty-state {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      background: var(--bg-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div id="detail-content">로딩 중...</div>
+  <div id="modal-root"></div>
+  <div id="toast-container" style="position:fixed;top:20px;right:20px;z-index:9999"></div>
+
+  <!-- 유틸 (ver01 호환) -->
+  <script src="../associate/compat/formatters.js"></script>
+  <!-- 데이터 (ver01 호환) -->
+  <script src="../associate/compat/mock-associates.js"></script>
+  <!-- 컴포넌트 (ver01 호환) -->
+  <script src="../associate/compat/toast.js"></script>
+
+  <script>
+    // URL 파라미터에서 회원 ID 가져오기
+    var params = new URLSearchParams(window.location.search);
+    var memberId = params.get('id');
+    var member = null;
+
+    // Supabase에서 직접 해당 회원 1건 조회
+    function fetchMemberFromSupabase(id) {
+      var SUPABASE_URL = 'https://zjqeveciussillyvzyzz.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqcWV2ZWNpdXNzaWxseXZ6eXp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTYyNjQsImV4cCI6MjA5NDY5MjI2NH0.HnCHN6Z0YfsLOUTm7gHhr3wVaieYImm3sfab6jMepM0';
+
+      return fetch(SUPABASE_URL + '/rest/v1/associates?id=eq.' + id + '&select=*', {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+        }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.length > 0) {
+          var row = data[0];
+          return {
+            id: row.id, name: row.name, phone: row.phone, gender: row.gender,
+            birthDate: row.birth_date, age: row.birth_date ? Formatters.age(row.birth_date) : '',
+            education: row.education, school: row.school, job: row.job, company: row.company,
+            region: row.region, branch: row.branch, brand: row.brand,
+            maritalStatus: row.marital_status, status: row.status, channel: row.channel,
+            consultant: row.consultant, registeredAt: row.registered_at,
+            distributedAt: row.distributed_at, lastContactAt: row.last_contact_at, memo: row.memo,
+          };
+        }
+        return null;
+      });
+    }
+
+    // 등록일 포맷
+    function formatRegDate(dateStr) {
+      if (!dateStr) return '-';
+      var d = new Date(dateStr);
+      var yyyy = d.getFullYear();
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      var dd = String(d.getDate()).padStart(2, '0');
+      var ampm = d.getHours() >= 12 ? '오후' : '오전';
+      var h12 = d.getHours() % 12 || 12;
+      var mi = String(d.getMinutes()).padStart(2, '0');
+      var ss = String(d.getSeconds()).padStart(2, '0');
+      return yyyy + '-' + mm + '-' + dd + ' ' + ampm + ' ' + h12 + ':' + mi + ':' + ss;
+    }
+
+    // 주민번호 마스킹
+    function maskSSN(birthDate) {
+      if (!birthDate) return '-';
+      var d = new Date(birthDate);
+      var yy = String(d.getFullYear()).slice(2);
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      var dd = String(d.getDate()).padStart(2, '0');
+      return yy + mm + dd + '-';
+    }
+
+    // 페이지 초기화
+    function initPage(m) {
+      member = m;
+      if (!member) {
+        document.getElementById('detail-content').innerHTML =
+          '<div class="empty-state" style="padding:60px">' +
+            '<div style="font-size:24px;margin-bottom:12px">⚠️</div>' +
+            '<div style="font-size:16px;font-weight:600">회원을 찾을 수 없습니다.</div>' +
+            '<p style="margin-top:8px">ID: ' + (memberId || '없음') + '</p>' +
+            '<a href="distribute.html" style="display:inline-block;margin-top:16px;color:var(--accent)">← 회원분배 목록</a>' +
+          '</div>';
+      } else {
+        document.title = '유입DB 상세 - ' + member.name + ' | 퍼플스 인트라넷';
+        setTimeout(function(){ renderDetail(member); }, 0);
+      }
+    }
+
+    // UUID 형식이면 Supabase 조회, 아니면 Mock에서 찾기
+    var isUUID = memberId && memberId.length > 10 && memberId.indexOf('-') > -1;
+    if (isUUID) {
+      fetchMemberFromSupabase(memberId).then(function(m) {
+        initPage(m);
+      }).catch(function(err) {
+        console.error('Supabase 조회 실패:', err);
+        var found = MockAssociates.find(function(x) { return String(x.id) === memberId; });
+        initPage(found || null);
+      });
+    } else {
+      var numId = parseInt(memberId);
+      var found = MockAssociates.find(function(x) { return x.id === numId; });
+      initPage(found || null);
+    }
+
+    // 팀장 의견 저장
+    function saveOpinion() {
+      var opinionText = document.getElementById('opinion-text').value.trim();
+      var key = 'purples_dist_opinion_' + member.id;
+      localStorage.setItem(key, opinionText);
+      Toast.show('담당 팀장 의견이 저장되었습니다.', 'success');
+    }
+
+    /* ── 상세 렌더 (준회원 상세와 동일한 구조) ── */
+    function renderDetail(m) {
+      var opinionKey = 'purples_dist_opinion_' + m.id;
+      var savedOpinion = localStorage.getItem(opinionKey) || '';
+      var inquiry = m.memo || '랜딩페이지 나의 이상형 만나러 갈까요?, 연애 할때 포기 못하는 것=성격, 나의 최종 학력=' + (m.education || '-') + ', 지역=' + (m.region || '-');
+
+      document.getElementById('detail-content').innerHTML = `
+        <!-- 헤더 -->
+        <div class="detail-header">
+          <div class="detail-header__left">
+            <div class="detail-header__name">${m.name}</div>
+            <div class="detail-header__meta">${m.gender} · ${m.age || ''}세 · ${m.region || '-'}</div>
+            <span class="badge badge--${m.status === '컨텍전' ? 'red' : 'blue'}" style="font-size:11px;padding:3px 10px">${m.status || '컨텍전'}</span>
+          </div>
+          <div class="detail-header__actions">
+            <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="window.location.href='distribute.html'">← 리스트</button>
+          </div>
+        </div>
+
+        <!-- 유입DB 상세정보 -->
+        <div class="section">
+          <div class="section__title">유입DB 상세정보</div>
+          <table class="info-table">
+            <tbody>
+              <tr>
+                <td class="label">이 름</td><td>${m.name} (${m.gender})</td>
+                <td class="label">주민번호</td><td>${maskSSN(m.birthDate)}</td>
+                <td class="label">생년월일</td><td>${Formatters.date(m.birthDate)} (${m.age || ''}세)</td>
+                <td class="label">결혼여부</td><td>${m.maritalStatus || '-'}</td>
+              </tr>
+              <tr>
+                <td class="label">현거주지</td><td>${m.region || '-'}</td>
+                <td class="label">주 소</td><td colspan="5">-</td>
+              </tr>
+              <tr>
+                <td class="label">휴대전화</td><td>${m.phone ? Formatters.phone(m.phone) : '-'}</td>
+                <td class="label">유선전화</td><td>- -</td>
+                <td class="label">이메일</td><td colspan="3">-</td>
+              </tr>
+              <tr>
+                <td class="label">최종학력</td><td>${m.education || '-'}</td>
+                <td class="label">학 교</td><td>${m.school || '-'}</td>
+                <td class="label">직 업</td><td>${m.job || '-'}</td>
+                <td class="label">직장명</td><td>${m.company || '-'}</td>
+              </tr>
+              <tr>
+                <td class="label">신 장</td><td>0</td>
+                <td class="label">체 중</td><td>0</td>
+                <td class="label">혈액형</td><td>-</td>
+                <td class="label">자 녀</td><td>-</td>
+              </tr>
+              <tr>
+                <td class="label">취 미</td><td>-</td>
+                <td class="label">종 교</td><td>-</td>
+                <td class="label">요청 매니져</td><td>-</td>
+                <td class="label">유입경로</td><td>${m.channel || '-'}</td>
+              </tr>
+              <tr>
+                <td class="label">등록일</td><td>${formatRegDate(m.registeredAt)}</td>
+                <td class="label">담당 매니져</td><td>${m.consultant || '-'}</td>
+                <td class="label">분배상태</td><td>${m.consultant ? '분배완료' : '미분배'}</td>
+                <td class="label">분배일</td><td>${m.distributedAt ? Formatters.date(m.distributedAt) : '-'}</td>
+              </tr>
+              <tr>
+                <td class="label" style="vertical-align:top">문의사항</td>
+                <td colspan="7" style="line-height:1.6">${inquiry}</td>
+              </tr>
+              <tr>
+                <td class="label" style="vertical-align:top">담당 팀장<br>의견</td>
+                <td colspan="7">
+                  <textarea id="opinion-text" style="width:100%;min-height:100px;border:1px solid var(--border-light);padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box" placeholder="의견을 입력하세요...">${savedOpinion}</textarea>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="text-align:center;margin-top:16px">
+            <button class="btn btn--primary" onclick="saveOpinion()" style="padding:8px 48px">확 인</button>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
