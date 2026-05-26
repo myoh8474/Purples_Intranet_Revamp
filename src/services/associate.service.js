@@ -6,29 +6,42 @@ import { supabase } from './supabase.js';
 import { MockAssociates } from '../mock/associates.js';
 
 /**
- * Supabase snake_case → 프론트 camelCase 변환
+ * Supabase (associate_mem) → 프론트 camelCase 변환
+ * DB 컬럼명은 기존 시스템과 동일하게 유지
  */
 function toCamel(row) {
   return {
     id: row.id,
-    name: row.name,
-    phone: row.phone,
-    gender: row.gender,
-    birthDate: row.birth_date,
-    education: row.education,
-    school: row.school,
-    job: row.job,
-    company: row.company,
-    region: row.region,
+    name: row.uname,                   // DB: uname
+    phone: row.tel_hand,               // DB: tel_hand
+    phone2: row.tel_eto || '',         // DB: tel_eto
+    gender: row.sex,                   // DB: sex
+    birthDate: row.birthday,           // DB: birthday
+    age: row.age,
+    education: row.school,             // DB: school (학력)
+    school: row.school_name,           // DB: school_name
+    job: row.job_name,                 // DB: job_name
+    company: row.office,               // DB: office
+    region: row.live_local,            // DB: live_local
     branch: row.branch,
     brand: row.brand,
-    maritalStatus: row.marital_status,
-    status: row.status,
-    channel: row.channel,
-    consultant: row.consultant,
-    registeredAt: row.registered_at,
-    distributedAt: row.distributed_at,
-    lastContactAt: row.last_contact_at,
+    maritalStatus: row.married,        // DB: married
+    status: row.state,                 // DB: state
+    channel: row.etc,                  // DB: etc
+    consultant: row.course,            // DB: course
+    registeredAt: row.find_date,       // DB: find_date
+    distributedAt: row.input_date,     // DB: input_date
+    lastContactAt: row.last_counsel,   // DB: last_counsel
+    email: row.email || '',
+    telHome: row.tel_home || '',
+    telOffice: row.tel_office || '',
+    height: row.height || 0,
+    weight: row.weight || 0,
+    bloodType: row.bloodtype || '',     // DB: bloodtype
+    children: row.children || '',
+    religion: row.religion || '',
+    hobby: row.hobby || '',
+    hope: row.hope || '',
     memo: row.memo,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -36,15 +49,30 @@ function toCamel(row) {
 }
 
 /**
- * 프론트 camelCase → Supabase snake_case 변환
+ * 프론트 camelCase → Supabase (associate_mem) 컬럼명 변환
  */
 function toSnake(data) {
   const map = {
-    birthDate: 'birth_date',
-    maritalStatus: 'marital_status',
-    registeredAt: 'registered_at',
-    distributedAt: 'distributed_at',
-    lastContactAt: 'last_contact_at',
+    name: 'uname',
+    phone: 'tel_hand',
+    phone2: 'tel_eto',
+    gender: 'sex',
+    birthDate: 'birthday',
+    education: 'school',
+    school: 'school_name',
+    job: 'job_name',
+    company: 'office',
+    region: 'live_local',
+    maritalStatus: 'married',
+    status: 'state',
+    channel: 'etc',
+    consultant: 'course',
+    registeredAt: 'find_date',
+    distributedAt: 'input_date',
+    lastContactAt: 'last_counsel',
+    telHome: 'tel_home',
+    telOffice: 'tel_office',
+    bloodType: 'bloodtype',
   };
   const result = {};
   for (const [key, val] of Object.entries(data)) {
@@ -72,12 +100,12 @@ export const AssociateService = {
     }
 
     // ── Supabase ──
-    let query = supabase.from('associates').select('*').order('registered_at', { ascending: false });
-    if (filters.status) query = query.eq('status', filters.status);
-    if (filters.consultant) query = query.eq('consultant', filters.consultant);
+    let query = supabase.from('associate_mem').select('*').order('find_date', { ascending: false });
+    if (filters.status) query = query.eq('state', filters.status);
+    if (filters.consultant) query = query.eq('course', filters.consultant);
     if (filters.branch) query = query.eq('branch', filters.branch);
     if (filters.search) {
-      query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+      query = query.or(`uname.ilike.%${filters.search}%,tel_hand.ilike.%${filters.search}%`);
     }
     const { data, error } = await query;
     if (error) { console.error('[AssociateService] getList error:', error); return []; }
@@ -90,7 +118,7 @@ export const AssociateService = {
   async getDetail(id) {
     if (useMock()) return MockAssociates.find(m => m.id === Number(id)) || null;
 
-    const { data, error } = await supabase.from('associates').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('associate_mem').select('*').eq('id', id).single();
     if (error) { console.error('[AssociateService] getDetail error:', error); return null; }
     return toCamel(data);
   },
@@ -106,7 +134,7 @@ export const AssociateService = {
     }
 
     const { data, error } = await supabase
-      .from('associates')
+      .from('associate_mem')
       .update(toSnake(updateData))
       .eq('id', id)
       .select()
@@ -127,7 +155,7 @@ export const AssociateService = {
     }
 
     const { data, error } = await supabase
-      .from('associates')
+      .from('associate_mem')
       .insert(toSnake(newData))
       .select()
       .single();
@@ -145,7 +173,7 @@ export const AssociateService = {
       return true;
     }
 
-    const { error } = await supabase.from('associates').delete().eq('id', id);
+    const { error } = await supabase.from('associate_mem').delete().eq('id', id);
     if (error) { console.error('[AssociateService] delete error:', error); return false; }
     return true;
   },

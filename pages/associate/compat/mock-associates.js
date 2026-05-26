@@ -2,6 +2,9 @@
    Supabase / Mock 자동 전환 지원 */
 var BRANCH_LIST = ['본사','경기','부산','대구','대전','광주'];
 var BRANDS = ['퍼플스','디노블','르매리'];
+var BLOODS = ['A','B','O','AB'];
+var RELIGIONS_LIST = ['무교','기독교','천주교','불교','기타'];
+var HOBBIES_LIST = ['등산','독서','운동','영화','여행','요리','음악','골프','테니스','수영','카페탐방','사진'];
 var CHANNELS = [
   '가입비견적','결혼테스트','글ON','구글커플','네이버예약','네이버커플',
   '기간만료(재컨텍)','기타','당근커플','렌딩-두두','무료맞선권','무료상담',
@@ -43,7 +46,7 @@ function _loadFromSupabase() {
   var SUPABASE_URL = 'https://zjqeveciussillyvzyzz.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqcWV2ZWNpdXNzaWxseXZ6eXp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTYyNjQsImV4cCI6MjA5NDY5MjI2NH0.HnCHN6Z0YfsLOUTm7gHhr3wVaieYImm3sfab6jMepM0';
 
-  return fetch(SUPABASE_URL + '/rest/v1/associates?select=*&order=registered_at.desc', {
+  return fetch(SUPABASE_URL + '/rest/v1/associate_mem?select=*&order=find_date.desc', {
     headers: {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -55,25 +58,36 @@ function _loadFromSupabase() {
     data.forEach(function(row) {
       MockAssociates.push({
         id: row.id,
-        name: row.name,
-        phone: row.phone,
-        gender: row.gender,
-        birthDate: row.birth_date,
-        age: row.birth_date ? Formatters.age(row.birth_date) : '',
-        education: row.education,
-        school: row.school,
-        job: row.job,
-        company: row.company,
-        region: row.region,
+        name: row.uname,
+        phone: row.tel_hand,
+        phone2: row.tel_eto || '',
+        gender: row.sex,
+        birthDate: row.birthday,
+        age: row.birthday ? Formatters.age(row.birthday) : '',
+        education: row.school,
+        school: row.school_name,
+        job: row.job_name,
+        company: row.office,
+        region: row.live_local,
         branch: row.branch,
         brand: row.brand,
-        maritalStatus: row.marital_status,
-        status: row.status,
-        channel: row.channel,
-        consultant: row.consultant,
-        registeredAt: row.registered_at,
-        distributedAt: row.distributed_at,
-        lastContactAt: row.last_contact_at,
+        maritalStatus: row.married,
+        status: row.state,
+        channel: row.etc,
+        consultant: row.course,
+        registeredAt: row.find_date,
+        distributedAt: row.input_date,
+        lastContactAt: row.last_counsel,
+        email: row.email || '',
+        telHome: row.tel_home || '',
+        telOffice: row.tel_office || '',
+        height: row.height || 0,
+        weight: row.weight || 0,
+        bloodType: row.bloodtype || '',
+        children: row.children || '',
+        religion: row.religion || '',
+        hobby: row.hobby || '',
+        hope: row.hope || '',
         memo: row.memo,
         duplicateEntries: [],
         contactHistory: [],
@@ -123,6 +137,13 @@ function _generateMockData() {
       registeredAt: regDate.toISOString(),
       distributedAt: distDate.toISOString(),
       lastContactAt: lastContact.toISOString(),
+      height: gender === '남' ? (170 + Math.floor(Math.random() * 15)) : (155 + Math.floor(Math.random() * 15)),
+      weight: gender === '남' ? (65 + Math.floor(Math.random() * 20)) : (45 + Math.floor(Math.random() * 15)),
+      bloodType: randomPick(BLOODS),
+      children: Math.random() > 0.85 ? '있음' : '없음',
+      religion: randomPick(RELIGIONS_LIST),
+      hobby: randomPick(HOBBIES_LIST),
+      hope: '', email: '', telHome: '', telOffice: '', phone2: '',
       duplicateEntries: [],
       contactHistory: [
         { date: lastContact.toISOString(), type: '통화', content: '초기 상담 진행. 관심도 높음.', result: '상담중' },

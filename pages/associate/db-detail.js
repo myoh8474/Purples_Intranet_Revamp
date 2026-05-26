@@ -42,15 +42,7 @@ function render() {
   const allData = getManagerMembers();
 
   content.innerHTML = `
-    <style>
-      .dbd-back { display:inline-flex; align-items:center; gap:4px; font-size:12px;
-                  color:var(--text-secondary); text-decoration:none; padding:6px 12px;
-                  border:1px solid var(--border-light); border-radius:var(--radius-md);
-                  transition:all var(--transition-fast); margin-bottom:12px; }
-      .dbd-back:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
-    </style>
-
-    <a class="dbd-back" href="db-status.html">← 보유DB 현황</a>
+    <a class="back-link" href="db-status.html">← 보유DB 현황</a>
 
     <div class="page-header">
       <div>
@@ -59,18 +51,27 @@ function render() {
       </div>
     </div>
 
-    <!-- 필터 -->
-    <div class="filter-bar"><div class="filter-bar__row">
-      <div class="filter-bar__item"><label>지사</label><select class="form-select form-input--sm" id="f-branch"><option value="">전체</option>${BRANCHES.map(b => `<option>${b}</option>`).join('')}</select></div>
-      <div class="filter-bar__item"><label>성별</label><select class="form-select form-input--sm" id="f-gender"><option value="">전체</option><option>남</option><option>여</option></select></div>
-      <div class="filter-bar__item"><label>결혼여부</label><select class="form-select form-input--sm" id="f-marital"><option value="">전체</option><option>초혼</option><option>재혼</option></select></div>
-      <div class="filter-bar__item"><label>학력</label><select class="form-select form-input--sm" id="f-edu"><option value="">전체</option>${EDUCATIONS.map(e => `<option>${e}</option>`).join('')}</select></div>
-      <div class="filter-bar__item"><label>상태</label><select class="form-select form-input--sm" id="f-status"><option value="">전체</option>${ASSOCIATE_STATUSES.map(s => `<option>${s}</option>`).join('')}</select></div>
-      <div class="filter-bar__item"><label>지역</label><select class="form-select form-input--sm" id="f-region"><option value="">전체</option>${REGIONS.map(r => `<option>${r}</option>`).join('')}</select></div>
-      <div class="filter-bar__item"><label>가입경로</label><select class="form-select form-input--sm" id="f-channel"><option value="">전체</option>${CHANNELS.map(c => `<option>${c}</option>`).join('')}</select></div>
-      <div class="filter-bar__search"><label>검색</label><input class="form-input form-input--sm" id="f-keyword" placeholder="이름, 전화번호, 직장 검색..."></div>
-      <button class="btn btn--primary btn--sm" id="btn-search" style="align-self:flex-end">검색</button>
-    </div></div>
+    <!-- 필터 (공통 search-table) -->
+    <table class="search-table">
+      <tbody>
+        <tr>
+          <th class="search-table__th">상세검색</th>
+          <td class="search-table__td">
+            <select class="form-input form-input--sm fi" id="f-branch" style="width:80px"><option value="">지사</option>${BRANCHES.map(b => `<option>${b}</option>`).join('')}</select>
+            <select class="form-input form-input--sm fi" id="f-gender" style="width:70px"><option value="">성별</option><option>남</option><option>여</option></select>
+            <select class="form-input form-input--sm fi" id="f-marital" style="width:80px"><option value="">결혼여부</option><option>초혼</option><option>재혼</option></select>
+            <select class="form-input form-input--sm fi" id="f-edu" style="width:80px"><option value="">학력</option>${EDUCATIONS.map(e => `<option>${e}</option>`).join('')}</select>
+            <select class="form-input form-input--sm fi" id="f-status" style="width:120px"><option value="">상태 전체</option>${ASSOCIATE_STATUSES.map(s => `<option>${s}</option>`).join('')}</select>
+            <select class="form-input form-input--sm fi" id="f-region" style="width:80px"><option value="">지역</option>${REGIONS.map(r => `<option>${r}</option>`).join('')}</select>
+            <select class="form-input form-input--sm fi" id="f-channel" style="width:100px"><option value="">경로 전체</option>${CHANNELS.map(c => `<option>${c}</option>`).join('')}</select>
+            <input class="form-input form-input--sm fi" id="f-keyword" placeholder="이름, 전화번호, 직장 검색..." style="width:180px">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="search-actions">
+      <button class="btn btn--sm search-btn" id="btn-search">검색</button>
+    </div>
 
     <div id="tbl"></div>
   `;

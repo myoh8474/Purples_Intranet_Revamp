@@ -31,7 +31,7 @@ export const ROLE_PERMISSIONS = {
     'cert-dashboard', 'cert-register',
     'sales-report', 'consultant-perf', 'ops-dashboard',
     // 매니저 성과 관리
-    'perf-ranking', 'perf-weekly-visit', 'perf-contact-stats', 'perf-matching-meeting',
+    'perf-ranking', 'perf-weekly-visit',
     'hr-performance', 'hr-salary', 'hr-evaluation', 'hr-attendance',
     'user-permission',
     // 성혼 관리
@@ -47,7 +47,7 @@ export const ROLE_PERMISSIONS = {
     'contract-billing', 'contract-status', 'contract-claim',
     'cert-dashboard', 'cert-register',
     // 매니저 성과 관리
-    'perf-ranking', 'perf-weekly-visit', 'perf-contact-stats', 'perf-matching-meeting',
+    'perf-ranking', 'perf-weekly-visit',
   ],
   consultant: [
     'dashboard',

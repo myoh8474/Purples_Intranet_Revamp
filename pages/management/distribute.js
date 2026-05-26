@@ -1,20 +1,18 @@
 /* ========================================
-   회원분배 관리 페이지 v2
-   - 신규 유입 준회원을 상담매니저에게 분배
-   - 소스외 자동 필터링 (학력/나이/형식/중복)
-   - 알림 분배: 과거 이력 태그 노출
-   - 분배현황 조회 / 수동분배
+   회원분배 관리 페이지 v3 (최종 확정안)
+   - 시스템 자동: 전화번호 형식 오류만 소스외
+   - 관리자 수동 3탭: 신규/중복/기간만료(재컨텍)
+   - 분배 이력 모니터링
    ======================================== */
 import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
-import { MockAssociates } from '@mock/associates.js';
+import { MockAssociates, saveMemberChange } from '@mock/associates.js';
 import { screenIncomingDB } from '@services/screening.service.js';
+import { CONSULTANTS, BRANCHES, CONSULTANT_BRANCH } from '@config/constants.js';
 
-initLayout({ pageId: 'member-distribute', breadcrumbs: ['준회원 관리', '회원분배'] });
-
-const CONSULTANTS = ['이지연','김민희','박수정','최영미','한소영','정다은','서윤아','강미래','윤하나','오세은'];
+initLayout({ pageId: 'member-distribute', breadcrumbs: ['회원분배'] });
 
 let selectedIds = [];
 
@@ -64,28 +62,30 @@ function getManagerStats() {
   return stats;
 }
 
-// 통계 계산
+// 통계 계산 (최종안: new/duplicate/recontact 분류)
 function getScreeningStats() {
-  let blocked = 0, alert = 0, pass = 0;
+  let blocked = 0, newCount = 0, duplicate = 0, recontact = 0;
   const undist = MockAssociates.filter(m => !m.consultant || m.consultant === '-' || m.status === '컨텍전');
   undist.forEach(m => {
     const s = getScreening(m);
     if (s.action === 'block') blocked++;
-    else if (s.action === 'alert') alert++;
-    else pass++;
+    else if (s.routeTo === 'duplicate') duplicate++;
+    else if (s.routeTo === 'recontact') recontact++;
+    else newCount++;
   });
-  return { blocked, alert, pass, total: undist.length };
+  return { blocked, newCount, duplicate, recontact, total: undist.length };
 }
 
 const content = document.getElementById('content');
 
 const PAGE_SIZE = 20;
 let currentPage = 1;
-let currentTab = 'undist'; // undist | blocked | alert | dist
+let currentTab = 'new'; // new | duplicate | recontact | history
 
 function render() {
   const stats = getScreeningStats();
   const totalDist = MockAssociates.filter(m => m.consultant && m.consultant !== '-' && m.status !== '컨텍전').length;
+
 
   content.innerHTML = `
     <div class="page-header" style="margin-bottom:20px">
@@ -95,79 +95,87 @@ function render() {
       </div>
     </div>
 
-    <div class="summary-grid" style="margin-bottom:20px">
-      <div class="summary-card summary-card--blue" style="cursor:pointer" data-tab="undist">
-        <div class="summary-card__value">${stats.pass}</div>
-        <div class="summary-card__label">분배 대기</div>
-      </div>
-      <div class="summary-card summary-card--red" style="cursor:pointer" data-tab="blocked">
-        <div class="summary-card__value">${stats.blocked}</div>
-        <div class="summary-card__label">소스외 차단</div>
-      </div>
-      <div class="summary-card summary-card--amber" style="cursor:pointer" data-tab="alert">
-        <div class="summary-card__value">${stats.alert}</div>
-        <div class="summary-card__label">이력 알림 분배</div>
-      </div>
-      <div class="summary-card summary-card--green" style="cursor:pointer" data-tab="dist">
-        <div class="summary-card__value">${totalDist}</div>
-        <div class="summary-card__label">분배 완료</div>
-      </div>
+    <!-- 탭 영역 -->
+    <div class="std-tabs" id="dist-tabs">
+      <button class="std-tab${currentTab==='new'?' active':''}" data-tab="new">
+        신규 회원 분배 <span class="std-tab__count">${stats.newCount}</span>
+      </button>
+      <button class="std-tab${currentTab==='duplicate'?' active':''}" data-tab="duplicate">
+        중복 회원 분배 <span class="std-tab__count std-tab__count--amber">${stats.duplicate}</span>
+      </button>
+      <button class="std-tab${currentTab==='recontact'?' active':''}" data-tab="recontact">
+        기간만료 (재컨텍) <span class="std-tab__count std-tab__count--purple">${stats.recontact}</span>
+      </button>
     </div>
 
-    <div class="card" style="margin-bottom:0">
-      <div class="card__header" style="padding-bottom:0;border-bottom:none">
-        <div class="dist-tabs" id="dist-tabs">
-          <button class="dist-tab${currentTab==='undist'?' active':''}" data-tab="undist">
-            분배 대기 <span class="dist-tab__count">${stats.pass}</span>
-          </button>
-          <button class="dist-tab${currentTab==='blocked'?' active':''}" data-tab="blocked">
-            소스외 차단 <span class="dist-tab__count dist-tab__count--red">${stats.blocked}</span>
-          </button>
-          <button class="dist-tab${currentTab==='alert'?' active':''}" data-tab="alert">
-            이력 알림 <span class="dist-tab__count dist-tab__count--amber">${stats.alert}</span>
-          </button>
-          <button class="dist-tab${currentTab==='dist'?' active':''}" data-tab="dist">
-            분배 완료 <span class="dist-tab__count dist-tab__count--green">${totalDist}</span>
-          </button>
-        </div>
-      </div>
-      <div class="card__body" style="padding:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-light)">
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="text" class="form-input form-input--sm" id="dist-search" placeholder="이름/연락처 검색..." style="width:180px;font-size:11px">
-          </div>
-          <div style="display:flex;gap:6px" id="action-buttons"></div>
-        </div>
-        <div style="font-size:12px;font-weight:600;padding:8px 16px;color:var(--text-secondary)" id="dist-count"></div>
-        <table class="data-table" style="font-size:12px">
-          <thead>
-            <tr id="dist-thead-row"></tr>
-          </thead>
-          <tbody id="dist-tbody"></tbody>
-        </table>
-        <div id="dist-pagination" class="pagination"></div>
-      </div>
+    <!-- 검색 영역 (테이블 형식) -->
+    <table class="search-table" id="filter-bar">
+      <tbody>
+        <tr>
+          <th class="search-table__th">회원검색</th>
+          <td class="search-table__td">
+            <input type="text" class="form-input form-input--sm fi" id="member-search" placeholder="이름 또는 연락처 입력" style="width:200px">
+          </td>
+        </tr>
+        <tr>
+          <th class="search-table__th">상세검색</th>
+          <td class="search-table__td">
+            <input type="date" class="form-input form-input--sm fi" id="filter-date-from" title="시작일" style="width:130px">
+            <span style="font-size:11px;color:#94a3b8">~</span>
+            <input type="date" class="form-input form-input--sm fi" id="filter-date-to" title="종료일" style="width:130px">
+            <select class="form-input form-input--sm fi" id="filter-channel" style="width:110px">
+              <option value="">경로 전체</option>
+              <option value="카카오커플">카카오커플</option><option value="네이버커플">네이버커플</option>
+              <option value="구글커플">구글커플</option><option value="블라인드커플">블라인드커플</option>
+              <option value="실시간상담">실시간상담</option><option value="전화문의">전화문의</option>
+              <option value="지인소개">지인소개</option><option value="기간만료(재컨텍)">기간만료(재컨텍)</option>
+            </select>
+            <select class="form-input form-input--sm fi" id="filter-edu" style="width:100px">
+              <option value="">학력 전체</option>
+              <option value="고졸">고졸</option>
+              <option value="전문대 재중">전문대 재중</option><option value="전문대 중퇴">전문대 중퇴</option><option value="전문대 졸업">전문대 졸업</option>
+              <option value="대학 재중">대학 재중</option><option value="대학 중퇴">대학 중퇴</option><option value="대학 졸업">대학 졸업</option>
+              <option value="대학원 재중">대학원 재중</option><option value="대학원 중퇴">대학원 중퇴</option><option value="대학원 졸업">대학원 졸업</option>
+              <option value="박사 과정">박사 과정</option><option value="박사 수료">박사 수료</option><option value="박사">박사</option>
+            </select>
+            <select class="form-input form-input--sm fi" id="filter-gender" style="width:70px">
+              <option value="">성별</option>
+              <option value="남">남</option><option value="여">여</option>
+            </select>
+          </td>
+        </tr>
+        ${currentTab !== 'new' ? `<tr>
+          <th class="search-table__th">매니저</th>
+          <td class="search-table__td">
+            <div style="position:relative;display:inline-block">
+              <input type="text" class="form-input form-input--sm fi" id="mgr-search-input" placeholder="매니저 이름 입력" style="width:140px">
+              <div class="mgr-autocomplete" id="mgr-autocomplete"></div>
+            </div>
+            <button class="mgr-modal-btn" id="btn-open-mgr-modal">매니저 선택</button>
+            <div class="mgr-tags" id="mgr-tags"></div>
+          </td>
+        </tr>` : ''}
+      </tbody>
+    </table>
+    <div class="search-actions">
+      <button class="btn btn--sm search-btn" id="btn-search">검색</button>
+      <button class="btn btn--sm filter-reset-btn" id="btn-filter-reset">초기화</button>
     </div>
+
+    <!-- 리스트 영역 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 6px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="dist-count"></div>
+      <div style="display:flex;gap:6px" id="action-buttons"></div>
+    </div>
+    <table class="data-table" style="font-size:12px">
+      <thead>
+        <tr id="dist-thead-row"></tr>
+      </thead>
+      <tbody id="dist-tbody"></tbody>
+    </table>
+    <div id="dist-pagination" class="pagination"></div>
 
     <style>
-      .dist-tabs { display: flex; gap: 4px; }
-      .dist-tab {
-        padding: 8px 16px; border: none; background: none;
-        font-size: 12px; font-weight: 500; color: var(--text-muted);
-        cursor: pointer; border-bottom: 2px solid transparent;
-        transition: all 0.15s ease; font-family: inherit;
-        display: flex; align-items: center; gap: 6px;
-      }
-      .dist-tab:hover { color: var(--text-primary); }
-      .dist-tab.active { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
-      .dist-tab__count {
-        font-size: 10px; font-weight: 600;
-        background: var(--bg-tertiary); padding: 1px 6px; border-radius: 10px;
-      }
-      .dist-tab.active .dist-tab__count { background: var(--accent-bg); color: var(--accent); }
-      .dist-tab__count--red { background: #fef2f2 !important; color: #dc2626 !important; }
-      .dist-tab__count--amber { background: #fffbeb !important; color: #d97706 !important; }
-      .dist-tab__count--green { background: #f0fdf4 !important; color: #16a34a !important; }
       .screening-tag {
         display: inline-flex; align-items: center; gap: 3px;
         font-size: 10px; padding: 2px 6px; border-radius: 4px;
@@ -176,6 +184,152 @@ function render() {
       .screening-tag--block { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
       .screening-tag--alert { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
       .screening-tag--dup { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+      /* ── 검색 테이블 ── */
+      .search-table {
+        width: 100%; border-collapse: collapse;
+        margin-bottom: 16px; font-size: 12px;
+        border: 1px solid #cbd5e1;
+      }
+      .search-table__th {
+        background: #f1f5f9; color: #334155; font-weight: 700;
+        padding: 8px 14px; text-align: left; white-space: nowrap;
+        width: 80px; border-bottom: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        font-size: 11px;
+      }
+      .search-table__td {
+        padding: 6px 14px; border-bottom: 1px solid #e2e8f0;
+        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        background: #fff;
+      }
+      .search-table tr:last-child .search-table__th,
+      .search-table tr:last-child .search-table__td {
+        border-bottom: none;
+      }
+      .fi { font-size: 11px !important; height: 30px; }
+      .filter-reset-btn {
+        font-size: 11px !important; background: #fff;
+        border: 1px solid #e2e8f0; color: #475569;
+        padding: 4px 10px; border-radius: 6px; cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .filter-reset-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+      .search-actions {
+        display: flex; justify-content: center; gap: 8px;
+        margin-bottom: 16px;
+      }
+      .search-btn {
+        font-size: 12px !important; background: #0369a1; color: #fff;
+        border: none; padding: 6px 24px; border-radius: 6px;
+        cursor: pointer; font-weight: 600; transition: background 0.15s;
+      }
+      .search-btn:hover { background: #0284c7; }
+      .mgr-modal-btn {
+        border: 1px solid #bae6fd; background: #f0f9ff; color: #0369a1;
+        font-size: 11px; padding: 0 10px; height: 30px;
+        cursor: pointer; border-radius: 6px; font-weight: 600;
+        font-family: inherit; transition: all 0.15s ease;
+      }
+      .mgr-modal-btn:hover { background: #e0f2fe; border-color: #7dd3fc; }
+      .mgr-autocomplete {
+        position: absolute; top: 100%; left: 0; width: 180px;
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1); z-index: 100;
+        max-height: 180px; overflow-y: auto; display: none;
+      }
+      .mgr-autocomplete.visible { display: block; }
+      .mgr-ac-item {
+        padding: 6px 10px; font-size: 11px; cursor: pointer;
+        display: flex; align-items: center; gap: 6px;
+        border-bottom: 1px solid #f8fafc;
+      }
+      .mgr-ac-item:hover { background: #e0f2fe; }
+      .mgr-ac-item__tag {
+        font-size: 9px; color: #64748b; background: #f1f5f9;
+        padding: 1px 4px; border-radius: 3px;
+      }
+      .mgr-tags {
+        display: flex; flex-wrap: wrap; gap: 3px; align-items: center;
+      }
+      .mgr-tag {
+        display: inline-flex; align-items: center; gap: 3px;
+        font-size: 10px; font-weight: 500; padding: 2px 8px;
+        border-radius: 10px; background: #e0f2fe; color: #0369a1;
+        border: 1px solid #bae6fd; animation: tagIn 0.15s ease;
+      }
+      @keyframes tagIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      .mgr-tag__x {
+        cursor: pointer; font-size: 11px; color: #64748b;
+        margin-left: 2px; font-weight: 700; line-height: 1;
+      }
+      .mgr-tag__x:hover { color: #dc2626; }
+
+      /* ── 매니저 모달 ── */
+      .mgr-modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+        z-index: 9999; display: flex; align-items: center; justify-content: center;
+        animation: mgrFadeIn 0.15s ease;
+      }
+      @keyframes mgrFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .mgr-modal {
+        background: #fff; border-radius: 12px; width: 520px; max-height: 80vh;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+        animation: mgrSlideUp 0.2s ease;
+      }
+      @keyframes mgrSlideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      .mgr-modal__head {
+        padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .mgr-modal__title { font-size: 14px; font-weight: 700; color: #0f172a; }
+      .mgr-modal__close {
+        width: 28px; height: 28px; border: none; background: #f1f5f9;
+        border-radius: 6px; cursor: pointer; font-size: 14px; color: #64748b;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .mgr-modal__close:hover { background: #e2e8f0; }
+      .mgr-modal__body { display: flex; flex: 1; min-height: 0; }
+      .mgr-modal__col {
+        display: flex; flex-direction: column; flex: 1;
+      }
+      .mgr-modal__col--left { border-right: 1px solid #e2e8f0; background: #f8fafc; }
+      .mgr-modal__col-head {
+        padding: 8px 14px; font-size: 11px; font-weight: 700; color: #475569;
+        border-bottom: 1px solid #e2e8f0; background: #f1f5f9;
+      }
+      .mgr-modal__scroll { overflow-y: auto; max-height: 320px; }
+      .mgr-modal__item {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 14px; font-size: 12px; cursor: pointer;
+        border-bottom: 1px solid #f1f5f9; transition: background 0.1s;
+        user-select: none; color: #334155;
+      }
+      .mgr-modal__item:hover { background: #e0f2fe; }
+      .mgr-modal__item input[type="checkbox"] {
+        width: 15px; height: 15px; accent-color: #0369a1; cursor: pointer;
+      }
+      .mgr-modal__item-name { flex: 1; font-weight: 500; }
+      .mgr-modal__item-count {
+        font-size: 10px; color: #94a3b8; background: #f1f5f9;
+        padding: 1px 6px; border-radius: 6px;
+      }
+      .mgr-modal__item-tag {
+        font-size: 10px; color: #0369a1; background: #e0f2fe;
+        padding: 1px 6px; border-radius: 4px;
+      }
+      .mgr-modal__item.checked { background: #eff6ff; }
+      .mgr-modal__empty {
+        padding: 30px; text-align: center; font-size: 12px;
+        color: #94a3b8; font-style: italic;
+      }
+      .mgr-modal__foot {
+        padding: 12px 20px; border-top: 1px solid #e2e8f0;
+        display: flex; align-items: center; justify-content: space-between;
+        background: #f8fafc; border-radius: 0 0 12px 12px;
+      }
+      .mgr-modal__foot-info { font-size: 11px; color: #64748b; }
+      .mgr-modal__foot-info strong { color: #0369a1; }
     </style>
   `;
 
@@ -183,63 +337,263 @@ function render() {
   applyFilter(true);
 }
 
+// 선택된 매니저 칩 상태
+let selectedManagers = [];
+
 function bindTabEvents() {
-  // 탭 전환
-  document.querySelectorAll('.dist-tab').forEach(tab => {
+  document.querySelectorAll('.std-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       currentTab = tab.dataset.tab;
-      document.querySelectorAll('.dist-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      applyFilter(true);
+      selectedManagers = [];
+      render();
     });
   });
 
-  // 서머리 카드 클릭도 탭 전환
-  document.querySelectorAll('.summary-card[data-tab]').forEach(card => {
-    card.addEventListener('click', () => {
-      currentTab = card.dataset.tab;
-      document.querySelectorAll('.dist-tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === currentTab);
+  // 회원 검색
+  const memberSearch = document.getElementById('member-search');
+  if (memberSearch) memberSearch.addEventListener('input', () => applyFilter(true));
+
+  // 매니저 검색 (자동완성)
+  const mgrInput = document.getElementById('mgr-search-input');
+  const acEl = document.getElementById('mgr-autocomplete');
+  if (mgrInput && acEl) {
+    mgrInput.addEventListener('input', function() {
+      const q = this.value.trim().toLowerCase();
+      if (!q) { acEl.classList.remove('visible'); return; }
+      const matches = CONSULTANTS.filter(c => c.toLowerCase().includes(q) && !selectedManagers.includes(c));
+      if (matches.length === 0) { acEl.classList.remove('visible'); return; }
+      acEl.innerHTML = matches.map(c => {
+        const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
+        return `<div class="mgr-ac-item" data-mgr="${c}">
+          <span>${c}</span>
+          <span class="mgr-ac-item__tag">${branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || ''}</span>
+        </div>`;
+      }).join('');
+      acEl.classList.add('visible');
+      acEl.querySelectorAll('.mgr-ac-item').forEach(item => {
+        item.addEventListener('click', function() {
+          if (!selectedManagers.includes(this.dataset.mgr)) selectedManagers.push(this.dataset.mgr);
+          mgrInput.value = '';
+          acEl.classList.remove('visible');
+          updateMgrBadge();
+          applyFilter(true);
+        });
       });
-      applyFilter(true);
+    });
+    mgrInput.addEventListener('blur', () => { setTimeout(() => acEl.classList.remove('visible'), 150); });
+  }
+
+  ['filter-channel', 'filter-edu', 'filter-gender', 'filter-date-from', 'filter-date-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => applyFilter(true));
+  });
+
+  // 매니저 모달 열기
+  const mgrBtn = document.getElementById('btn-open-mgr-modal');
+  if (mgrBtn) mgrBtn.addEventListener('click', openMgrModal);
+  // 검색 버튼
+  const searchBtn = document.getElementById('btn-search');
+  if (searchBtn) searchBtn.addEventListener('click', () => applyFilter(true));
+
+  // 초기화
+  document.getElementById('btn-filter-reset').addEventListener('click', () => {
+    if (memberSearch) memberSearch.value = '';
+    if (mgrInput) mgrInput.value = '';
+    document.getElementById('filter-date-from').value = '';
+    document.getElementById('filter-date-to').value = '';
+    document.getElementById('filter-channel').value = '';
+    document.getElementById('filter-edu').value = '';
+    document.getElementById('filter-gender').value = '';
+    selectedManagers = [];
+    updateMgrBadge();
+    applyFilter(true);
+  });
+}
+
+/** 매니저 선택 모달 열기 */
+function openMgrModal() {
+  // 모달에서 사용할 임시 선택 상태
+  let tempSelected = [...selectedManagers];
+  let checkedBranches = [];
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mgr-modal-overlay';
+  overlay.innerHTML = `
+    <div class="mgr-modal">
+      <div class="mgr-modal__head">
+        <div class="mgr-modal__title">매니저 선택</div>
+        <button class="mgr-modal__close" id="mgr-modal-close">✕</button>
+      </div>
+      <div class="mgr-modal__body">
+        <div class="mgr-modal__col mgr-modal__col--left">
+          <div class="mgr-modal__col-head">지사 선택</div>
+          <div class="mgr-modal__scroll" id="mm-branch-scroll">
+            ${BRANCHES.map(b => {
+              const cnt = CONSULTANTS.filter(c => CONSULTANT_BRANCH[c] === b.code).length;
+              return `<label class="mgr-modal__item">
+                <input type="checkbox" class="mm-branch-check" value="${b.code}">
+                <span class="mgr-modal__item-name">${b.name}</span>
+                <span class="mgr-modal__item-count">${cnt}명</span>
+              </label>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="mgr-modal__col">
+          <div class="mgr-modal__col-head">소속 매니저</div>
+          <div class="mgr-modal__scroll" id="mm-mgr-scroll">
+            <div class="mgr-modal__empty">지사를 선택하세요</div>
+          </div>
+        </div>
+      </div>
+      <div class="mgr-modal__foot">
+        <div class="mgr-modal__foot-info" id="mm-foot-info">선택된 매니저 없음</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn--sm" id="mm-reset" style="font-size:11px;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569">초기화</button>
+          <button class="btn btn--sm" id="mm-confirm" style="font-size:11px;background:#0369a1;color:#fff;border:none;padding:6px 16px">선택 완료</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  function refreshMgrList() {
+    const scroll = document.getElementById('mm-mgr-scroll');
+    if (checkedBranches.length === 0) {
+      scroll.innerHTML = `<div class="mgr-modal__empty">← 지사를 선택하세요</div>`;
+      updateFootInfo();
+      return;
+    }
+    let html = '';
+    checkedBranches.forEach(code => {
+      const branch = BRANCHES.find(b => b.code === code);
+      CONSULTANTS.filter(c => CONSULTANT_BRANCH[c] === code).forEach(mgr => {
+        const checked = tempSelected.includes(mgr);
+        html += `<label class="mgr-modal__item${checked ? ' checked' : ''}">
+          <input type="checkbox" class="mm-mgr-check" value="${mgr}" ${checked ? 'checked' : ''}>
+          <span class="mgr-modal__item-name">${mgr}</span>
+          <span class="mgr-modal__item-tag">${branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || ''}</span>
+        </label>`;
+      });
+    });
+    scroll.innerHTML = html || `<div class="mgr-modal__empty">소속 매니저 없음</div>`;
+    scroll.querySelectorAll('.mm-mgr-check').forEach(cb => {
+      cb.addEventListener('change', function() {
+        const mgr = this.value;
+        if (this.checked) { if (!tempSelected.includes(mgr)) tempSelected.push(mgr); }
+        else { tempSelected = tempSelected.filter(m => m !== mgr); }
+        this.closest('.mgr-modal__item').classList.toggle('checked', this.checked);
+        updateFootInfo();
+      });
+    });
+    updateFootInfo();
+  }
+
+  function updateFootInfo() {
+    const el = document.getElementById('mm-foot-info');
+    if (!el) return;
+    if (tempSelected.length > 0) {
+      el.innerHTML = `<strong>${tempSelected.length}명</strong> 선택: ${tempSelected.slice(0,3).join(', ')}${tempSelected.length > 3 ? ` 외 ${tempSelected.length-3}명` : ''}`;
+    } else {
+      el.textContent = '선택된 매니저 없음';
+    }
+  }
+
+  // 지사 체크 이벤트
+  overlay.querySelectorAll('.mm-branch-check').forEach(cb => {
+    cb.addEventListener('change', function() {
+      if (this.checked) checkedBranches.push(this.value);
+      else checkedBranches = checkedBranches.filter(c => c !== this.value);
+      refreshMgrList();
     });
   });
 
-  document.getElementById('dist-search').addEventListener('input', () => applyFilter(true));
+  // 닫기
+  document.getElementById('mgr-modal-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  // 초기화
+  document.getElementById('mm-reset').addEventListener('click', () => {
+    tempSelected = [];
+    checkedBranches = [];
+    overlay.querySelectorAll('.mm-branch-check').forEach(cb => { cb.checked = false; });
+    refreshMgrList();
+  });
+
+  // 선택 완료
+  document.getElementById('mm-confirm').addEventListener('click', () => {
+    selectedManagers = [...tempSelected];
+    updateMgrBadge();
+    applyFilter(true);
+    overlay.remove();
+  });
+}
+
+/** 필터바의 매니저 태그 렌더링 */
+function updateMgrBadge() {
+  const tagsEl = document.getElementById('mgr-tags');
+  if (!tagsEl) return;
+  if (selectedManagers.length > 0) {
+    tagsEl.innerHTML = selectedManagers.map(m =>
+      `<span class="mgr-tag">${m}<span class="mgr-tag__x" data-mgr="${m}">×</span></span>`
+    ).join('');
+    tagsEl.querySelectorAll('.mgr-tag__x').forEach(x => {
+      x.addEventListener('click', function(e) {
+        e.stopPropagation();
+        selectedManagers = selectedManagers.filter(m => m !== this.dataset.mgr);
+        updateMgrBadge();
+        applyFilter(true);
+      });
+    });
+  } else {
+    tagsEl.innerHTML = '';
+  }
 }
 
 function applyFilter(resetPage) {
   if (resetPage) currentPage = 1;
-  const search = document.getElementById('dist-search').value.trim().toLowerCase();
-
+  const search = (document.getElementById('member-search')?.value || '').trim().toLowerCase();
+  const channel = (document.getElementById('filter-channel')?.value || '');
+  const edu = (document.getElementById('filter-edu')?.value || '');
+  const gender = (document.getElementById('filter-gender')?.value || '');
+  const dateFrom = document.getElementById('filter-date-from')?.value || '';
+  const dateTo = document.getElementById('filter-date-to')?.value || '';
   let filtered = [];
 
-  if (currentTab === 'dist') {
-    // 분배 완료
-    filtered = MockAssociates.filter(m => {
-      const isDist = m.consultant && m.consultant !== '-' && m.status !== '컨텍전';
-      if (!isDist) return false;
-      if (search && !m.name.toLowerCase().includes(search) && !m.phone.includes(search)) return false;
-      return true;
-    });
-  } else {
-    // 미분배 대상
-    const undist = MockAssociates.filter(m => {
-      if (m.consultant && m.consultant !== '-' && m.status !== '컨텍전') return false;
-      if (search && !m.name.toLowerCase().includes(search) && !m.phone.includes(search)) return false;
-      return true;
-    });
-
-    if (currentTab === 'blocked') {
-      filtered = undist.filter(m => getScreening(m).action === 'block');
-    } else if (currentTab === 'alert') {
-      filtered = undist.filter(m => getScreening(m).action === 'alert');
-    } else {
-      // undist (분배 대기 = pass)
-      filtered = undist.filter(m => getScreening(m).action === 'pass');
+  function getManagerName(m) {
+    if (currentTab === 'duplicate') {
+      const s = getScreening(m);
+      return s.duplicateInfo?.existingManager || '';
+    } else if (currentTab === 'history') {
+      return m.consultant || '';
+    } else if (currentTab === 'recontact') {
+      return m.pastConsultant || '';
     }
+    return '';
   }
 
+  function matchFilters(m) {
+    if (search && !m.name.toLowerCase().includes(search) && !m.phone.includes(search)) return false;
+    if (channel && m.channel !== channel) return false;
+    if (edu && m.education !== edu) return false;
+    if (gender && m.gender !== gender) return false;
+    if (dateFrom && m.registeredAt < dateFrom) return false;
+    if (dateTo && m.registeredAt > dateTo + 'T23:59:59') return false;
+    // 매니저 칩 다중선택 필터
+    if (selectedManagers.length > 0 && !selectedManagers.includes(getManagerName(m))) return false;
+    return true;
+  }
+
+  const undist = MockAssociates.filter(m => {
+    if (m.consultant && m.consultant !== '-' && m.status !== '컨텍전') return false;
+    return matchFilters(m);
+  });
+  if (currentTab === 'duplicate') {
+    filtered = undist.filter(m => getScreening(m).routeTo === 'duplicate');
+  } else if (currentTab === 'recontact') {
+    filtered = undist.filter(m => getScreening(m).routeTo === 'recontact');
+  } else {
+    filtered = undist.filter(m => { const s = getScreening(m); return s.action !== 'block' && s.routeTo === 'new'; });
+  }
   renderTable(filtered);
   renderActionButtons();
 }
@@ -247,18 +601,18 @@ function applyFilter(resetPage) {
 function renderActionButtons() {
   const btnArea = document.getElementById('action-buttons');
   if (!btnArea) return;
-
-  if (currentTab === 'undist' || currentTab === 'alert') {
-    btnArea.innerHTML = `<button class="btn btn--sm" id="btn-manual" style="font-size:11px;background:#0369a1;color:#fff;border:none">✋ 수동분배</button>`;
-    document.getElementById('btn-manual').addEventListener('click', handleManualDist);
-  } else if (currentTab === 'blocked') {
-    btnArea.innerHTML = `<button class="btn btn--sm" id="btn-export-blocked" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333">📋 소스외 내역 다운로드</button>`;
-    document.getElementById('btn-export-blocked').addEventListener('click', () => {
-      Toast.show('소스외 내역이 다운로드됩니다. (프로토타입)', 'info');
-    });
-  } else {
-    btnArea.innerHTML = '';
-  }
+  const stats = getManagerStats();
+  btnArea.innerHTML = `<select class="form-input form-input--sm" id="dist-mgr-select" style="font-size:11px;height:28px;width:140px">
+    <option value="">매니저 선택</option>
+    ${CONSULTANTS.map(c => {
+      const cnt = stats[c] ? stats[c].total : 0;
+      return `<option value="${c}">${c} (${cnt}명)</option>`;
+    }).join('')}
+  </select>
+  <button class="btn btn--sm" id="btn-manual" style="font-size:11px;background:#0369a1;color:#fff;border:none">상담매니저 등록</button>
+  <button class="btn btn--sm" id="btn-sourceout" style="font-size:11px;background:#fff;border:1px solid #dc2626;color:#dc2626">소스외 처리</button>`;
+  document.getElementById('btn-manual').addEventListener('click', handleManualDist);
+  document.getElementById('btn-sourceout').addEventListener('click', () => Toast.show('소스외 처리 기능은 추후 구현 예정입니다.', 'info'));
 }
 
 function renderTable(filtered) {
@@ -267,42 +621,29 @@ function renderTable(filtered) {
   const countEl = document.getElementById('dist-count');
   if (!thead || !tbody) return;
 
-  const tabLabels = { undist: '분배 대기', blocked: '소스외 차단', alert: '이력 알림 분배', dist: '분배 완료' };
-  if (countEl) countEl.textContent = `${tabLabels[currentTab]} ${filtered.length}건`;
+  const labels = { 'new': '신규 회원 분배', duplicate: '중복 회원 분배', recontact: '기간만료 (재컨텍)' };
+  if (countEl) countEl.textContent = `${labels[currentTab]} ${filtered.length}건`;
 
-  // 헤더 구성
-  if (currentTab === 'blocked') {
-    thead.innerHTML = `
+  if (currentTab === 'duplicate') {
+    thead.innerHTML = `<th style="width:30px"><input type="checkbox" id="dist-check-all"></th>
       <th style="width:40px">No</th><th>이름</th><th>성별</th><th>나이</th>
-      <th>연락처</th><th>유입경로</th><th>등록일</th><th>차단 사유</th>
-    `;
-  } else if (currentTab === 'alert') {
-    thead.innerHTML = `
-      <th style="width:30px"><input type="checkbox" id="dist-check-all"></th>
+      <th>연락처</th><th>유입경로</th><th>등록일</th><th>기존 담당자</th><th>현재 상태</th><th>최종 컨택일</th>`;
+  } else if (currentTab === 'recontact') {
+    thead.innerHTML = `<th style="width:30px"><input type="checkbox" id="dist-check-all"></th>
       <th style="width:40px">No</th><th>이름</th><th>성별</th><th>나이</th>
-      <th>연락처</th><th>유입경로</th><th>등록일</th><th>과거 이력</th>
-    `;
-  } else if (currentTab === 'dist') {
-    thead.innerHTML = `
-      <th style="width:40px">No</th><th>이름</th><th>성별</th><th>나이</th>
-      <th>연락처</th><th>유입경로</th><th>등록일</th><th>담당매니저</th><th>분배상태</th>
-    `;
+      <th>연락처</th><th>등록일</th><th>과거 프로그램</th><th>미팅 횟수</th><th>총 결제액</th><th>클레임</th>`;
   } else {
-    thead.innerHTML = `
-      <th style="width:30px"><input type="checkbox" id="dist-check-all"></th>
+    thead.innerHTML = `<th style="width:30px"><input type="checkbox" id="dist-check-all"></th>
       <th style="width:40px">No</th><th>이름</th><th>성별</th><th>나이</th>
-      <th>연락처</th><th>유입경로</th><th>등록일</th><th>분배상태</th>
-    `;
+      <th>연락처</th><th>학력</th><th>유입경로</th><th>등록일</th>`;
   }
 
   if (filtered.length === 0) {
-    const colSpan = currentTab === 'blocked' || currentTab === 'dist' ? 9 : 10;
-    tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:40px;color:var(--text-muted)">조건에 맞는 회원이 없습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--text-muted)">조건에 맞는 회원이 없습니다.</td></tr>`;
     document.getElementById('dist-pagination').innerHTML = '';
     return;
   }
 
-  // 페이징
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * PAGE_SIZE;
@@ -311,72 +652,44 @@ function renderTable(filtered) {
   tbody.innerHTML = paged.map((m, i) => {
     const screening = getScreening(m);
     const no = start + i + 1;
-    const isRecontact = m.channel === '기간만료(재컨텍)';
-    const typeBadge = isRecontact
-      ? '<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;margin-left:4px;white-space:nowrap">🔄 재컨텍</span>'
-      : '<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;margin-left:4px;white-space:nowrap">🆕 신규</span>';
 
-    if (currentTab === 'blocked') {
-      const reasonHtml = screening.reasons.map(r =>
-        `<span class="screening-tag screening-tag--block">🚫 ${r}</span>`
-      ).join(' ');
-      const dupInfo = screening.existingMember
-        ? `<span class="screening-tag screening-tag--dup">→ 기존: ${screening.existingMember.consultant || '-'}</span>`
-        : '';
-      return `<tr style="background:#fef2f2">
-        <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#333;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
-        <td style="text-align:center">${m.gender}</td>
-        <td style="text-align:center">${m.age}세</td>
-        <td>${Formatters.phone(m.phone)}</td>
-        <td style="font-size:11px">${m.channel || '-'}</td>
-        <td>${Formatters.date(m.registeredAt)}</td>
-        <td style="max-width:250px">${reasonHtml} ${dupInfo}</td>
-      </tr>`;
-    }
-
-    if (currentTab === 'alert') {
-      const tagHtml = screening.tags.map(t =>
-        `<span class="screening-tag screening-tag--alert">⚠️ ${t.label}</span>`
-      ).join(' ');
-      return `<tr style="background:#fffbeb">
+    if (currentTab === 'duplicate') {
+      const info = screening.duplicateInfo || {};
+      return `<tr>
         <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
         <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#333;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
-        <td style="text-align:center">${m.gender}</td>
-        <td style="text-align:center">${m.age}세</td>
+        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
+        <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
         <td>${Formatters.phone(m.phone)}</td>
-        <td style="font-size:11px">${m.channel || '-'}</td>
-        <td>${Formatters.date(m.registeredAt)}</td>
-        <td style="max-width:250px">${tagHtml}</td>
+        <td style="font-size:11px">${m.channel || '-'}</td><td>${Formatters.date(m.registeredAt)}</td>
+        <td><span style="font-weight:600;color:#d97706">${info.existingManager || '미배정'}</span></td>
+        <td><span class="screening-tag screening-tag--dup">${info.existingStatus || '-'}</span></td>
+        <td style="font-size:11px">${info.lastContactAt ? Formatters.date(info.lastContactAt) : '-'}</td>
       </tr>`;
     }
-
-    if (currentTab === 'dist') {
-      return `<tr style="background:#f0f9ff;opacity:0.8">
+    if (currentTab === 'recontact') {
+      const info = screening.recontactInfo || {};
+      return `<tr>
+        <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
         <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:#0369a1;text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
-        <td style="text-align:center">${m.gender}</td>
-        <td style="text-align:center">${m.age}세</td>
-        <td>${Formatters.phone(m.phone)}</td>
-        <td style="font-size:11px">${m.channel || '-'}</td>
-        <td>${Formatters.date(m.registeredAt)}</td>
-        <td><span style="font-weight:600;color:#0369a1">${m.consultant}</span></td>
-        <td style="text-align:center"><span class="badge badge--green" style="font-size:10px;padding:2px 8px">분배완료</span></td>
+        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
+        <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
+        <td>${Formatters.phone(m.phone)}</td><td>${Formatters.date(m.registeredAt)}</td>
+        <td style="font-size:11px">${info.program || '-'}</td>
+        <td style="text-align:center">${info.meetingCount || 0}회</td>
+        <td style="text-align:right">${info.totalPayment ? info.totalPayment.toLocaleString() + '원' : '-'}</td>
+        <td style="text-align:center">${info.hasClaim ? '<span style="color:#dc2626;font-weight:600">있음</span>' : '-'}</td>
       </tr>`;
     }
-
-    // undist (분배 대기)
+    // new
     return `<tr>
       <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
       <td style="text-align:center">${no}</td>
-      <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline;cursor:pointer" onclick="event.stopPropagation()">${m.name}</a> ${typeBadge}</td>
-      <td style="text-align:center">${m.gender}</td>
-      <td style="text-align:center">${m.age}세</td>
+      <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
+      <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
       <td>${Formatters.phone(m.phone)}</td>
-      <td style="font-size:11px">${m.channel || '-'}</td>
-      <td>${Formatters.date(m.registeredAt)}</td>
-      <td style="text-align:center"><span class="badge badge--red" style="font-size:10px;padding:2px 8px">미분배</span></td>
+      <td style="font-size:11px">${m.education || '-'}</td>
+      <td style="font-size:11px">${m.channel || '-'}</td><td>${Formatters.date(m.registeredAt)}</td>
     </tr>`;
   }).join('');
 
@@ -410,91 +723,28 @@ function handleManualDist() {
   const checks = document.querySelectorAll('.dist-check:checked');
   selectedIds = [];
   checks.forEach(c => selectedIds.push(parseInt(c.value)));
-  if (selectedIds.length === 0) { Toast.show('분배할 회원을 선택하세요.', 'warning'); return; }
+  if (selectedIds.length === 0) { Toast.show('등록할 회원을 선택하세요.', 'warning'); return; }
+
+  const manager = document.getElementById('dist-mgr-select')?.value;
+  if (!manager) { Toast.show('매니저를 선택하세요.', 'warning'); return; }
+
+  if (!confirm(`${selectedIds.length}명을 ${manager} 매니저에게 등록하시겠습니까?`)) return;
 
   const selected = MockAssociates.filter(m => selectedIds.includes(m.id));
-  const screening = selected.map(m => getScreening(m));
-  const hasAlerts = screening.some(s => s.action === 'alert');
+  selected.forEach(m => {
+    m.consultant = manager;
+    m.distributedAt = new Date().toISOString();
+    saveMemberChange(m.id, { consultant: m.consultant, distributedAt: m.distributedAt });
+    addDistHistory(m.name, manager);
 
-  Modal.show({
-    title: `✋ 수동 회원분배 (${selected.length}명)`,
-    size: 'lg',
-    content: `
-      ${hasAlerts ? `
-        <div style="padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;margin-bottom:14px;font-size:11px;color:#92400e">
-          ⚠️ 과거 이력이 있는 회원이 포함되어 있습니다. 매니저에게 이력 태그가 함께 전달됩니다.
-        </div>
-      ` : ''}
-      <div style="margin-bottom:16px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:8px">선택된 회원 (${selected.length}명)</div>
-        <div style="max-height:180px;overflow-y:auto">
-          <table class="data-table" style="font-size:11px"><thead><tr><th>No</th><th>이름</th><th>성별</th><th>나이</th><th>유입경로</th><th>이력</th></tr></thead>
-          <tbody>${selected.map((m, i) => {
-            const s = getScreening(m);
-            const tagHtml = s.tags.length > 0
-              ? s.tags.map(t => `<span class="screening-tag screening-tag--alert" style="font-size:9px">⚠️</span>`).join('')
-              : '-';
-            return `<tr><td>${i+1}</td><td>${m.name}</td><td>${m.gender}</td><td>${m.age}세</td><td>${m.channel || '-'}</td><td>${tagHtml}</td></tr>`;
-          }).join('')}</tbody></table>
-        </div>
-      </div>
-      <div style="padding:16px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:8px">배정할 매니저</div>
-        <input type="text" id="dist-mgr-search" class="form-input form-input--sm" placeholder="매니저 이름 검색..." style="font-size:11px;margin-bottom:8px">
-        <div style="max-height:200px;overflow-y:auto">
-          <table class="data-table" style="font-size:11px">
-            <thead><tr><th style="width:30px"></th><th>매니저</th><th style="text-align:center">보유 DB</th></tr></thead>
-            <tbody id="dist-mgr-tbody">
-              ${CONSULTANTS.map(c => {
-                const stats = getManagerStats();
-                const cnt = stats[c] ? stats[c].total : 0;
-                return `<tr data-mgr="${c}"><td style="text-align:center"><input type="radio" name="dist-mgr-radio" value="${c}"></td><td style="font-weight:600">${c}</td><td style="text-align:center">${cnt}명</td></tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `,
-    footer: `<button class="btn btn--secondary" onclick="document.getElementById('modal-root').innerHTML=''">취소</button>
-             <button class="btn btn--primary" id="btn-exec-manual">분배 실행</button>`,
+    const s = getScreening(m) || {};
+    if (s.tags && s.tags.length > 0) {
+      addScreeningLog(m, s);
+    }
   });
-
-  setTimeout(() => {
-    const mgrSearch = document.getElementById('dist-mgr-search');
-    if (mgrSearch) {
-      mgrSearch.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
-        document.querySelectorAll('#dist-mgr-tbody tr').forEach(tr => {
-          const name = tr.getAttribute('data-mgr') || '';
-          tr.style.display = name.toLowerCase().includes(q) ? '' : 'none';
-        });
-      });
-    }
-
-    const execBtn = document.getElementById('btn-exec-manual');
-    if (execBtn) {
-      execBtn.addEventListener('click', () => {
-        const radio = document.querySelector('input[name="dist-mgr-radio"]:checked');
-        const manager = radio ? radio.value : '';
-        if (!manager) { Toast.show('매니저를 선택하세요.', 'warning'); return; }
-        selected.forEach(m => {
-          m.consultant = manager;
-          if (m.status === '컨텍전') m.status = '부재중(미컨텍)';
-          addDistHistory(m.name, manager);
-
-          // 알림 분배 태그가 있으면 이력 저장
-          const s = getScreening(m);
-          if (s.tags.length > 0) {
-            addScreeningLog(m, s);
-          }
-        });
-        screeningCache.clear(); // 캐시 초기화
-        document.getElementById('modal-root').innerHTML = '';
-        Toast.show(`${selected.length}명이 ${manager} 매니저에게 분배되었습니다.`, 'success');
-        render(); // 전체 재렌더
-      });
-    }
-  }, 100);
+  screeningCache.clear();
+  Toast.show(`${selected.length}명이 ${manager} 매니저에게 등록되었습니다.`, 'success');
+  render();
 }
 
 render();

@@ -5,15 +5,14 @@ import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { AssociateService } from '@services/associate.service.js';
 import { MockAssociates } from '@mock/associates.js';
-import { CONSULTANTS, ASSOCIATE_STATUSES } from '@config/constants.js';
+import { CONSULTANTS, ASSOCIATE_STATUSES, BRANCHES, CONSULTANT_BRANCH } from '@config/constants.js';
 
 initLayout({ pageId: 'associate-list', breadcrumbs: ['준회원 관리', '준회원 목록'] });
 const content = document.getElementById('content');
 
-const BRANCHES=['본사','경기','부산','대구','대전','광주'];
 const REGIONS=['서울','부산','대구','광주','인천','대전','울산','경기','강원','세종','충북','충남','경북','경남','전북','전남','제주','해외','지역없음'];
 const CHANNELS=['가입비견적','결혼테스트','네이버예약','네이버커플','무료상담','무료맞선권','블라인드커플','실시간상담','이상형매칭','카카오커플','카카오톡','MBTI테스트','TV광고','구글커플','메타커플','당근커플','렌딩-두두'];
-const EDUCATIONS=['고졸','전문대졸','대졸','석사','박사'];
+const EDUCATIONS=['고졸','전문대 재중','전문대 중퇴','전문대 졸업','대학 재중','대학 중퇴','대학 졸업','대학원 재중','대학원 중퇴','대학원 졸업','박사 과정','박사 수료','박사'];
 
 function getRole(){ return localStorage.getItem('purples_role')||'admin'; }
 function roleName(r){ return {admin:'관리자 (본사)',branch:'지사장',manager:'일반 매니저'}[r]||r; }
@@ -56,18 +55,65 @@ async function render(){
   </select>
   <span style="font-size:11px;color:var(--text-secondary)">현재: <strong>${roleName(role)}</strong></span>
 </div>
-<div class="filter-bar"><div class="filter-bar__row">
-  <div class="filter-bar__item"><label>지사</label><select class="form-select form-input--sm" id="f-branch"><option value="">전체</option>${BRANCHES.map(b=>`<option>${b}</option>`).join('')}</select></div>
-  <div class="filter-bar__item"><label>상담매니저</label><select class="form-select form-input--sm" id="f-consult"><option value="">전체</option>${CONSULTANTS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-  <div class="filter-bar__item"><label>성별</label><select class="form-select form-input--sm" id="f-gender"><option value="">전체</option><option>남</option><option>여</option></select></div>
-  <div class="filter-bar__item"><label>결혼여부</label><select class="form-select form-input--sm" id="f-marital"><option value="">전체</option><option>초혼</option><option>재혼</option></select></div>
-  <div class="filter-bar__item"><label>학력</label><select class="form-select form-input--sm" id="f-edu"><option value="">전체</option>${EDUCATIONS.map(e=>`<option>${e}</option>`).join('')}</select></div>
-  <div class="filter-bar__item"><label>상태</label><select class="form-select form-input--sm" id="f-status"><option value="">전체</option>${ASSOCIATE_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div>
-  <div class="filter-bar__item"><label>지역</label><select class="form-select form-input--sm" id="f-region"><option value="">전체</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}</select></div>
-  <div class="filter-bar__item"><label>가입경로</label><select class="form-select form-input--sm" id="f-channel"><option value="">전체</option>${CHANNELS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-  <div class="filter-bar__search"><label>검색</label><input class="form-input form-input--sm" id="f-keyword" placeholder="이름, 전화번호, 직장 검색..."></div>
-  <button class="btn btn--primary btn--sm" id="btn-search" style="align-self:flex-end">검색</button>
-</div></div>
+
+<!-- 검색 영역 (테이블 형식) -->
+<table class="search-table" id="filter-bar">
+  <tbody>
+    <tr>
+      <th class="search-table__th">회원검색</th>
+      <td class="search-table__td">
+        <input type="text" class="form-input form-input--sm fi" id="f-keyword" placeholder="이름, 전화번호, 직장 검색" style="width:220px">
+      </td>
+    </tr>
+    <tr>
+      <th class="search-table__th">상세검색</th>
+      <td class="search-table__td">
+        <select class="form-input form-input--sm fi" id="f-gender" style="width:70px">
+          <option value="">성별</option><option value="남">남</option><option value="여">여</option>
+        </select>
+        <select class="form-input form-input--sm fi" id="f-marital" style="width:80px">
+          <option value="">결혼여부</option><option value="초혼">초혼</option><option value="재혼">재혼</option>
+        </select>
+        <select class="form-input form-input--sm fi" id="f-edu" style="width:80px">
+          <option value="">학력</option>${EDUCATIONS.map(e=>`<option>${e}</option>`).join('')}
+        </select>
+        <select class="form-input form-input--sm fi" id="f-status" style="width:120px">
+          <option value="">상태 전체</option>${ASSOCIATE_STATUSES.map(s=>`<option>${s}</option>`).join('')}
+        </select>
+        <select class="form-input form-input--sm fi" id="f-region" style="width:80px">
+          <option value="">지역</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}
+        </select>
+        <select class="form-input form-input--sm fi" id="f-channel" style="width:110px">
+          <option value="">경로 전체</option>${CHANNELS.map(c=>`<option>${c}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th class="search-table__th">매니저</th>
+      <td class="search-table__td">
+        <select class="form-input form-input--sm fi" id="f-branch" style="width:100px">
+          <option value="">지사 전체</option>${BRANCHES.map(b=>`<option value="${b.name}">${b.name}</option>`).join('')}
+        </select>
+        <select class="form-input form-input--sm fi" id="f-consult" style="width:140px">
+          <option value="">매니저 전체</option>
+          ${CONSULTANTS.map(c => {
+            const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
+            const bName = branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || '';
+            return `<option value="${c}">${c} (${bName})</option>`;
+          }).join('')}
+        </select>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div class="search-actions">
+  <button class="btn btn--sm search-btn" id="btn-search">검색</button>
+  <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+</div>
+
+
+
+
 ${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:8px">${roleButtons(role)}</div>`:''}
 <div id="tbl"></div>`;
 
@@ -113,6 +159,18 @@ ${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-ite
   document.getElementById('f-keyword').onkeydown=e=>{if(e.key==='Enter')applyFilters();};
   document.getElementById('btn-new').onclick=()=>{ window.location.href='register.html'; };
   document.getElementById('role-sw').onchange=e=>{localStorage.setItem('purples_role',e.target.value);render();Toast.show(`권한: ${roleName(e.target.value)}`,'info');};
+
+  // 초기화 버튼
+  document.getElementById('btn-reset')?.addEventListener('click',()=>{
+    ['f-keyword'].forEach(id=>document.getElementById(id).value='');
+    ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch','f-consult'].forEach(id=>document.getElementById(id).value='');
+    applyFilters();
+  });
+
+  // 드롭다운 변경 시 자동 검색
+  ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch','f-consult'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change', applyFilters);
+  });
 
   // ── 일괄변경 모달 (관리자 전용) ──
   document.getElementById('btn-bulk')?.addEventListener('click',()=>{

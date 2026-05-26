@@ -5,37 +5,63 @@
 -- ============================================
 
 -- ============================================
--- 1. 준회원 테이블
+-- 1. 준회원 테이블 (기존: [dbo].[associate_mem])
 -- ============================================
-CREATE TABLE associates (
-  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name          text NOT NULL,
-  phone         text NOT NULL,
-  gender        text CHECK (gender IN ('남','여')),
-  birth_date    date,
-  education     text,
-  school        text,
-  job           text,
-  company       text,
-  region        text,
-  branch        text,
-  brand         text DEFAULT '퍼플스',
-  marital_status text DEFAULT '초혼',
-  status        text DEFAULT '컨텍전',
-  channel       text,
-  consultant    text,
-  registered_at timestamptz DEFAULT now(),
-  distributed_at timestamptz,
-  last_contact_at timestamptz,
-  memo          text,
-  created_at    timestamptz DEFAULT now(),
-  updated_at    timestamptz DEFAULT now()
+-- ※ 컬럼명은 기존 시스템과 동일하게 유지
+-- ※ 전화번호는 기존 3분할(tel_hand1/2/3) → 단일필드(tel_hand)로 통합
+-- ※ 주민번호(jumin1/2) 폐지 → birthday로 통일
+CREATE TABLE associate_mem (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  -- 인적사항
+  uname           text NOT NULL,                            -- 회원명 (기존: uname)
+  sex             text CHECK (sex IN ('남','여')),           -- 성별 (기존: 1:남 2:여 → 텍스트로 변경)
+  birthday        date,                                     -- 생년월일 (기존: birthday)
+  age             smallint,                                 -- 나이
+  married         text DEFAULT '초혼',                       -- 결혼이부 (기존: 1:미혼 2:재혼 → 텍스트로 변경)
+  -- 학력/직업
+  school          text,                                     -- 학력 (기존: school, 정형화 예정)
+  school_name     text,                                     -- 학교명 (기존: school_name)
+  job_name        text,                                     -- 직업 (기존: job_name)
+  office          text,                                     -- 직장명 (기존: office)
+  -- 연락처 (기존 3분할 → 통합)
+  tel_hand        text NOT NULL,                            -- 핸드폰 (기존: tel_hand1+2+3)
+  tel_eto         text,                                     -- 핸드폰2 (기존: tel_eto1+2+3)
+  tel_home        text,                                     -- 자택전화 (기존: tel_home1+2+3)
+  tel_office      text,                                     -- 직장전화 (기존: tel_office1+2+3)
+  email           text,                                     -- 이메일 (기존: email)
+  -- 지역/소속
+  live_local      text,                                     -- 지역코드 (기존: live_local)
+  branch          text,                                     -- 지사코드
+  brand           text DEFAULT '퍼플스',                     -- 브랜드
+  -- 상태/이력
+  state           text DEFAULT '컨텍전',                     -- 회원상태 (기존: state)
+  etc             text,                                     -- 유입경로 (기존: etc)
+  course          text,                                     -- 담당매니저 (기존: course)
+  -- 신체/기타
+  height          smallint,                                 -- 신장 (기존: height)
+  weight          smallint,                                 -- 체중 (기존: weight)
+  bloodtype       text,                                     -- 혈액형 (기존: bloodtype)
+  children        text,                                     -- 자녀 (기존: children)
+  religion        text,                                     -- 종교 (기존: religion)
+  hobby           text,                                     -- 취미 (기존: hobby)
+  hope            text,                                     -- 희망사항 (기존: hope)
+  -- 일자
+  find_date       timestamptz DEFAULT now(),                 -- 등록일 (기존: find_date)
+  input_date      timestamptz,                              -- 분배일 (기존: input_date)
+  last_counsel    timestamptz,                              -- 최종상담일 (기존: last_counsel)
+  last_update     timestamptz,                              -- 최종업데이트 (기존: last_update)
+  -- 분배/메모
+  associate_provide_idx uuid,                               -- 분배이력 FK (기존: associate_provide_idx)
+  memo            text,
+  -- 시스템
+  created_at      timestamptz DEFAULT now(),
+  updated_at      timestamptz DEFAULT now()
 );
 
 -- 검색 성능용 인덱스
-CREATE INDEX idx_associates_status ON associates(status);
-CREATE INDEX idx_associates_branch ON associates(branch);
-CREATE INDEX idx_associates_phone ON associates(phone);
+CREATE INDEX idx_assoc_state ON associate_mem(state);
+CREATE INDEX idx_assoc_branch ON associate_mem(branch);
+CREATE INDEX idx_assoc_tel_hand ON associate_mem(tel_hand);
 
 -- ============================================
 -- 2. 정회원 테이블

@@ -30,7 +30,7 @@
   </div>
 
   <div class="card">
-    <h2>2. 준회원 데이터 (associates)</h2>
+    <h2>2. 준회원 데이터 (associate_mem)</h2>
     <p>건수: <span id="assoc-count">-</span></p>
     <table id="assoc-table"><thead><tr><th>이름</th><th>전화</th><th>지사</th><th>상태</th></tr></thead><tbody></tbody></table>
   </div>
@@ -66,12 +66,12 @@
 
       try {
         // 1. 준회원
-        const { data: assocs, error: e1 } = await supabase.from('associates').select('*');
-        if (e1) throw new Error('associates 조회 실패: ' + e1.message);
+        const { data: assocs, error: e1 } = await supabase.from('associate_mem').select('*');
+        if (e1) throw new Error('associate_mem 조회 실패: ' + e1.message);
         document.getElementById('assoc-count').textContent = assocs.length + '건';
         const tbody1 = document.querySelector('#assoc-table tbody');
         assocs.forEach(r => {
-          tbody1.innerHTML += `<tr><td>${r.name}</td><td>${r.phone}</td><td>${r.branch}</td><td>${r.status}</td></tr>`;
+          tbody1.innerHTML += `<tr><td>${r.uname}</td><td>${r.tel_hand}</td><td>${r.branch}</td><td>${r.state}</td></tr>`;
         });
         log(`✅ 준회원 ${assocs.length}건 조회 성공`);
 

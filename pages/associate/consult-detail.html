@@ -4,11 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>매니저 상담현황 - 퍼플스 인트라넷</title>
+  <link rel="stylesheet" href="../../src/styles/variables.css">
+  <link rel="stylesheet" href="../../src/styles/base.css">
+  <link rel="stylesheet" href="../../src/styles/layout.css">
+  <link rel="stylesheet" href="../../src/styles/components.css">
+  <style>
+    body {
+      overflow-y: auto;
+      min-height: 100vh;
+      background: var(--bg-primary);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #detail-content {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px 48px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="detail-content">로딩 중...</div>
   <div id="modal-root"></div>
-  <div class="toast-container" id="toast-container"></div>
+  <div id="toast-container" style="position:fixed;top:20px;right:20px;z-index:9999"></div>
   <script type="module" src="./consult-detail.js"></script>
 </body>
 </html>

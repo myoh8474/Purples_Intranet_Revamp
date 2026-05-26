@@ -1,7 +1,8 @@
 /* ========================================
-   유입DB 소스외 자동 분류 서비스
-   - 자동 소스외: 즉시 차단 (중복/학력/나이/형식오류)
-   - 알림 분배: 정상 분배 + 이력 태그 노출
+   유입DB 스크리닝 서비스 v3 (최종 확정안)
+   ─────────────────────────────────
+   시스템 자동 처리: 전화번호 형식 오류만
+   나머지(나이/학력/중복): 차단 안 함 → 분류 정보만 반환
    ======================================== */
 import { MockAssociates } from '@mock/associates.js';
 
@@ -28,33 +29,8 @@ export function validatePhone(phone) {
 }
 
 /**
- * 나이 부적격 검증
- * @param {number} age - 만 나이
- * @returns {{ valid: boolean, reason?: string }}
- */
-export function validateAge(age) {
-  if (!age && age !== 0) return { valid: true }; // 나이 정보 없으면 SKIP
-  if (age < 19) return { valid: false, reason: `연령 부적격 (${age}세 - 19세 미만)` };
-  if (age >= 65) return { valid: false, reason: `연령 부적격 (${age}세 - 65세 이상)` };
-  return { valid: true };
-}
-
-/**
- * 학력/성별 검증 (남성 고졸 이하만 제외)
- * @param {string} gender - '남' | '여'
- * @param {string} education - 학력
- * @returns {{ valid: boolean, reason?: string }}
- */
-export function validateEducation(gender, education) {
-  if (!gender || !education) return { valid: true }; // 정보 없으면 SKIP
-  if (gender === '남' && education === '고졸') {
-    return { valid: false, reason: '남성 고졸 이하 분배 제외' };
-  }
-  return { valid: true };
-}
-
-/**
  * 중복 DB 검증 (현재 진행 중 회원과 동일 번호)
+ * - 차단하지 않고, 중복 정보만 반환
  * @param {string} phone - 전화번호
  * @param {number} [excludeId] - 자기 자신 제외용 ID
  * @returns {{ duplicate: boolean, existingMember?: object, reason?: string }}
@@ -98,120 +74,113 @@ export function checkDuplicate(phone, excludeId) {
 }
 
 /**
- * 과거 이력 조회 (알림 분배용 태그)
- * @param {string} phone - 전화번호
- * @returns {{ hasHistory: boolean, tags: Array<{type: string, label: string, date: string}> }}
+ * 기간만료(재컨텍) 여부 판단
+ * - 과거 정회원 계약 종료 후 재유입
+ * @param {object} member - 회원 데이터
+ * @returns {{ isRecontact: boolean, pastHistory?: object }}
  */
-export function checkPastHistory(phone) {
-  if (!phone) return { hasHistory: false, tags: [] };
-  const cleaned = phone.replace(/[^0-9]/g, '');
-  const tags = [];
-
-  // 과거 불가 상태 이력 체크
-  const pastBlocked = MockAssociates.filter(m => {
-    const mPhone = (m.phone || '').replace(/[^0-9]/g, '');
-    return mPhone === cleaned && ['불가', '소스외'].includes(m.status);
-  });
-
-  // localStorage에서 상태 업데이트 이력 확인
-  try {
-    const updates = JSON.parse(localStorage.getItem('purples_status_updates') || '{}');
-    Object.entries(updates).forEach(([id, update]) => {
-      const member = MockAssociates.find(m => m.id === parseInt(id));
-      if (!member) return;
-      const mPhone = (member.phone || '').replace(/[^0-9]/g, '');
-      if (mPhone !== cleaned) return;
-
-      const status = typeof update === 'string' ? update : update.status;
-      if (['불가', '소스외'].includes(status)) {
-        const reason = typeof update === 'object' ? update.reason : '';
-        tags.push({
-          type: 'blocked',
-          label: `과거 '${status}${reason ? ' - ' + reason : ''}' 이력`,
-          date: typeof update === 'object' && update.date ? update.date : '',
-        });
-      }
-    });
-  } catch (e) {}
-
-  // 과거 인증 반려 이력 체크 (localStorage)
-  try {
-    const certHistory = JSON.parse(localStorage.getItem('purples_cert_reject_history') || '[]');
-    certHistory.forEach(entry => {
-      const ePhone = (entry.phone || '').replace(/[^0-9]/g, '');
-      if (ePhone === cleaned) {
-        tags.push({
-          type: 'cert_reject',
-          label: `과거 인증 반려 (${entry.reason || '사유 미상'})`,
-          date: entry.date || '',
-        });
-      }
-    });
-  } catch (e) {}
-
-  // pastBlocked에서도 태그 생성
-  pastBlocked.forEach(m => {
-    if (!tags.find(t => t.label.includes(m.status))) {
-      tags.push({
-        type: 'blocked',
-        label: `과거 '${m.status}' 상태 이력`,
-        date: m.registeredAt || '',
-      });
-    }
-  });
-
-  return { hasHistory: tags.length > 0, tags };
+export function checkRecontact(member) {
+  if (member.channel === '기간만료(재컨텍)') {
+    return {
+      isRecontact: true,
+      pastHistory: {
+        program: member.pastProgram || '-',
+        meetingCount: member.pastMeetings || 0,
+        totalPayment: member.pastTotalPayment || 0,
+        hasClaim: member.pastClaim || false,
+      },
+    };
+  }
+  return { isRecontact: false };
 }
 
 /**
- * 유입 DB 종합 소스외 체크 (메인 함수)
- * @param {object} member - 회원 데이터 { phone, gender, age, education, ... }
- * @returns {{ action: 'block'|'alert'|'pass', reasons: string[], tags: Array, existingMember?: object }}
+ * 자동 분배 채널 판단
+ * @param {object} member - 회원 데이터
+ * @returns {{ type: 'auto_roundrobin'|'auto_direct'|'manual', directManager?: string }}
+ */
+export function checkAutoDistribute(member) {
+  // 홈페이지 담당자 지정 상담 → 다이렉트 배정
+  if (member.channel === '실시간상담' && member.designatedManager) {
+    return { type: 'auto_direct', directManager: member.designatedManager };
+  }
+
+  // 랜딩페이지 채널 (CPA/SNS 등) 완전 신규 → 자동 순번 분배
+  const landingChannels = [
+    '카카오커플', '네이버커플', '구글커플', '블라인드커플', '당근커플',
+    '인스타리어', 'SNS기타', 'TV광고', '커플테스타', 'MBTI테스트',
+    '사주궁합운세', '타겟팅', '렌딩-두두',
+  ];
+
+  if (landingChannels.includes(member.channel)) {
+    return { type: 'auto_roundrobin' };
+  }
+
+  // 나머지 → 관리자 수동 분배
+  return { type: 'manual' };
+}
+
+/**
+ * 유입 DB 종합 스크리닝 (메인 함수)
+ * ─────────────────────────────────
+ * 최종 확정안:
+ *  - 자동 차단: 전화번호 형식 오류만
+ *  - 분류: 신규(new) / 중복(duplicate) / 기간만료 재컨텍(recontact)
+ *  - 나이/학력: 차단하지 않음, 데이터 그대로 팀장 판단
+ * 
+ * @param {object} member - 회원 데이터
+ * @returns {{ 
+ *   action: 'block'|'pass',
+ *   routeTo: 'new'|'duplicate'|'recontact'|null,
+ *   reasons: string[],
+ *   duplicateInfo?: object,
+ *   recontactInfo?: object,
+ *   autoDistribute?: object
+ * }}
  */
 export function screenIncomingDB(member) {
-  const result = { action: 'pass', reasons: [], tags: [], existingMember: null };
+  const result = {
+    action: 'pass',
+    routeTo: null,
+    reasons: [],
+    duplicateInfo: null,
+    recontactInfo: null,
+    autoDistribute: null,
+  };
 
-  // ── 1단계: 자동 소스외 (즉시 차단) ──
-
-  // ① 전화번호 형식 검증
+  // ── 1. 전화번호 형식 검증 (형식오류 → 자동 소스외) ──
   const phoneCheck = validatePhone(member.phone);
   if (!phoneCheck.valid) {
     result.action = 'block';
     result.reasons.push(phoneCheck.reason);
-    return result; // 즉시 리턴 (더 체크할 필요 없음)
+    return result;
   }
 
-  // ② 중복 DB (현재 진행 중 회원)
+  // ── 2. 기간만료(재컨텍) 체크 → 탭3 ──
+  const recontactCheck = checkRecontact(member);
+  if (recontactCheck.isRecontact) {
+    result.routeTo = 'recontact';
+    result.recontactInfo = recontactCheck.pastHistory;
+    return result;
+  }
+
+  // ── 3. 중복 체크 → 탭2 (차단 아님, 분류만) ──
   const dupCheck = checkDuplicate(member.phone, member.id);
   if (dupCheck.duplicate) {
-    result.action = 'block';
+    result.routeTo = 'duplicate';
+    result.duplicateInfo = {
+      existingMember: dupCheck.existingMember,
+      existingManager: dupCheck.existingMember?.consultant || '미배정',
+      existingStatus: dupCheck.existingMember?.status || '-',
+      lastContactAt: dupCheck.existingMember?.lastContactAt || '',
+    };
     result.reasons.push(dupCheck.reason);
-    result.existingMember = dupCheck.existingMember;
     return result;
   }
 
-  // ③ 나이 체크 (정보 있을 때만)
-  const ageCheck = validateAge(member.age);
-  if (!ageCheck.valid) {
-    result.action = 'block';
-    result.reasons.push(ageCheck.reason);
-    return result;
-  }
-
-  // ④ 학력/성별 체크 (정보 있을 때만)
-  const eduCheck = validateEducation(member.gender, member.education);
-  if (!eduCheck.valid) {
-    result.action = 'block';
-    result.reasons.push(eduCheck.reason);
-    return result;
-  }
-
-  // ── 2단계: 알림 분배 (차단 X, 이력 태그) ──
-  const historyCheck = checkPastHistory(member.phone);
-  if (historyCheck.hasHistory) {
-    result.action = 'alert';
-    result.tags = historyCheck.tags;
-  }
+  // ── 4. 신규 → 탭1 (자동/수동 분배 판단) ──
+  result.routeTo = 'new';
+  result.autoDistribute = checkAutoDistribute(member);
 
   return result;
 }

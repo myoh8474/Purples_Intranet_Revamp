@@ -1,35 +1,18 @@
 /* ========================================
-   매니저 개별 상담현황 (Consult Detail)
-   
-   상담현황 목록에서 매니저 이름 클릭 시 표시
-   - 날짜 + 매니저 상담현황 요약 (컨텍수, 전화, SMS 등)
-   - 당일 미팅
-   - 당일 미팅예약
-   - 상담 내역 로그
+   매니저 상세 — 기간별 성과 추이
    ======================================== */
-import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
-import { Toast } from '@components/Toast.js';
-import { Modal } from '@components/Modal.js';
 import { MockAssociates } from '@mock/associates.js';
+import { BRANCHES } from '@config/constants.js';
 
 const params = new URLSearchParams(window.location.search);
 const managerName = params.get('manager') || '';
-const dateParam = params.get('date') || new Date().toISOString().slice(0, 10);
 
-initLayout({ pageId: 'associate-consult-status', breadcrumbs: ['준회원 관리', '상담현황', managerName] });
-const content = document.getElementById('content');
+const content = document.getElementById('detail-content');
 
-/* ── 상태 분류 헬퍼 ── */
-function classifyStatus(status) {
-  const map = {
-    '컨텍전': 'inflow', '부재중(미컨텍)': 'missed',
-    '낮음(컨텍)': 'consulting', '보통(컨텍)': 'consulting', '높음(컨텍)': 'consulting',
-    '장기상담(컨텍)': 'consulting', '가입보류(컨텍)': 'consulting',
-    '방문상담': 'meeting', '가입중': 'contract', '가입완료': 'contract',
-  };
-  return map[status] || 'pending';
-}
+/* ── 지사 코드→한글 ── */
+const branchMap = {};
+BRANCHES.forEach(b => { branchMap[b.code] = b.name; });
 
 /* ── 데이터 가져오기 ── */
 function getManagerData() {
@@ -41,383 +24,367 @@ function getManagerData() {
   return data.filter(m => m.consultant === managerName);
 }
 
-/* ── 당일 미팅 조회 ── */
-function getTodayMeetings(data) {
-  const meetings = [];
-  data.forEach(m => {
-    try {
-      const hist = JSON.parse(localStorage.getItem('purples_meeting_history_' + m.id) || '[]');
-      hist.forEach(h => {
-        if (h.date && h.date.startsWith(dateParam) && h.status !== '예약') {
-          meetings.push({ ...h, memberName: m.name, memberId: m.id, consultant: m.consultant });
-        }
-      });
-    } catch (e) {}
-  });
-  meetings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  return meetings;
-}
+/* ── 기간 내 일별 성과 집계 ── */
+function calcDailyStats(from, to) {
+  const data = getManagerData();
+  const dbCount = data.length;
+  const branch = data.length > 0 ? (branchMap[data[0].branch] || data[0].branch || '-') : '-';
 
-/* ── 당일 미팅 예약 조회 ── */
-function getTodayReservations(data) {
-  const reservations = [];
-  data.forEach(m => {
-    try {
-      const hist = JSON.parse(localStorage.getItem('purples_meeting_history_' + m.id) || '[]');
-      hist.forEach(h => {
-        if (h.date && h.date.startsWith(dateParam) && h.status === '예약') {
-          reservations.push({ ...h, memberName: m.name, memberId: m.id, consultant: m.consultant });
-        }
-      });
-    } catch (e) {}
-  });
-  reservations.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  return reservations;
-}
+  // 날짜 범위 생성
+  const dates = [];
+  const start = new Date(from);
+  const end = new Date(to);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(d.toISOString().slice(0, 10));
+  }
 
-/* ── 상담 로그 수집 ── */
-function getConsultLogs(data) {
-  const logs = [];
+  // 일별 초기값
+  const daily = {};
+  dates.forEach(dt => {
+    daily[dt] = { date: dt, contacts: 0, calls: 0, meetings: 0, joins: 0, amount: 0 };
+  });
+
+  // 상담 로그 집계 (컨텍수, 콜수)
   data.forEach(m => {
     // contactHistory
     (m.contactHistory || []).forEach(h => {
-      logs.push({
-        consultant: m.consultant,
-        memberName: m.name,
-        memberId: m.id,
-        date: h.date || h.createdAt,
-        type: h.type || '통화',
-        content: h.content || '-',
-        result: h.result || '-',
-      });
+      const dt = (h.date || h.createdAt || '').slice(0, 10);
+      if (daily[dt]) {
+        daily[dt].contacts++;
+        if (h.type === '통화' || h.type === '전화') daily[dt].calls++;
+      }
     });
     // localStorage 전화상담
     try {
       const callHist = JSON.parse(localStorage.getItem('purples_call_history_' + m.id) || '[]');
       callHist.forEach(h => {
+        const dt = (h.date || h.createdAt || '').slice(0, 10);
+        if (daily[dt]) {
+          daily[dt].contacts++;
+          daily[dt].calls++;
+        }
+      });
+    } catch (e) {}
+
+    // 미팅 기록
+    try {
+      const hist = JSON.parse(localStorage.getItem('purples_meeting_history_' + m.id) || '[]');
+      hist.forEach(h => {
+        const dt = (h.date || '').slice(0, 10);
+        if (daily[dt] && h.status !== '예약' && h.status !== '취소') {
+          daily[dt].meetings++;
+        }
+      });
+    } catch (e) {}
+  });
+
+  // 방문 데이터 (가입 관련)
+  try {
+    const visitData = JSON.parse(localStorage.getItem('purples_visit_data') || '[]');
+    visitData.filter(v => v.consultant === managerName).forEach(v => {
+      const dt = (v.date || '').slice(0, 10);
+      if (daily[dt] && v.result === '가입') {
+        daily[dt].joins++;
+        daily[dt].amount += (v.amount || 0);
+      }
+    });
+  } catch (e) {}
+
+  const rows = dates.map(dt => daily[dt]).reverse(); // 최근순
+  const totals = rows.reduce((t, r) => ({
+    contacts: t.contacts + r.contacts,
+    calls: t.calls + r.calls,
+    meetings: t.meetings + r.meetings,
+    joins: t.joins + r.joins,
+    amount: t.amount + r.amount,
+  }), { contacts: 0, calls: 0, meetings: 0, joins: 0, amount: 0 });
+
+  return { rows, totals, branch, dbCount };
+}
+
+/* ── 날짜 헬퍼 ── */
+function today() { return new Date().toISOString().slice(0, 10); }
+function weekStart() {
+  const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1);
+  return d.toISOString().slice(0, 10);
+}
+function monthStart() {
+  const d = new Date(); d.setDate(1);
+  return d.toISOString().slice(0, 10);
+}
+
+/* ── 렌더 ── */
+function render() {
+  const todayStr = today();
+  document.title = `${managerName} 성과 상세 - 퍼플스 인트라넷`;
+
+  content.innerHTML = `
+    <!-- 뒤로가기 -->
+    <a class="cd-back-btn" href="javascript:void(0)" id="btn-back">← 상담현황 목록</a>
+
+    <!-- 매니저 기본정보 -->
+    <div class="cd-info">
+      <h2 class="cd-info__name">${managerName}</h2>
+      <span class="cd-info__meta" id="info-branch">-</span>
+      <span class="cd-info__meta">보유DB: <strong id="info-db">0</strong>명</span>
+    </div>
+
+    <!-- 기간 필터 -->
+    <table class="search-table">
+      <tbody>
+        <tr>
+          <th class="search-table__th">기간</th>
+          <td class="search-table__td">
+            <input type="date" id="f-from" value="${todayStr}" class="form-input form-input--sm fi" style="width:140px">
+            <span class="text-muted">~</span>
+            <input type="date" id="f-to" value="${todayStr}" class="form-input form-input--sm fi" style="width:140px">
+            <div class="period-quick-btns" style="margin-left:8px">
+              <button class="btn btn--ghost btn--sm" id="btn-today">오늘</button>
+              <button class="btn btn--ghost btn--sm" id="btn-week">이번주</button>
+              <button class="btn btn--ghost btn--sm" id="btn-month">이번달</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="search-actions">
+      <button class="btn btn--sm search-btn" id="btn-search">검색</button>
+      <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+    </div>
+
+    <!-- 기간별 성과 테이블 -->
+    <div class="list-section">
+      <div class="list-section__header">
+        <h3 class="list-section__title">기간별 성과 추이</h3>
+        <span class="list-section__meta" id="period-label">${todayStr}</span>
+      </div>
+      <div class="list-section__body">
+        <table class="std-table">
+          <thead>
+            <tr>
+              <th style="width:110px">날짜</th>
+              <th>컨텍수</th>
+              <th>콜수</th>
+              <th>방문미팅</th>
+              <th>가입건수</th>
+              <th style="width:130px">가입금액</th>
+            </tr>
+          </thead>
+          <tbody id="perf-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 관리 회원 목록 -->
+    <div class="list-section" style="margin-top:24px">
+      <div class="list-section__header">
+        <h3 class="list-section__title">관리 회원 목록</h3>
+        <span class="list-section__meta" id="member-count">0명</span>
+      </div>
+      <div class="list-section__body">
+        <table class="std-table">
+          <thead>
+            <tr>
+              <th style="width:40px">No</th>
+              <th style="width:70px">회원명</th>
+              <th style="width:60px">성별</th>
+              <th style="width:50px">나이</th>
+              <th style="width:80px">지역</th>
+              <th style="width:110px">연락처</th>
+              <th style="width:100px">회원상태</th>
+              <th style="width:100px">등록일</th>
+            </tr>
+          </thead>
+          <tbody id="member-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 상담 기록 -->
+    <div class="list-section" style="margin-top:24px">
+      <div class="list-section__header">
+        <h3 class="list-section__title">상담 기록</h3>
+        <span class="list-section__meta" id="log-count">0건</span>
+      </div>
+      <div class="list-section__body">
+        <table class="std-table">
+          <thead>
+            <tr>
+              <th style="width:40px">No</th>
+              <th style="width:100px">상담일</th>
+              <th style="width:70px">회원명</th>
+              <th style="width:110px">연락처</th>
+              <th>상담내용</th>
+              <th style="width:100px">회원상태</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // 스타일 삽입
+  const style = document.createElement('style');
+  style.textContent = `
+    .cd-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px;
+      color:var(--text-secondary); text-decoration:none; padding:6px 12px;
+      border:1px solid var(--border-light); transition:all .15s; margin-bottom:16px; }
+    .cd-back-btn:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
+    .cd-info { display:flex; align-items:center; gap:16px; padding:16px 0; margin-bottom:8px;
+      border-bottom:1px solid var(--border-light); }
+    .cd-info__name { font-size:18px; font-weight:800; margin:0; color:var(--text-primary); }
+    .cd-info__meta { font-size:12px; color:var(--text-muted); }
+    .cd-info__meta strong { color:var(--accent); font-weight:700; }
+  `;
+  content.prepend(style);
+
+  // 이벤트 바인딩
+  document.getElementById('btn-back').addEventListener('click', () => { window.close(); });
+  document.getElementById('btn-search').addEventListener('click', updateTable);
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    document.getElementById('f-from').value = todayStr;
+    document.getElementById('f-to').value = todayStr;
+    updateTable();
+  });
+  document.getElementById('btn-today').addEventListener('click', () => {
+    document.getElementById('f-from').value = todayStr;
+    document.getElementById('f-to').value = todayStr;
+    updateTable();
+  });
+  document.getElementById('btn-week').addEventListener('click', () => {
+    document.getElementById('f-from').value = weekStart();
+    document.getElementById('f-to').value = todayStr;
+    updateTable();
+  });
+  document.getElementById('btn-month').addEventListener('click', () => {
+    document.getElementById('f-from').value = monthStart();
+    document.getElementById('f-to').value = todayStr;
+    updateTable();
+  });
+
+  updateTable();
+  renderMembers();
+  renderLogs();
+}
+
+/* ── 테이블 업데이트 ── */
+function updateTable() {
+  const from = document.getElementById('f-from').value;
+  const to = document.getElementById('f-to').value;
+  const { rows, totals, branch, dbCount } = calcDailyStats(from, to);
+
+  // 기본 정보 갱신
+  document.getElementById('info-branch').textContent = branch;
+  document.getElementById('info-db').textContent = dbCount;
+
+  // 기간 레이블
+  document.getElementById('period-label').textContent = from === to ? from : `${from} ~ ${to}`;
+
+  const tbody = document.getElementById('perf-tbody');
+
+  function numCell(val) {
+    return `<td class="tc" style="color:${val > 0 ? 'var(--text-primary)' : 'var(--text-muted)'}">${val}</td>`;
+  }
+  function moneyCell(val) {
+    return `<td class="tr" style="color:${val > 0 ? 'var(--text-primary)' : 'var(--text-muted)'}">${val > 0 ? val.toLocaleString() : '0'}</td>`;
+  }
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">데이터가 없습니다.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td class="tc">${r.date}</td>
+    ${numCell(r.contacts)}
+    ${numCell(r.calls)}
+    ${numCell(r.meetings)}
+    ${numCell(r.joins)}
+    ${moneyCell(r.amount)}
+  </tr>`).join('') + `<tr style="background:var(--bg-secondary);font-weight:700;border-top:1px solid var(--border-light)">
+    <td class="tc">합계</td>
+    <td class="tc">${totals.contacts}</td>
+    <td class="tc">${totals.calls}</td>
+    <td class="tc">${totals.meetings}</td>
+    <td class="tc">${totals.joins}</td>
+    <td class="tr">${totals.amount > 0 ? totals.amount.toLocaleString() : '0'}</td>
+  </tr>`;
+}
+
+/* ── 관리 회원 목록 렌더 ── */
+function renderMembers() {
+  const data = getManagerData().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  document.getElementById('member-count').textContent = `${data.length}명`;
+  const tbody = document.getElementById('member-tbody');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="tc" style="padding:40px;color:var(--text-muted)">관리 회원이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map((m, i) => `<tr>
+    <td class="tc col-no">${i + 1}</td>
+    <td class="tc"><a href="detail.html?id=${m.id}" target="_blank" class="col-link">${m.name}</a></td>
+    <td class="tc">${m.gender || '-'}</td>
+    <td class="tc">${m.age || '-'}</td>
+    <td class="tc">${m.region || '-'}</td>
+    <td class="tc">${Formatters.phone(m.phone)}</td>
+    <td class="tc" style="white-space:nowrap">${m.status || '-'}</td>
+    <td class="tc">${m.createdAt ? m.createdAt.slice(0, 10) : '-'}</td>
+  </tr>`).join('');
+}
+
+/* ── 상담 기록 렌더 ── */
+function renderLogs() {
+  const data = getManagerData();
+  const logs = [];
+  data.forEach(m => {
+    (m.contactHistory || []).forEach(h => {
+      logs.push({
+        date: h.date || h.createdAt,
+        memberName: m.name,
+        memberId: m.id,
+        phone: m.phone,
+        content: h.content || '-',
+        status: m.status,
+      });
+    });
+    try {
+      JSON.parse(localStorage.getItem('purples_call_history_' + m.id) || '[]').forEach(h => {
         logs.push({
-          consultant: h.consultant || m.consultant,
+          date: h.date || h.createdAt,
           memberName: m.name,
           memberId: m.id,
-          date: h.date || h.createdAt,
-          type: '통화',
+          phone: m.phone,
           content: h.content || '-',
-          result: h.result || '-',
+          status: m.status,
         });
       });
     } catch (e) {}
   });
   logs.sort((a, b) => new Date(b.date) - new Date(a.date));
-  return logs;
+  const recent = logs.slice(0, 50);
+
+  document.getElementById('log-count').textContent = `${logs.length}건`;
+  const tbody = document.getElementById('log-tbody');
+  if (recent.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="tc" style="padding:40px;color:var(--text-muted)">상담 기록이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map((l, i) => {
+    const dt = l.date ? new Date(l.date) : null;
+    const dateStr = dt && !isNaN(dt) ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` : '-';
+    return `<tr>
+      <td class="tc col-no">${i + 1}</td>
+      <td class="tc">${dateStr}</td>
+      <td class="tc"><a href="detail.html?id=${l.memberId}" target="_blank" class="col-link">${l.memberName}</a></td>
+      <td class="tc">${Formatters.phone(l.phone)}</td>
+      <td class="tl" style="max-width:400px">${l.content}</td>
+      <td class="tc" style="white-space:nowrap">${l.status || '-'}</td>
+    </tr>`;
+  }).join('');
 }
 
-/* ── 요약 통계 산출 ── */
-function calcSummary(data, logs) {
-  const today = dateParam;
-  const todayLogs = logs.filter(l => l.date && l.date.startsWith(today));
-  const totalMembers = data.length;
-
-  // 전체 수치 (괄호 안)
-  const totalContacts = logs.filter(l => l.type === '통화' || l.type === '전화').length;
-  const totalSms = logs.filter(l => l.type === 'SMS' || l.type === '문자').length;
-  const totalMail = logs.filter(l => l.type === 'Mail' || l.type === '이메일').length;
-
-  // 당일 수치
-  const todayContacts = todayLogs.filter(l => l.type === '통화' || l.type === '전화').length;
-  const todaySms = todayLogs.filter(l => l.type === 'SMS' || l.type === '문자').length;
-  const todayMail = todayLogs.filter(l => l.type === 'Mail' || l.type === '이메일').length;
-
-  // 미팅 관련
-  let totalMeetings = 0, todayMeetingCount = 0;
-  let totalVisits = 0, totalTrips = 0;
-  let totalReservations = 0, todayReservations = 0;
-  let totalCancels = 0, totalChanges = 0;
-  let totalContracts = 0, todayContracts = 0;
-  let totalAmount = 0;
-
-  data.forEach(m => {
-    try {
-      const hist = JSON.parse(localStorage.getItem('purples_meeting_history_' + m.id) || '[]');
-      hist.forEach(h => {
-        totalMeetings++;
-        if (h.date && h.date.startsWith(today)) todayMeetingCount++;
-        if (h.status === '예약') { totalReservations++; if (h.date && h.date.startsWith(today)) todayReservations++; }
-        if (h.status === '취소') totalCancels++;
-      });
-    } catch (e) {}
-
-    if (m.status === '가입완료' || m.status === '가입중') {
-      totalContracts++;
-    }
-  });
-
-  return {
-    contact: { today: todayContacts, total: totalContacts },
-    phone: { today: todayContacts, total: totalContacts },
-    sms: { today: todaySms, total: totalSms },
-    mail: { today: todayMail, total: totalMail },
-    meeting: { today: todayMeetingCount, total: totalMeetings },
-    visit: { today: 0, total: totalVisits },
-    trip: { today: 0, total: totalTrips },
-    reservation: { today: todayReservations, total: totalReservations },
-    cancel: { today: 0, total: totalCancels },
-    dateChange: { today: 0, total: totalChanges },
-    contract: { today: todayContracts, total: totalContracts },
-    amount: { today: 0, total: totalAmount },
-  };
-}
-
-/* ── 포맷 날짜 헤더 ── */
-function formatDateHeader(dateStr) {
-  const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return `${y}년 ${m}월 ${day}일`;
-}
-
-/* ── 렌더 ── */
-function render() {
-  const data = getManagerData();
-  const logs = getConsultLogs(data);
-  const summary = calcSummary(data, logs);
-  const todayMeetings = getTodayMeetings(data);
-  const todayReservations = getTodayReservations(data);
-
-  // 상담 로그를 날짜별로 정렬 (최근순)
-  const recentLogs = logs.slice(0, 30);
-
-  document.title = `${managerName} 상담현황 - 퍼플스 인트라넷`;
-
-  content.innerHTML = `
-    <style>
-      .cd-header { text-align:center; padding:16px 20px; background:var(--bg-primary); 
-                   border:1px solid var(--border-light); margin-bottom:20px; border-radius:var(--radius-lg); }
-      .cd-header__title { font-size:var(--font-size-lg); font-weight:700; color:var(--text-primary); }
-      .cd-header__date-nav { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:8px; }
-
-      /* 요약 테이블 */
-      .cd-summary { width:100%; border-collapse:collapse; margin-bottom:24px; }
-      .cd-summary th { padding:8px 6px; background:var(--bg-secondary); border:1px solid var(--border-light);
-                       font-size:11px; font-weight:700; text-align:center; color:var(--text-secondary); 
-                       white-space:nowrap; }
-      .cd-summary td { padding:10px 6px; border:1px solid var(--border-light); text-align:center;
-                       font-size:13px; font-weight:700; color:var(--text-primary); }
-      .cd-summary td .cd-total { font-size:10px; font-weight:500; color:var(--text-muted); }
-
-      /* 섹션 */
-      .cd-section { margin-bottom:24px; }
-      .cd-section__title { font-size:13px; font-weight:700; color:var(--text-primary); 
-                          padding-bottom:8px; border-bottom:2px solid var(--accent); margin-bottom:0; }
-      .cd-section__title--meeting { border-bottom-color:#3b82f6; }
-      .cd-section__title--reservation { border-bottom-color:#f59e0b; }
-      .cd-section__title--log { border-bottom-color:#10b981; }
-
-      /* 데이터 테이블 공통 */
-      .cd-table { width:100%; border-collapse:collapse; font-size:12px; }
-      .cd-table th { padding:7px 10px; background:var(--bg-secondary); border:1px solid var(--border-light);
-                     font-size:11px; font-weight:700; text-align:center; color:var(--text-secondary); 
-                     white-space:nowrap; }
-      .cd-table td { padding:6px 10px; border:1px solid var(--border-light); vertical-align:top; }
-      .cd-table tbody tr:hover { background:var(--accent-bg); }
-      .cd-table .cd-no { text-align:center; width:40px; color:var(--text-muted); }
-      .cd-table .cd-center { text-align:center; }
-
-      /* 상담내용 로그 스타일 */
-      .cd-log-content { font-size:12px; line-height:1.6; color:var(--text-primary); 
-                        max-width:600px; word-break:break-all; white-space:pre-wrap; }
-      .cd-empty { padding:24px; text-align:center; color:var(--text-muted); font-size:12px;
-                  background:var(--bg-secondary); border:1px solid var(--border-light); }
-
-      /* 날짜 네비 */
-      .cd-date-btn { background:none; border:1px solid var(--border-light); padding:4px 10px;
-                     font-size:12px; cursor:pointer; border-radius:var(--radius-md); 
-                     color:var(--text-secondary); transition:all var(--transition-fast); }
-      .cd-date-btn:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
-      .cd-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px;
-                     color:var(--text-secondary); text-decoration:none; padding:6px 12px;
-                     border:1px solid var(--border-light); border-radius:var(--radius-md);
-                     transition:all var(--transition-fast); margin-bottom:16px; }
-      .cd-back-btn:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
-    </style>
-
-    <!-- 뒤로가기 -->
-    <a class="cd-back-btn" href="consult-status.html">← 상담현황 목록</a>
-
-    <!-- 헤더 -->
-    <div class="cd-header">
-      <div class="cd-header__title">${formatDateHeader(dateParam)} ${managerName} 상담현황</div>
-      <div class="cd-header__date-nav">
-        <button class="cd-date-btn" id="btn-prev">◀ 전일</button>
-        <input type="date" id="date-picker" value="${dateParam}" class="form-input form-input--sm" style="width:auto">
-        <button class="cd-date-btn" id="btn-next">익일 ▶</button>
-      </div>
-    </div>
-
-    <!-- 요약 통계 -->
-    <table class="cd-summary">
-      <thead>
-        <tr>
-          <th>총 컨텍수</th>
-          <th>전화</th>
-          <th>Sms</th>
-          <th>Mail</th>
-          <th>미팅 건수</th>
-          <th>방문 건수</th>
-          <th>출장 건수</th>
-          <th>미팅 예약</th>
-          <th>미팅 취소</th>
-          <th>미팅일 변경</th>
-          <th>정회원 가입</th>
-          <th>가입 금액</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>${summary.contact.today} <span class="cd-total">(${summary.contact.total})</span></td>
-          <td>${summary.phone.today} <span class="cd-total">(${summary.phone.total})</span></td>
-          <td>${summary.sms.today} <span class="cd-total">(${summary.sms.total})</span></td>
-          <td>${summary.mail.today} <span class="cd-total">(${summary.mail.total})</span></td>
-          <td>${summary.meeting.today} <span class="cd-total">(${summary.meeting.total})</span></td>
-          <td>${summary.visit.today} <span class="cd-total">(${summary.visit.total})</span></td>
-          <td>${summary.trip.today} <span class="cd-total">(${summary.trip.total})</span></td>
-          <td>${summary.reservation.today} <span class="cd-total">(${summary.reservation.total})</span></td>
-          <td>${summary.cancel.today} <span class="cd-total">(${summary.cancel.total})</span></td>
-          <td>${summary.dateChange.today} <span class="cd-total">(${summary.dateChange.total})</span></td>
-          <td>${summary.contract.today} <span class="cd-total">(${summary.contract.total})</span></td>
-          <td>${summary.amount.today ? Formatters.money(summary.amount.today) : '0'}원 <span class="cd-total">(원)</span></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- 당일 미팅 -->
-    <div class="cd-section">
-      <div class="cd-section__title cd-section__title--meeting">-당일 미팅</div>
-      ${todayMeetings.length > 0 ? `
-        <table class="cd-table">
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>매니저</th>
-              <th>회원명</th>
-              <th>날짜</th>
-              <th>Type</th>
-              <th>내용</th>
-              <th>결과</th>
-              <th>결과내용</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${todayMeetings.map((m, i) => `
-              <tr>
-                <td class="cd-no">${i + 1}</td>
-                <td class="cd-center">${m.consultant}</td>
-                <td class="cd-center">${m.memberName}</td>
-                <td class="cd-center">${Formatters.date(m.date)}${m.time ? ' ' + m.time : ''}</td>
-                <td class="cd-center">4</td>
-                <td>${m.content || '-'}</td>
-                <td class="cd-center">${m.status || '-'}</td>
-                <td>${m.resultNote || '-'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      ` : '<div class="cd-empty">당일 미팅 내역이 없습니다.</div>'}
-    </div>
-
-    <!-- 당일 미팅예약 -->
-    <div class="cd-section">
-      <div class="cd-section__title cd-section__title--reservation">-당일 미팅예약</div>
-      ${todayReservations.length > 0 ? `
-        <table class="cd-table">
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>매니저</th>
-              <th>회원명</th>
-              <th>날짜</th>
-              <th>Type</th>
-              <th>내용</th>
-              <th>결과</th>
-              <th>결과내용</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${todayReservations.map((m, i) => `
-              <tr>
-                <td class="cd-no">${i + 1}</td>
-                <td class="cd-center">${m.consultant}</td>
-                <td class="cd-center">${m.memberName}</td>
-                <td class="cd-center">${Formatters.date(m.date)}${m.time ? ' ' + m.time : ''}</td>
-                <td class="cd-center">4</td>
-                <td>${m.content || '-'}</td>
-                <td class="cd-center">${m.status || '-'}</td>
-                <td>${m.resultNote || '-'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      ` : '<div class="cd-empty">당일 미팅예약 내역이 없습니다.</div>'}
-    </div>
-
-    <!-- 상담 내역 로그 -->
-    <div class="cd-section">
-      <div class="cd-section__title cd-section__title--log">-상담 내역</div>
-      ${recentLogs.length > 0 ? `
-        <table class="cd-table">
-          <thead>
-            <tr>
-              <th style="width:40px">번호</th>
-              <th style="width:140px">상담일</th>
-              <th style="width:80px">회원명</th>
-              <th>상담 내용</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${recentLogs.map((l, i) => `
-              <tr>
-                <td class="cd-no">${recentLogs.length - i}</td>
-                <td class="cd-center">${formatDateTime(l.date)}</td>
-                <td class="cd-center">
-                  <a href="detail.html?id=${l.memberId}" target="_blank" 
-                     style="color:var(--accent);font-weight:600;text-decoration:none">${l.memberName}</a>
-                </td>
-                <td class="cd-log-content">${l.content}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      ` : '<div class="cd-empty">상담 내역이 없습니다.</div>'}
-    </div>
-  `;
-
-  // 날짜 네비게이션 이벤트
-  document.getElementById('btn-prev')?.addEventListener('click', () => navigateDate(-1));
-  document.getElementById('btn-next')?.addEventListener('click', () => navigateDate(1));
-  document.getElementById('date-picker')?.addEventListener('change', (e) => {
-    window.location.href = `consult-detail.html?manager=${encodeURIComponent(managerName)}&date=${e.target.value}`;
-  });
-}
-
-function formatDateTime(dateStr) {
-  if (!dateStr) return '-';
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${day} ${h}:${min}`;
-}
-
-function navigateDate(offset) {
-  const d = new Date(dateParam);
-  d.setDate(d.getDate() + offset);
-  const newDate = d.toISOString().slice(0, 10);
-  window.location.href = `consult-detail.html?manager=${encodeURIComponent(managerName)}&date=${newDate}`;
-}
-
+/* ── 초기화 ── */
 if (!managerName) {
   content.innerHTML = `<div style="padding:60px;text-align:center">
     <div style="font-size:24px;margin-bottom:12px">⚠️</div>

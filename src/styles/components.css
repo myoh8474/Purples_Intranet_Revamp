@@ -3,7 +3,7 @@
    ======================================== */
 
 /* ── 카드 ── */
-.card{background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);margin-bottom:var(--spacing-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow var(--transition-fast),border-color var(--transition-fast)}
+.card{background:var(--bg-primary);border:1px solid var(--border-light);margin-bottom:var(--spacing-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow var(--transition-fast),border-color var(--transition-fast)}
 .card:hover{box-shadow:var(--shadow-md);border-color:var(--border-medium)}
 .card--glass{background:var(--glass-bg);backdrop-filter:var(--glass-blur);border-color:var(--glass-border)}
 .card--info{border-left:4px solid var(--status-blue)}
@@ -17,7 +17,7 @@
 /* ── KPI 카드 ── */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--spacing-lg);margin-bottom:var(--spacing-xl)}
 .kpi-grid--3{grid-template-columns:repeat(3,1fr)}
-.kpi-card{display:flex;align-items:center;gap:var(--spacing-lg);padding:var(--spacing-xl);border-radius:var(--radius-lg);background:var(--bg-primary);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);transition:all var(--transition-fast)}
+.kpi-card{display:flex;align-items:center;gap:var(--spacing-lg);padding:var(--spacing-xl);background:var(--bg-primary);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);transition:all var(--transition-fast)}
 .kpi-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .kpi-card__icon{font-size:2rem;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-lg)}
 .kpi-card--purple .kpi-card__icon{background:var(--purple-100)}
@@ -175,7 +175,7 @@
 @keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--accent)}50%{box-shadow:0 0 0 6px rgba(139,92,246,.2)}}
 
 /* ── 상태 패널 ── */
-.status-panel{padding:var(--spacing-lg);background:var(--bg-secondary);border-radius:var(--radius-lg);border:1px solid var(--border-light)}
+.status-panel{padding:var(--spacing-lg);background:var(--bg-secondary);border:1px solid var(--border-light)}
 .status-panel__label{font-size:var(--font-size-xs);font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:var(--spacing-sm)}
 .status-panel__badge{display:inline-flex;padding:6px 16px;border-radius:var(--radius-full);font-size:var(--font-size-md);font-weight:700}
 .status-panel__transitions{margin-top:var(--spacing-lg)}
@@ -214,7 +214,7 @@
 
 /* ── 회원 카드 (매칭 결과) ── */
 .member-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--spacing-lg)}
-.member-card{border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:var(--spacing-lg);transition:all var(--transition-fast)}
+.member-card{border:1px solid var(--border-light);padding:var(--spacing-lg);transition:all var(--transition-fast)}
 .member-card:hover{box-shadow:var(--shadow-md);border-color:var(--accent-lighter)}
 .member-card__header{display:flex;align-items:center;gap:var(--spacing-md);margin-bottom:var(--spacing-md)}
 .member-card__avatar{font-size:1.8rem}
@@ -247,7 +247,7 @@
 
 /* ── 스탯 카드 (기존 호환) ── */
 .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--spacing-lg);margin-bottom:var(--spacing-xl)}
-.stat-card{display:flex;align-items:center;gap:var(--spacing-lg);padding:var(--spacing-xl);background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);transition:all var(--transition-fast)}
+.stat-card{display:flex;align-items:center;gap:var(--spacing-lg);padding:var(--spacing-xl);background:var(--bg-primary);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);transition:all var(--transition-fast)}
 .stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .stat-card__icon{font-size:2rem;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md)}
 .stat-card__icon--purple{background:var(--purple-100)}
@@ -258,7 +258,7 @@
 .stat-card__label{font-size:var(--font-size-sm);color:var(--text-muted)}
 
 /* ── 필터바 ── */
-.filter-bar{background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:var(--spacing-lg) var(--spacing-xl);margin-bottom:var(--spacing-xl)}
+.filter-bar{background:var(--bg-primary);border:1px solid var(--border-light);padding:var(--spacing-lg) var(--spacing-xl);margin-bottom:var(--spacing-xl)}
 .filter-bar__row{display:flex;align-items:flex-end;gap:var(--spacing-md);flex-wrap:wrap}
 .filter-bar__item{display:flex;flex-direction:column;gap:4px;min-width:0}
 .filter-bar__item label{font-size:var(--font-size-xs);font-weight:600;color:var(--text-muted);white-space:nowrap}
@@ -425,35 +425,70 @@
    표준 데이터 테이블 (std-table)
    — 모든 관리 페이지에서 공통 사용
    ======================================== */
-.std-table { width:100%; border-collapse:collapse; font-size:var(--font-size-sm); }
+.std-table { width:100%; border-collapse:collapse; font-size:12px; }
 .std-table th {
   padding:8px 12px; background:var(--bg-secondary); border:1px solid var(--border-light);
-  font-size:var(--font-size-xs); font-weight:700; text-align:center;
+  font-size:12px; font-weight:700; text-align:center;
   color:var(--text-secondary); white-space:nowrap; position:sticky; top:0; z-index:1;
 }
 .std-table td {
   padding:6px 12px; border:1px solid var(--border-light);
-  font-size:var(--font-size-sm); vertical-align:middle;
+  font-size:12px; vertical-align:middle;
 }
-.std-table td.tc { text-align:center; }
-.std-table td.tr { text-align:right; font-variant-numeric:tabular-nums; }
-.std-table td.tl { text-align:left; }
+
+/* 정렬 유틸 */
+.std-table td.tc, .std-table th.tc { text-align:center; }
+.std-table td.tr, .std-table th.tr { text-align:right; font-variant-numeric:tabular-nums; }
+.std-table td.tl, .std-table th.tl { text-align:left; }
 .std-table td.ellipsis { max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* 행 호버/스트라이프 */
 .std-table tbody tr:hover td { background:var(--accent-bg); }
 .std-table tbody tr:nth-child(even) td { background:var(--bg-secondary); }
 .std-table tbody tr:nth-child(even):hover td { background:var(--accent-bg); }
-.std-table .row-total td { background:var(--accent-bg) !important; font-weight:700; border-top:2px solid var(--accent); }
+
+/* 합계행 */
+.std-table .row-total td { background:var(--accent-bg) !important; font-weight:700; border-top:1px solid var(--accent); }
 .std-table .row-highlight td { background:var(--gold-50); }
+
+/* 컬럼 유틸 */
 .std-table .col-no { width:60px; color:var(--text-muted); text-align:center; white-space:nowrap; }
 .std-table .col-name { font-weight:600; }
-.std-table .col-link { color:var(--accent); text-decoration:underline; font-weight:700; cursor:pointer; }
-.std-table .col-link:hover { color:var(--accent-dark); }
+.std-table .col-link { color:var(--accent); text-decoration:none; cursor:pointer; }
+.std-table .col-link:hover { color:var(--accent-dark); text-decoration:underline; }
 .std-table .col-good { color:var(--status-green); font-weight:700; }
 .std-table .col-bad { color:var(--status-red); font-weight:700; }
 .std-table .col-warn { color:var(--status-amber); font-weight:700; }
 
+/* 숫자/금액/퍼센트 셀 유틸 */
+.std-table .col-num { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; }
+.std-table .col-money { text-align:right; font-weight:600; font-variant-numeric:tabular-nums; font-size:11px; }
+.std-table .col-pct { text-align:center; font-weight:700; }
+.std-table .col-zero { color:var(--text-muted); font-weight:400; }
+
+/* 그룹 헤더 배경 */
+.std-table th.th-blue { background:#eff6ff; }
+.std-table th.th-green { background:#ecfdf5; }
+.std-table th.th-yellow { background:#fefce8; }
+.std-table th.th-purple { background:#f5f3ff; }
+
 /* 테이블 래퍼 */
-.table-wrap { overflow-x:auto; border:1px solid var(--border-light); border-radius:var(--radius-lg); }
+.table-wrap { overflow-x:auto; border:1px solid var(--border-light);  }
+
+/* ========================================
+   리스트 섹션 (list-section)
+   — 카드 래퍼 없이 타이틀 + 테이블 직접 표시
+   ======================================== */
+.list-section { margin-top:16px; }
+.list-section__header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:8px; padding:0;
+}
+.list-section__title { font-size:14px; font-weight:700; margin:0; color:var(--text-primary); }
+.list-section__meta { font-size:12px; color:var(--text-muted); }
+.list-section__actions { display:flex; gap:6px; align-items:center; }
+.list-section__body { overflow-x:auto; }
+.list-section__footer { font-size:10px; color:var(--text-muted); text-align:right; padding:6px 0; }
 
 /* ========================================
    표준 요약 카드 그리드
@@ -464,7 +499,7 @@
 .summary-card {
   flex:1; min-width:120px; padding:14px 20px;
   background:var(--bg-primary); border:1px solid var(--border-light);
-  border-radius:var(--radius-lg); text-align:center;
+  text-align:center;
   box-shadow:var(--shadow-sm); transition:all var(--transition-fast);
   cursor:default;
 }
@@ -485,7 +520,7 @@
    ======================================== */
 .mini-cal {
   background:var(--bg-primary); border:1px solid var(--border-light);
-  border-radius:var(--radius-lg); overflow:hidden;
+   overflow:hidden;
 }
 .mini-cal__header {
   display:flex; justify-content:space-between; align-items:center;
@@ -564,7 +599,7 @@
    ======================================== */
 .stat-summary {
   background:var(--bg-primary); border:1px solid var(--border-light);
-  border-radius:var(--radius-lg); overflow:hidden; height:100%;
+   overflow:hidden; height:100%;
 }
 .stat-summary__title {
   padding:10px 14px; font-size:var(--font-size-base); font-weight:700;
@@ -686,3 +721,115 @@
 .std-table .row--selected td:first-child { border-left: 3px solid var(--accent); }
 .party-row { cursor: pointer; }
 
+/* ========================================
+   준회원 관리 공통 스타일
+   — 검색 필터, KPI 카드, 액션 버튼
+   ======================================== */
+
+/* ── 검색 테이블 (search-table) ── */
+.search-table {
+  width: 100%; border-collapse: collapse;
+  margin-bottom: 16px; font-size: 12px;
+  border: 1px solid var(--border-light);
+}
+.search-table__th {
+  background: #f1f5f9; color: #334155; font-weight: 700;
+  padding: 8px 14px; text-align: left; white-space: nowrap;
+  width: 80px; border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light); font-size: 11px;
+}
+.search-table__td {
+  padding: 6px 14px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  background: #fff;
+}
+.search-table tr:last-child .search-table__th,
+.search-table tr:last-child .search-table__td { border-bottom: none; }
+.fi { font-size: 11px !important; height: 30px; }
+
+/* ── 검색/초기화 버튼 ── */
+.search-actions {
+  display: flex; justify-content: center; gap: 8px;
+  margin-bottom: 16px;
+}
+.search-btn {
+  font-size: 12px !important; background: #0369a1; color: #fff;
+  border: none; padding: 6px 24px; border-radius: 6px;
+  cursor: pointer; font-weight: 600; transition: background 0.15s;
+}
+.search-btn:hover { background: #0284c7; }
+.filter-reset-btn {
+  font-size: 11px !important; background: #fff;
+  border: 1px solid var(--border-light); color: #475569;
+  padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.filter-reset-btn:hover { background: #f1f5f9; border-color: var(--border-light); }
+
+/* ── KPI 통계 카드 ── */
+.kpi-stat-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 10px; margin-bottom: 20px;
+}
+.kpi-stat-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.kpi-stat-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-stat-card {
+  padding: 18px 16px; background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  text-align: center; box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+.kpi-stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kpi-stat-card__value {
+  font-size: 24px; font-weight: 800; line-height: 1.2;
+}
+.kpi-stat-card__value--sm { font-size: 16px; }
+.kpi-stat-card__label {
+  font-size: 11px; color: var(--text-muted); margin-top: 4px;
+}
+
+/* ── 기간 퀵 버튼 ── */
+.period-quick-btns {
+  display: flex; gap: 4px; align-items: center;
+}
+.period-quick-btns .btn {
+  font-size: 11px; padding: 4px 10px;
+}
+
+/* ========================================
+   공통 탭 (std-tabs)
+   사용: <div class="std-tabs"><button class="std-tab active">탭1</button>...</div>
+   ======================================== */
+.std-tabs {
+  display: flex; gap: 4px; margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+.std-tab {
+  padding: 8px 16px; border: none; background: none;
+  font-size: 12px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.15s ease; font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+}
+.std-tab:hover { color: var(--text-primary); }
+.std-tab.active {
+  color: var(--accent); font-weight: 700;
+  border-bottom-color: var(--accent);
+}
+
+/* 탭 카운트 배지 */
+.std-tab__count {
+  font-size: 10px; font-weight: 600;
+  background: var(--bg-tertiary); padding: 1px 6px; border-radius: 10px;
+}
+.std-tab.active .std-tab__count {
+  background: var(--accent-bg); color: var(--accent);
+}
+.std-tab__count--red { background: #fef2f2 !important; color: #dc2626 !important; }
+.std-tab__count--amber { background: #fffbeb !important; color: #d97706 !important; }
+.std-tab__count--green { background: #f0fdf4 !important; color: #16a34a !important; }
+.std-tab__count--purple { background: #f5f3ff !important; color: #7c3aed !important; }
+
+/* 탭 패널 */
+.std-tab-panel { display: none; }
+.std-tab-panel.active { display: block; }

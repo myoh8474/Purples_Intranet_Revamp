@@ -1,26 +1,44 @@
 /* 준회원 상세 탭 렌더링 */
 import { Formatters } from '@utils/formatters.js';
-import { CONSULTANTS } from '@config/constants.js';
+import { CONSULTANTS, BRANCHES } from '@config/constants.js';
 
 const LBL = 'background:var(--bg-secondary);width:120px;font-weight:600;font-size:12px;color:var(--text-secondary);text-align:center;white-space:nowrap';
 const VAL = 'font-size:13px;padding:8px 12px';
 const SEC = (t) => `<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin:24px 0 12px">${t}</div>`;
+function branchName(code) {
+  const b = BRANCHES.find(x => x.code === code);
+  return b ? b.name : (code || '-');
+}
 
 export function renderBasicTab(m) {
   return `
     ${SEC('인적사항')}
     <table class="data-table data-table--bordered" style="font-size:13px"><tbody>
       <tr><td style="${LBL}">회원명</td><td style="${VAL}">${m.name}</td><td style="${LBL}">성별</td><td style="${VAL}">${m.gender}</td><td style="${LBL}">상태</td><td style="${VAL}">${Formatters.statusBadge(m.status,'associate')}</td></tr>
-      <tr><td style="${LBL}">생년월일</td><td style="${VAL}">${Formatters.date(m.birthDate)} (${m.age}세)</td><td style="${LBL}">핸드폰</td><td style="${VAL}">${Formatters.phone(m.phone)}</td><td style="${LBL}">결혼여부</td><td style="${VAL}">${m.maritalStatus}</td></tr>
+      <tr><td style="${LBL}">생년월일</td><td style="${VAL}">${Formatters.date(m.birthDate)} (${m.age}세)</td><td style="${LBL}">결혼여부</td><td style="${VAL}">${m.maritalStatus}</td><td style="${LBL}">지역</td><td style="${VAL}">${m.region}</td></tr>
       <tr><td style="${LBL}">학력</td><td style="${VAL}">${m.education} / ${m.school}</td><td style="${LBL}">직업</td><td style="${VAL}">${m.job}</td><td style="${LBL}">직장</td><td style="${VAL}">${m.company||'-'}</td></tr>
-      <tr><td style="${LBL}">지역</td><td style="${VAL}">${m.region}</td><td style="${LBL}">가입경로</td><td style="${VAL}">${m.channel}</td><td style="${LBL}">컨설턴트</td><td style="${VAL}">${m.consultant}</td></tr>
+    </tbody></table>
+
+    ${SEC('연락처')}
+    <table class="data-table data-table--bordered" style="font-size:13px"><tbody>
+      <tr><td style="${LBL}">핸드폰</td><td style="${VAL}">${Formatters.phone(m.phone)}</td><td style="${LBL}">핸드폰2</td><td style="${VAL}">${m.phone2 ? Formatters.phone(m.phone2) : '-'}</td><td style="${LBL}">이메일</td><td style="${VAL}">${m.email||'-'}</td></tr>
+      <tr><td style="${LBL}">자택전화</td><td style="${VAL}">${m.telHome||'-'}</td><td style="${LBL}">직장전화</td><td style="${VAL}">${m.telOffice||'-'}</td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
+    </tbody></table>
+
+    ${SEC('신체/기타')}
+    <table class="data-table data-table--bordered" style="font-size:13px"><tbody>
+      <tr><td style="${LBL}">신장</td><td style="${VAL}">${m.height ? m.height + 'cm' : '-'}</td><td style="${LBL}">체중</td><td style="${VAL}">${m.weight ? m.weight + 'kg' : '-'}</td><td style="${LBL}">혈액형</td><td style="${VAL}">${m.bloodType ? m.bloodType + '형' : '-'}</td></tr>
+      <tr><td style="${LBL}">자녀</td><td style="${VAL}">${m.children||'-'}</td><td style="${LBL}">종교</td><td style="${VAL}">${m.religion||'-'}</td><td style="${LBL}">취미</td><td style="${VAL}">${m.hobby||'-'}</td></tr>
     </tbody></table>
 
     ${SEC('등록 정보')}
     <table class="data-table data-table--bordered" style="font-size:13px"><tbody>
       <tr><td style="${LBL}">등록일</td><td style="${VAL}">${Formatters.date(m.registeredAt)}</td><td style="${LBL}">분배일</td><td style="${VAL}">${Formatters.date(m.distributedAt)}</td><td style="${LBL}">최종컨텍</td><td style="${VAL}">${Formatters.date(m.lastContactAt)}</td></tr>
-      <tr><td style="${LBL}">지사</td><td style="${VAL}">${m.branch}</td><td style="${LBL}">브랜드</td><td style="${VAL}">${m.brand||'-'}</td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
+      <tr><td style="${LBL}">지사</td><td style="${VAL}">${branchName(m.branch)}</td><td style="${LBL}">브랜드</td><td style="${VAL}">${m.brand||'-'}</td><td style="${LBL}">가입경로</td><td style="${VAL}">${m.channel}</td></tr>
+      <tr><td style="${LBL}">컨설턴트</td><td style="${VAL}">${m.consultant||'-'}</td><td style="${LBL}"></td><td style="${VAL}"></td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
     </tbody></table>
+
+    ${m.hope ? `${SEC('희망사항')}<div style="padding:12px;background:var(--bg-secondary);border-radius:8px;font-size:13px;line-height:1.6">${m.hope}</div>` : ''}
   `;
 }
 

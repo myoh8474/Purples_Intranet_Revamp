@@ -37,17 +37,31 @@ export function getMenuItems(basePath = '/') {
 
     { type: 'divider' },
 
-    // ━━ 회원 관리 ━━
+    // ━━ 회원 라이프사이클 ━━
+    {
+      id: 'member-distribute',
+      icon: icons.star,
+      text: '회원분배',
+      children: [
+        { id: 'member-distribute-main', text: '회원분배', href: `${basePath}pages/management/distribute.html` },
+        { id: 'member-distribute-history', text: '회원분배내역조회', href: `${basePath}pages/management/distribute-history.html` },
+      ],
+    },
+    {
+      id: 'new-member',
+      icon: icons.clipboard,
+      text: '신규회원 통합관리',
+      href: `${basePath}pages/new-member/index.html`,
+    },
     {
       id: 'associate',
       icon: icons.users,
       text: '준회원 관리',
       children: [
         { id: 'associate-list', text: '준회원 목록', href: `${basePath}pages/associate/list.html` },
-        { id: 'associate-consult-status', text: '상담현황', href: `${basePath}pages/associate/consult-status.html` },
-        { id: 'associate-db-status', text: '보유DB 현황', href: `${basePath}pages/associate/db-status.html` },
+        { id: 'associate-consult-status', text: '상담통계', href: `${basePath}pages/associate/consult-status.html` },
+        { id: 'associate-consult', text: '상담내역 조회', href: `${basePath}pages/associate/consult.html` },
         { id: 'associate-visit', text: '방문상담 관리', href: `${basePath}pages/associate/visit.html` },
-        { id: 'member-distribute', text: '회원분배', href: `${basePath}pages/management/distribute.html` },
       ],
     },
     {
@@ -107,18 +121,15 @@ export function getMenuItems(basePath = '/') {
 
     { type: 'divider' },
 
-    // ━━ 성과·인사 ━━
+    // ━━ 매니저 관리 ━━
     {
-      id: 'performance',
+      id: 'manager',
       icon: icons.trending,
-      text: '성과 관리',
+      text: '매니저 관리',
       children: [
-        { type: 'group', text: '성과' },
-        { id: 'perf-ranking', text: '성과관리', href: `${basePath}pages/performance/ranking.html` },
-        { type: 'group', text: '활동 지표' },
-        { id: 'perf-weekly-visit', text: '주간 방문상담 현황', href: `${basePath}pages/performance/weekly-visit.html` },
-        { id: 'perf-contact-stats', text: '회원 컨텍 현황', href: `${basePath}pages/performance/contact-stats.html` },
-        { id: 'perf-matching-meeting', text: '매칭 미팅 등록 현황', href: `${basePath}pages/performance/matching-meeting.html` },
+        { id: 'associate-db-overview', text: '보유DB 현황', href: `${basePath}pages/associate/db-status.html?tab=db` },
+        { id: 'associate-db-status', text: '매니저 활동관리', href: `${basePath}pages/associate/db-status.html?tab=perf` },
+        { id: 'mgr-ranking', text: '성과관리', href: `${basePath}pages/performance/ranking.html` },
       ],
     },
     {

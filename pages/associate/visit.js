@@ -1,17 +1,17 @@
 /* ========================================
-   방문상담 관리 (표준 디자인 시스템)
-   통합: 약속관리 + 방문상담현황
+   방문예약 관리
+   탭1: 방문 일정표 (캘린더 + 당일 예약)
+   탭2: 방문상담 현황 (필터 + 리스트)
    ======================================== */
 import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { Toast } from '@components/Toast.js';
 import { MockAssociates } from '@mock/associates.js';
-import { CONSULTANTS } from '@config/constants.js';
+import { CONSULTANTS, BRANCHES } from '@config/constants.js';
 
 initLayout({ pageId: 'associate-visit', breadcrumbs: ['준회원 관리', '방문상담 관리'] });
 const content = document.getElementById('content');
 
-const BRANCHES = ['본사','경기','부산','대구','대전','광주'];
 const VISIT_RESULTS = ['기타','취소','변경','보류','가입'];
 
 /* ── Mock 방문상담 데이터 ── */
@@ -31,7 +31,7 @@ function generateVisitData() {
       const mins = [0,0,30,30][Math.floor(Math.random()*4)];
       const date = new Date(thisYear, thisMonth, day, hours, mins);
       const isPast = date <= now;
-      const result = isPast ? ['기타','취소','변경','보류','가입'][Math.floor(Math.random()*5)] : '';
+      const result = isPast ? VISIT_RESULTS[Math.floor(Math.random()*5)] : '';
       visits.push({ id: id++, branch: m.branch, consultant: m.consultant,
         memberName: m.name, memberId: m.id, date: date.toISOString(),
         time: `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}`,
@@ -41,7 +41,7 @@ function generateVisitData() {
         amount: result === '가입' ? [2000000,3000000,5000000][Math.floor(Math.random()*3)] : 0 });
     }
   }
-  visits.sort((a, b) => new Date(b.date) - new Date(a.date));
+  visits.sort((a, b) => new Date(a.date) - new Date(b.date));
   localStorage.setItem('purples_visit_data', JSON.stringify(visits));
   return visits;
 }
@@ -56,186 +56,246 @@ function init() {
   allVisits = generateVisitData();
 }
 
-/* ── 캘린더 (표준 mini-cal 클래스) ── */
+/* ── 배지 ── */
+function resultBadge(r) {
+  if (!r) return '';
+  const map = {'기타':'#6b7280','취소':'#ef4444','변경':'#f59e0b','보류':'#8b5cf6','가입':'#059669'};
+  const c = map[r] || '#6b7280';
+  return `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${c}18;color:${c};font-weight:600">${r}</span>`;
+}
+
+/* ── 캘린더 ── */
 function renderCalendar() {
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const mn = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const dayCounts = {};
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  // 날짜별 방문 데이터 그룹핑
+  const dayMap = {};
   allVisits.forEach(v => {
     const d = new Date(v.date);
-    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) dayCounts[d.getDate()] = (dayCounts[d.getDate()]||0)+1;
+    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+      const key = d.getDate();
+      if (!dayMap[key]) dayMap[key] = [];
+      dayMap[key].push(v);
+    }
   });
 
   let cells = '';
-  for (let i = 0; i < firstDay; i++) cells += '<div class="mini-cal__cell mini-cal__cell--empty"></div>';
+  for (let i = 0; i < firstDay; i++) cells += '<div class="cal-cell cal-cell--empty"></div>';
+
   for (let d = 1; d <= daysInMonth; d++) {
     const ds = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = new Date(currentYear, currentMonth, d).getDay();
-    const cls = [
-      'mini-cal__cell',
-      ds === selectedDate ? 'mini-cal__cell--selected' : '',
-      ds === new Date().toISOString().slice(0,10) ? 'mini-cal__cell--today' : ''
-    ].filter(Boolean).join(' ');
-    const dayCls = dow === 0 ? 'mini-cal__day mini-cal__day--sun' : dow === 6 ? 'mini-cal__day mini-cal__day--sat' : 'mini-cal__day';
-    cells += `<div class="${cls}" data-date="${ds}" onclick="window.__selectDate('${ds}')">
-      <span class="${dayCls}">${d}</span>
-      ${dayCounts[d] ? `<span class="mini-cal__badge">${dayCounts[d]}건</span>` : ''}
+    const isToday = ds === todayStr;
+    const visits = (dayMap[d] || []).sort((a,b) => a.time.localeCompare(b.time));
+
+    let cls = 'cal-cell';
+    if (isToday) cls += ' cal-cell--today';
+    if (dow === 0) cls += ' cal-cell--sun';
+    if (dow === 6) cls += ' cal-cell--sat';
+
+    const maxShow = 3;
+    let items = '';
+    visits.slice(0, maxShow).forEach(v => {
+      const dotColor = v.result === '가입' ? '#059669' : v.result === '취소' ? '#ef4444' : v.result === '변경' ? '#f59e0b' : '#3b82f6';
+      items += `<div class="cal-item" title="${v.consultant} - ${v.memberName}">
+        <span class="cal-item__dot" style="background:${dotColor}"></span>
+        <span class="cal-item__time">${v.time}</span>
+        <span class="cal-item__name">${v.memberName}</span>
+        ${resultBadge(v.result)}
+      </div>`;
+    });
+    if (visits.length > maxShow) {
+      items += `<div class="cal-item cal-item--more">+${visits.length - maxShow}건</div>`;
+    }
+
+    cells += `<div class="${cls}">
+      <div class="cal-cell__header">
+        <span class="cal-cell__day">${d}</span>
+        ${visits.length ? `<span class="cal-cell__count">${visits.length}</span>` : ''}
+      </div>
+      <div class="cal-cell__body">${items}</div>
     </div>`;
   }
 
-  return `<div class="mini-cal">
-    <div class="mini-cal__header">
+  return `
+    <div class="cal-header">
       <button class="mini-cal__nav" id="cal-prev">◀ ${currentMonth === 0 ? '12월' : mn[currentMonth-1]}</button>
-      <span class="mini-cal__title">${currentYear}년 ${mn[currentMonth]}</span>
+      <span class="cal-header__title">${currentYear}년 ${mn[currentMonth]}</span>
       <button class="mini-cal__nav" id="cal-next">${currentMonth === 11 ? '1월' : mn[currentMonth+1]} ▶</button>
     </div>
-    <div class="mini-cal__grid">
-      <div class="mini-cal__head mini-cal__head--sun">일</div><div class="mini-cal__head">월</div>
-      <div class="mini-cal__head">화</div><div class="mini-cal__head">수</div>
-      <div class="mini-cal__head">목</div><div class="mini-cal__head">금</div>
-      <div class="mini-cal__head mini-cal__head--sat">토</div>
+    <div class="cal-grid">
+      <div class="cal-head cal-head--sun">일</div><div class="cal-head">월</div>
+      <div class="cal-head">화</div><div class="cal-head">수</div>
+      <div class="cal-head">목</div><div class="cal-head">금</div>
+      <div class="cal-head cal-head--sat">토</div>
       ${cells}
-    </div>
-  </div>`;
+    </div>`;
 }
 
-/* ── 요약 (표준 stat-summary 클래스) ── */
-function renderSummary() {
-  const mv = allVisits.filter(v => { const d = new Date(v.date); return d.getFullYear()===currentYear && d.getMonth()===currentMonth; });
-  const s = { 미팅수:mv.length, 출장:0, 방문:mv.filter(v=>v.visitStatus!=='방문미정').length,
-    취소:mv.filter(v=>v.result==='취소').length, 변경:mv.filter(v=>v.result==='변경').length,
-    가입:mv.filter(v=>v.result==='가입').length,
-    가입금액:mv.filter(v=>v.result==='가입').reduce((a,v)=>a+(v.amount||0),0) };
-  const row = (l,v) => `<tr><td class="stat-summary__label">${l}</td><td class="stat-summary__value">${l==='가입금액'?v.toLocaleString()+'원':v}</td></tr>`;
-  return `<div class="stat-summary"><div class="stat-summary__title">월간 요약</div>
-    <table class="stat-summary__table"><tbody>${row('미팅수',s.미팅수)}${row('출장',s.출장)}${row('방문',s.방문)}${row('취소',s.취소)}${row('변경',s.변경)}${row('가입',s.가입)}${row('가입금액',s.가입금액)}</tbody></table></div>`;
-}
 
-/* ── 배지 ── */
-function resultBadge(r) {
-  if (!r) return '<span class="text-muted">-</span>';
-  const map = {'기타':'gray','취소':'red','변경':'amber','보류':'purple','가입':'green'};
-  return `<span class="badge badge--${map[r]||'gray'}">${r}</span>`;
-}
-function visitStatusBadge(s) {
-  const map = {'방문예정':'blue','방문미정':'amber','방문완료':'green'};
-  return `<span class="badge badge--${map[s]||'gray'}">${s}</span>`;
-}
-
-/* ── 테이블 ── */
-function renderTable() {
+/* ── 하단 리스트 ── */
+function renderListTable() {
   const gv = id => document.getElementById(id)?.value || '';
   let data = [...allVisits];
   if (gv('f-date-from')) data = data.filter(v => v.date.slice(0,10) >= gv('f-date-from'));
   if (gv('f-date-to')) data = data.filter(v => v.date.slice(0,10) <= gv('f-date-to'));
-  if (gv('f-consultant')) data = data.filter(v => v.consultant === gv('f-consultant'));
-  if (gv('f-branch')) data = data.filter(v => v.branch === gv('f-branch'));
   if (gv('f-result')) data = data.filter(v => v.result === gv('f-result'));
+  if (gv('f-branch')) data = data.filter(v => v.branch === gv('f-branch'));
+  if (gv('f-consultant')) data = data.filter(v => v.consultant === gv('f-consultant'));
   data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  document.getElementById('visit-tbody').innerHTML = data.map((v, i) => `<tr>
-    <td class="tc col-no">${data.length-i}</td><td class="tc">${v.branch}</td>
-    <td class="tc col-name">${v.consultant}</td>
+  document.getElementById('list-count').textContent = `${data.length}건`;
+  document.getElementById('list-tbody').innerHTML = data.map((v, i) => `<tr>
+    <td class="tc col-no">${data.length - i}</td>
+    <td class="tc">${v.branch}</td>
+    <td class="tc col-name"><a href="consult-detail.html?manager=${encodeURIComponent(v.consultant)}&date=${v.date.slice(0,10)}" target="_blank" class="col-link" style="text-decoration:none">${v.consultant}</a></td>
     <td class="tc"><a href="detail.html?id=${v.memberId}" target="_blank" class="col-link" style="text-decoration:none">${v.memberName}</a></td>
-    <td class="tc">${v.date.slice(0,10)}</td><td class="tc">${v.time}</td>
-    <td class="tc">${visitStatusBadge(v.visitStatus)}</td>
+    <td class="tc">${v.date.slice(0,10)}</td>
+    <td class="tc">${v.time}</td>
+    <td class="tc"><span class="badge badge--${v.visitStatus==='방문예정'?'blue':'amber'}" style="font-size:10px">${v.visitStatus}</span></td>
     <td class="tl ellipsis">${v.content||'-'}</td>
-    <td class="tc">${resultBadge(v.result)}</td>
+    <td class="tc">${resultBadge(v.result)||'<span class="text-muted">-</span>'}</td>
     <td class="tl ellipsis">${v.resultNote||'-'}</td>
-    <td class="tc">${v.amount ? v.amount.toLocaleString()+'원' : '-'}</td>
-  </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;padding:30px" class="text-muted">해당 기간 방문상담 내역이 없습니다.</td></tr>';
-  document.getElementById('visit-count').textContent = `${data.length}건`;
+  </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;padding:30px" class="text-muted">해당 기간 방문상담 내역이 없습니다.</td></tr>';
 }
 
-window.__selectDate = function(dateStr) {
-  selectedDate = dateStr;
-  document.getElementById('f-date-from').value = dateStr;
-  document.getElementById('f-date-to').value = dateStr;
-  document.getElementById('cal-area').innerHTML = renderCalendar();
-  bindCalendarEvents(); renderTable();
-};
+/* ── 이벤트 ── */
+window.__selectDate = null; // 사용하지 않음
 
 function bindCalendarEvents() {
   document.getElementById('cal-prev')?.addEventListener('click', () => {
-    currentMonth--; if (currentMonth < 0) { currentMonth=11; currentYear--; }
+    currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; }
     document.getElementById('cal-area').innerHTML = renderCalendar();
-    document.getElementById('summary-area').innerHTML = renderSummary();
     bindCalendarEvents();
   });
   document.getElementById('cal-next')?.addEventListener('click', () => {
-    currentMonth++; if (currentMonth > 11) { currentMonth=0; currentYear++; }
+    currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     document.getElementById('cal-area').innerHTML = renderCalendar();
-    document.getElementById('summary-area').innerHTML = renderSummary();
     bindCalendarEvents();
   });
 }
 
+/* ── 탭 전환 ── */
+function switchTab(tabId) {
+  document.querySelectorAll('.std-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  document.querySelectorAll('.std-tab-panel').forEach(p => p.classList.toggle('active', p.id === tabId));
+
+  if (tabId === 'tab-list') renderListTable();
+}
+
+/* ── 메인 렌더 ── */
 function render() {
   init();
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0, 10);
   const consultants = [...new Set(allVisits.map(v => v.consultant))].sort();
+  const branches = [...new Set(allVisits.map(v => v.branch))].sort();
 
   content.innerHTML = `
     <style>
-      .visit-top{display:grid;grid-template-columns:1fr 240px;gap:16px;margin-bottom:20px}
-      @media(max-width:900px){.visit-top{grid-template-columns:1fr}}
+      .cal-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--bg-secondary); border:1px solid var(--border-light); border-bottom:none; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+      .cal-header__title { font-size:16px; font-weight:700; color:var(--text-primary); }
+      .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); border:1px solid var(--border-light); border-top:none; border-radius:0 0 var(--radius-lg) var(--radius-lg); overflow:hidden; background:var(--bg-primary); }
+      .cal-head { padding:8px 4px; text-align:center; font-size:11px; font-weight:700; color:var(--text-muted); background:var(--bg-secondary); border-bottom:1px solid var(--border-light); }
+      .cal-head--sun { color:var(--status-red); }
+      .cal-head--sat { color:var(--status-blue); }
+      .cal-cell { min-height:100px; padding:4px 6px; border-bottom:1px solid var(--border-light); border-right:1px solid var(--border-light); display:flex; flex-direction:column; }
+      .cal-cell:nth-child(7n+8) { border-right:none; }
+      .cal-cell--empty { background:var(--bg-secondary); min-height:40px; }
+      .cal-cell--today { box-shadow:inset 0 0 0 2px var(--accent); }
+      .cal-cell--sun .cal-cell__day { color:var(--status-red); }
+      .cal-cell--sat .cal-cell__day { color:var(--status-blue); }
+      .cal-cell__header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+      .cal-cell__day { font-size:12px; font-weight:600; color:var(--text-primary); }
+      .cal-cell__count { font-size:9px; font-weight:700; background:var(--accent); color:#fff; padding:1px 5px; border-radius:8px; line-height:1.4; }
+      .cal-cell__body { flex:1; display:flex; flex-direction:column; gap:2px; overflow:hidden; }
+      .cal-item { display:flex; align-items:center; gap:3px; font-size:10px; padding:2px 4px; border-radius:3px; background:var(--bg-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+      .cal-item:hover { background:var(--border-light); }
+      .cal-item__dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+      .cal-item__time { font-weight:600; color:var(--text-secondary); flex-shrink:0; }
+      .cal-item__name { color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; }
+      .cal-item--more { color:var(--accent); font-weight:600; background:var(--accent-bg); justify-content:center; }
+      @media(max-width:900px) { .cal-cell { min-height:60px; } .cal-item__name { display:none; } }
     </style>
 
     <div class="page-header">
       <div><h1 class="page-header__title">방문상담 관리</h1>
       <p class="page-header__subtitle">준회원 방문상담 예약 및 결과 관리</p></div>
-      <div class="page-header__actions"><button class="btn btn--primary btn--sm" id="btn-new-visit">+ 방문상담 등록</button></div>
     </div>
 
-    <div class="visit-top">
+    <!-- 탭 -->
+    <div class="std-tabs" id="visit-tabs">
+      <button class="std-tab active" data-tab="tab-calendar">방문 일정표</button>
+      <button class="std-tab" data-tab="tab-list">방문상담 현황</button>
+    </div>
+
+    <!-- 탭1: 대형 캘린더 -->
+    <div class="std-tab-panel active" id="tab-calendar">
       <div id="cal-area">${renderCalendar()}</div>
-      <div id="summary-area">${renderSummary()}</div>
     </div>
 
-    <div class="filter-bar"><div class="filter-bar__row">
-      <div class="filter-bar__item"><label>기간</label>
-        <div style="display:flex;gap:4px;align-items:center">
-          <input type="date" id="f-date-from" value="${today}" class="form-input form-input--sm" style="width:auto">
-          <span class="text-muted">~</span>
-          <input type="date" id="f-date-to" value="${today}" class="form-input form-input--sm" style="width:auto">
-        </div>
+    <!-- 탭2: 방문상담 현황 -->
+    <div class="std-tab-panel" id="tab-list">
+      <table class="search-table">
+        <tbody>
+          <tr>
+            <th class="search-table__th">기간</th>
+            <td class="search-table__td">
+              <input type="date" id="f-date-from" value="${today}" class="form-input form-input--sm fi" style="width:140px">
+              <span class="text-muted">~</span>
+              <input type="date" id="f-date-to" value="${today}" class="form-input form-input--sm fi" style="width:140px">
+            </td>
+          </tr>
+          <tr>
+            <th class="search-table__th">상세검색</th>
+            <td class="search-table__td">
+              <select class="form-input form-input--sm fi" id="f-branch" style="width:100px"><option value="">지사 전체</option>${branches.map(b=>`<option>${b}</option>`).join('')}</select>
+              <select class="form-input form-input--sm fi" id="f-consultant" style="width:120px"><option value="">매니저 전체</option>${consultants.map(c=>`<option>${c}</option>`).join('')}</select>
+              <select class="form-input form-input--sm fi" id="f-result" style="width:100px"><option value="">결과 전체</option>${VISIT_RESULTS.map(r=>`<option>${r}</option>`).join('')}</select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="search-actions">
+        <button class="btn btn--sm search-btn" id="btn-list-search">검색</button>
+        <button class="btn btn--sm filter-reset-btn" id="btn-list-reset">초기화</button>
       </div>
-      <div class="filter-bar__item"><label>지사</label>
-        <select class="form-select form-input--sm" id="f-branch"><option value="">전체</option>${BRANCHES.map(b=>`<option>${b}</option>`).join('')}</select>
-      </div>
-      <div class="filter-bar__item"><label>컨설턴트</label>
-        <select class="form-select form-input--sm" id="f-consultant"><option value="">전체</option>${consultants.map(c=>`<option>${c}</option>`).join('')}</select>
-      </div>
-      <div class="filter-bar__item"><label>결과</label>
-        <select class="form-select form-input--sm" id="f-result"><option value="">전체</option>${VISIT_RESULTS.map(r=>`<option>${r}</option>`).join('')}</select>
-      </div>
-      <button class="btn btn--primary btn--sm" id="btn-filter">검색</button>
-      <button class="btn btn--secondary btn--sm" id="btn-reset">초기화</button>
-    </div></div>
 
-    <div class="card">
-      <div class="card__header"><h3 class="card__title" style="font-size:14px">방문상담 현황</h3>
-      <span style="font-size:12px;font-weight:600;color:var(--accent)" id="visit-count">0건</span></div>
-      <div class="card__body" style="padding:0;overflow-x:auto">
-        <table class="std-table"><thead><tr>
-          <th style="width:45px">번호</th><th>지사</th><th>매니저</th><th>회원명</th>
-          <th>일자</th><th>시간</th><th>방문상태</th><th>내용</th>
-          <th>결과</th><th>결과내용</th><th>가입금액</th>
-        </tr></thead><tbody id="visit-tbody"></tbody></table>
+      <div class="list-section">
+        <div class="list-section__header">
+          <h3 class="list-section__title">방문상담 현황</h3>
+          <span class="list-section__meta" style="font-weight:600;color:var(--accent)" id="list-count">0건</span>
+        </div>
+        <div class="list-section__body">
+          <table class="std-table">
+            <thead><tr>
+              <th style="width:40px">번호</th><th>지사</th><th>매니저</th><th>회원명</th>
+              <th>일자</th><th>시간</th><th>방문형태</th><th>내용</th>
+              <th>결과</th><th>결과내용</th>
+            </tr></thead>
+            <tbody id="list-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
 
-  renderTable(); bindCalendarEvents();
-  document.getElementById('btn-filter').addEventListener('click', renderTable);
-  document.getElementById('btn-reset').addEventListener('click', () => {
-    ['f-date-from','f-date-to','f-consultant','f-branch','f-result'].forEach(id => { document.getElementById(id).value = ''; });
-    selectedDate = '';
-    document.getElementById('cal-area').innerHTML = renderCalendar();
-    bindCalendarEvents(); renderTable();
+  // 초기 렌더
+  bindCalendarEvents();
+
+  // 탭 이벤트
+  document.querySelectorAll('.std-tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
   });
-  document.getElementById('btn-new-visit').addEventListener('click', () => Toast.show('방문상담 등록 기능은 추후 구현 예정입니다.', 'info'));
+
+  // 리스트 필터 이벤트
+  document.getElementById('btn-list-search').addEventListener('click', renderListTable);
+  document.getElementById('btn-list-reset').addEventListener('click', () => {
+    ['f-date-from','f-date-to','f-branch','f-consultant','f-result'].forEach(id => { document.getElementById(id).value = ''; });
+    renderListTable();
+  });
 }
 
 render();

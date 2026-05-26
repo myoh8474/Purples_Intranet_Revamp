@@ -57,8 +57,8 @@
       margin-bottom: 12px;
       padding-bottom: 8px;
     }
-    .info-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
-    .info-table td { padding: 6px 10px; border: 1px solid var(--border-light); vertical-align: middle; }
+    .info-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    .info-table td { padding: 6px 10px; border: 1px solid var(--border-light); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
     .info-table .label {
       background: var(--bg-secondary);
       font-weight: 700;
@@ -66,6 +66,7 @@
       color: var(--text-secondary);
       text-align: center;
       font-size: 12px;
+      width: 9%;
     }
     .grid-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
     .grid-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
@@ -195,9 +196,9 @@
     // Supabase에서 직접 해당 회원 1건 조회
     function fetchMemberFromSupabase(id) {
       var SUPABASE_URL = 'https://zjqeveciussillyvzyzz.supabase.co';
-      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqcWV2ZWNpdXNzaWxseXZ6eXp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTYyNjQsImV4cCI6MjA5NDY5MjI2NH0.HnCHN6Z0YfsLOUTm7gHhr3wVaieYImm3sfab6jMepM0';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqcWV2ZWNpdXNzaWxseXZ5eXp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTYyNjQsImV4cCI6MjA5NDY5MjI2NH0.HnCHN6Z0YfsLOUTm7gHhr3wVaieYImm3sfab6jMepM0';
 
-      return fetch(SUPABASE_URL + '/rest/v1/associates?id=eq.' + id + '&select=*', {
+      return fetch(SUPABASE_URL + '/rest/v1/associate_mem?id=eq.' + id + '&select=*', {
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -209,25 +210,36 @@
           var row = data[0];
           return {
             id: row.id,
-            name: row.name,
-            phone: row.phone,
-            gender: row.gender,
-            birthDate: row.birth_date,
-            age: row.birth_date ? Formatters.age(row.birth_date) : '',
-            education: row.education,
-            school: row.school,
-            job: row.job,
-            company: row.company,
-            region: row.region,
+            name: row.uname,
+            phone: row.tel_hand,
+            phone2: row.tel_eto || '',
+            gender: row.sex,
+            birthDate: row.birthday,
+            age: row.birthday ? Formatters.age(row.birthday) : '',
+            education: row.school,
+            school: row.school_name,
+            job: row.job_name,
+            company: row.office,
+            region: row.live_local,
             branch: row.branch,
             brand: row.brand,
-            maritalStatus: row.marital_status,
-            status: row.status,
-            channel: row.channel,
-            consultant: row.consultant,
-            registeredAt: row.registered_at,
-            distributedAt: row.distributed_at,
-            lastContactAt: row.last_contact_at,
+            maritalStatus: row.married,
+            status: row.state,
+            channel: row.etc,
+            consultant: row.course,
+            registeredAt: row.find_date,
+            distributedAt: row.input_date,
+            lastContactAt: row.last_counsel,
+            email: row.email || '',
+            telHome: row.tel_home || '',
+            telOffice: row.tel_office || '',
+            height: row.height || 0,
+            weight: row.weight || 0,
+            bloodType: row.bloodtype || '',
+            children: row.children || '',
+            religion: row.religion || '',
+            hobby: row.hobby || '',
+            hope: row.hope || '',
             memo: row.memo,
             duplicateEntries: [],
             contactHistory: [],
@@ -2586,6 +2598,12 @@
                 <td><span class="clickable-consultant" onclick="showConsultantHistory()">${m.consultant}</span></td>
                 <td class="label">회원상태</td><td>${Formatters.statusBadge(m.status, 'associate')}</td>
                 <td class="label">가입경로</td><td>${m.channel}</td>
+                <td class="label">지 사</td><td>${m.branch}</td>
+              </tr>
+              <tr>
+                <td class="label">등록일</td><td>${Formatters.date(m.registeredAt)}</td>
+                <td class="label">분배일</td><td>${Formatters.date(m.distributedAt)}</td>
+                <td class="label">최종컨텍</td><td>${Formatters.date(m.lastContactAt)}</td>
                 <td class="label">주민번호</td><td>-</td>
               </tr>
               <tr>
@@ -2602,30 +2620,30 @@
               </tr>
               <tr>
                 <td class="label">집주소</td><td colspan="3">-</td>
-                <td class="label">이메일</td><td colspan="3">-</td>
+                <td class="label">이메일</td><td colspan="3">${m.email || '-'}</td>
               </tr>
               <tr>
-                <td class="label">신 장</td><td>0 cm</td>
-                <td class="label">체 중</td><td>0 kg</td>
-                <td class="label">혈액형</td><td>-</td>
-                <td class="label">자 녀</td><td>-</td>
+                <td class="label">신 장</td><td>${m.height ? m.height + ' cm' : '-'}</td>
+                <td class="label">체 중</td><td>${m.weight ? m.weight + ' kg' : '-'}</td>
+                <td class="label">혈액형</td><td>${m.bloodType ? m.bloodType + '형' : '-'}</td>
+                <td class="label">자 녀</td><td>${m.children || '-'}</td>
               </tr>
               <tr>
-                <td class="label">취 미</td><td>-</td>
-                <td class="label">종 교</td><td>-</td>
+                <td class="label">취 미</td><td>${m.hobby || '-'}</td>
+                <td class="label">종 교</td><td>${m.religion || '-'}</td>
                 <td class="label">매니저 지정</td><td>-</td>
-                <td class="label">희망 상대</td><td>-</td>
+                <td class="label">희망 상대</td><td>${m.hope || '-'}</td>
               </tr>
               <tr>
-                <td class="label">직장번호</td><td>-</td>
-                <td class="label">자택번호</td><td>-</td>
+                <td class="label">직장번호</td><td>${m.telOffice || '-'}</td>
+                <td class="label">자택번호</td><td>${m.telHome || '-'}</td>
                 <td class="label">핸드폰1</td>
                 <td>
                   ${Formatters.phone(m.phone)} &nbsp;
                   <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="if(confirm('통화를 연결하시겠습니까?')){Toast.show('통화 연결 중...','info')}">📞 통화</button>
                   <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333;margin-left:4px" onclick="showSmsModal()">💬 문자</button>
                 </td>
-                <td class="label">핸드폰2</td><td>-</td>
+                <td class="label">핸드폰2</td><td>${m.phone2 ? Formatters.phone(m.phone2) : '-'}</td>
               </tr>
               <tr>
                 <td class="label">수신 여부</td>

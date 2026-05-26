@@ -1,12 +1,13 @@
 /* ========================================
-   대시보드 페이지 — CMS 스타일 레이아웃
-   첨부 디자인 참조: 업무현황 + 캘린더 + 공지 + 알림
+   대시보드 페이지 — 영업기획(상담최고관리자) 대시보드
+   상담현황 + 매니저 활동 + 방문예약 + 보유DB 통합
    ======================================== */
 import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { MockAssociates } from '@mock/associates.js';
 import { MockMonthlySales, MockTodos, MockStats, MockNotifications } from '@mock/stats.js';
 import { Auth } from '@core/auth.js';
+import { CONSULTANTS, CONSULTANT_BRANCH, BRANCHES } from '@config/constants.js';
 
 // 레이아웃 초기화
 initLayout({ pageId: 'dashboard', breadcrumbs: ['대시보드'] });
@@ -406,27 +407,266 @@ if (isAdmin) {
   const arrow = document.getElementById('brand-arrow');
 
   if (selectorBtn && dropdown) {
-    // 토글
     selectorBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const isOpen = dropdown.style.display === 'block';
       dropdown.style.display = isOpen ? 'none' : 'block';
       if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
     });
-
-    // 옵션 선택
     document.querySelectorAll('.brand-option').forEach(opt => {
       opt.addEventListener('click', () => {
-        const brand = opt.dataset.brand;
-        localStorage.setItem('purples_dashboard_brand', brand);
+        localStorage.setItem('purples_dashboard_brand', opt.dataset.brand);
         window.location.reload();
       });
     });
-
-    // 외부 클릭 시 닫기
     document.addEventListener('click', () => {
       dropdown.style.display = 'none';
       if (arrow) arrow.style.transform = 'rotate(0deg)';
     });
   }
 }
+
+// ========================================
+// 영업기획 상담현황 섹션 (팀장/관리자용)
+// ========================================
+function buildConsultStatus() {
+  const data = [...MockAssociates];
+  // 상태 업데이트 반영
+  try {
+    const u = JSON.parse(localStorage.getItem('purples_status_updates') || '{}');
+    data.forEach(m => { if (u[m.id]) m.status = typeof u[m.id] === 'string' ? u[m.id] : u[m.id].status || m.status; });
+  } catch (e) {}
+
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const branchMap = {};
+  BRANCHES.forEach(b => { branchMap[b.code] = b.name; });
+
+  // 매니저별 통계 계산
+  const managerStats = CONSULTANTS.map(name => {
+    const members = data.filter(m => m.consultant === name);
+    const branch = branchMap[CONSULTANT_BRANCH[name]] || '-';
+
+    // 전화 기록 수집
+    let todayContacts = 0, yesterdayContacts = 0;
+    let todayMeetings = 0, yesterdayMeetings = 0;
+    let todayJoins = 0, yesterdayJoins = 0;
+    let todayAmount = 0, yesterdayAmount = 0;
+
+    members.forEach(m => {
+      // contactHistory
+      (m.contactHistory || []).forEach(h => {
+        const d = (h.date || '').slice(0, 10);
+        if (d === today) { todayContacts++; if (h.result === '방문상담') todayMeetings++; if (h.result === '가입완료' || h.result === '가입중') todayJoins++; }
+        if (d === yesterday) { yesterdayContacts++; if (h.result === '방문상담') yesterdayMeetings++; if (h.result === '가입완료' || h.result === '가입중') yesterdayJoins++; }
+      });
+
+      // localStorage 전화
+      try {
+        JSON.parse(localStorage.getItem('purples_call_history_' + m.id) || '[]').forEach(h => {
+          const d = (h.date || '').slice(0, 10);
+          if (d === today) { todayContacts++; if (h.result === '방문상담') todayMeetings++; }
+          if (d === yesterday) { yesterdayContacts++; if (h.result === '방문상담') yesterdayMeetings++; }
+        });
+      } catch (e) {}
+
+      // localStorage 미팅
+      try {
+        JSON.parse(localStorage.getItem('purples_meeting_history_' + m.id) || '[]').forEach(h => {
+          const d = (h.date || '').slice(0, 10);
+          if (d === today) todayMeetings++;
+          if (d === yesterday) yesterdayMeetings++;
+        });
+      } catch (e) {}
+    });
+
+    return { name, branch, db: members.length,
+      todayContacts, todayMeetings, todayJoins, todayAmount,
+      yesterdayContacts, yesterdayMeetings, yesterdayJoins, yesterdayAmount };
+  });
+
+  // 합계
+  const totals = managerStats.reduce((t, m) => ({
+    db: t.db + m.db,
+    todayContacts: t.todayContacts + m.todayContacts,
+    todayMeetings: t.todayMeetings + m.todayMeetings,
+    todayJoins: t.todayJoins + m.todayJoins,
+    yesterdayContacts: t.yesterdayContacts + m.yesterdayContacts,
+    yesterdayMeetings: t.yesterdayMeetings + m.yesterdayMeetings,
+    yesterdayJoins: t.yesterdayJoins + m.yesterdayJoins,
+  }), { db:0, todayContacts:0, todayMeetings:0, todayJoins:0, yesterdayContacts:0, yesterdayMeetings:0, yesterdayJoins:0 });
+
+  // 7일 추이 데이터 생성
+  const trendDays = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    const ds = d.toISOString().slice(0, 10);
+    const dayLabel = `${d.getMonth()+1}/${d.getDate()}`;
+    let contacts = 0;
+    data.forEach(m => {
+      (m.contactHistory || []).forEach(h => { if ((h.date || '').slice(0, 10) === ds) contacts++; });
+    });
+    // 기본 mock: 랜덤으로 변동
+    if (contacts === 0) contacts = Math.floor(Math.random() * 15) + 5;
+    trendDays.push({ label: dayLabel, value: contacts });
+  }
+  const maxTrend = Math.max(...trendDays.map(d => d.value), 1);
+
+  // 방문예약 현황
+  const visitData = [];
+  try {
+    const stored = JSON.parse(localStorage.getItem('purples_visit_data') || '[]');
+    stored.filter(v => v.date && v.date.slice(0, 10) === today).forEach(v => visitData.push(v));
+  } catch (e) {}
+  // 미팅 기록에서도 수집
+  data.forEach(m => {
+    try {
+      JSON.parse(localStorage.getItem('purples_meeting_history_' + m.id) || '[]').forEach(h => {
+        if ((h.date || '').slice(0, 10) === today) {
+          visitData.push({ memberName: m.name, consultant: m.consultant, branch: branchMap[m.branch] || m.branch,
+            date: h.date, time: h.time || '-', content: h.content || '방문예정', status: h.status || '예약' });
+        }
+      });
+    } catch (e) {}
+  });
+
+  return { managerStats, totals, trendDays, maxTrend, visitData };
+}
+
+// 영업기획 섹션 렌더
+if (isAdmin || user?.team === '영업기획팀') {
+  const cs = buildConsultStatus();
+  const branchMap = {};
+  BRANCHES.forEach(b => { branchMap[b.code] = b.name; });
+
+  content.innerHTML += `
+    <!-- 구분선 -->
+    <div style="margin:28px 0 20px;border-top:2px solid var(--accent);padding-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <h2 style="font-size:17px;font-weight:800;color:var(--text-primary);margin:0">📊 상담 현황</h2>
+          <p style="font-size:12px;color:var(--text-muted);margin:4px 0 0">매니저별 상담 활동 현황 · 기준일 ${new Date().toLocaleDateString('ko-KR')}</p>
+        </div>
+      </div>
+
+      <!-- KPI 카드 -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
+        <div style="padding:16px;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);text-align:center;border-left:3px solid #3b82f6">
+          <div style="font-size:22px;font-weight:800;color:#3b82f6">${cs.totals.todayContacts}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">금일 컨텍수</div>
+        </div>
+        <div style="padding:16px;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);text-align:center;border-left:3px solid #8b5cf6">
+          <div style="font-size:22px;font-weight:800;color:#8b5cf6">${cs.totals.todayMeetings}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">금일 미팅</div>
+        </div>
+        <div style="padding:16px;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);text-align:center;border-left:3px solid #10b981">
+          <div style="font-size:22px;font-weight:800;color:#10b981">${cs.totals.todayJoins}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">금일 가입</div>
+        </div>
+        <div style="padding:16px;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);text-align:center;border-left:3px solid #f59e0b">
+          <div style="font-size:22px;font-weight:800;color:#f59e0b">${cs.visitData.length}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">금일 방문예약</div>
+        </div>
+        <div style="padding:16px;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:var(--radius-lg);text-align:center;border-left:3px solid #6366f1">
+          <div style="font-size:22px;font-weight:800;color:#6366f1">${cs.totals.db}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">보유DB 합계</div>
+        </div>
+      </div>
+
+      <!-- 2열: 매니저 테이블 + 추이 그래프 -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:20px">
+        <!-- 매니저별 상담현황 -->
+        <div class="card" style="margin:0">
+          <div class="card__header"><h3 class="card__title" style="font-size:13px">매니저별 상담 현황</h3>
+            <span style="font-size:11px;color:var(--text-muted)">금일 / 어제</span>
+          </div>
+          <div class="card__body" style="padding:0;overflow-x:auto">
+            <table class="std-table" style="font-size:11px">
+              <thead><tr>
+                <th style="width:50px">지사</th><th style="width:60px">매니저</th><th style="width:45px">보유DB</th>
+                <th colspan="3" style="background:#eff6ff;text-align:center">금일</th>
+                <th colspan="3" style="background:#fefce8;text-align:center">어제</th>
+              </tr>
+              <tr>
+                <th></th><th></th><th></th>
+                <th style="background:#eff6ff">컨텍</th><th style="background:#eff6ff">미팅</th><th style="background:#eff6ff">가입</th>
+                <th style="background:#fefce8">컨텍</th><th style="background:#fefce8">미팅</th><th style="background:#fefce8">가입</th>
+              </tr></thead>
+              <tbody>
+                ${cs.managerStats.map(m => `<tr>
+                  <td class="tc">${m.branch}</td>
+                  <td class="tc" style="font-weight:600">${m.name}</td>
+                  <td class="tc">${m.db}</td>
+                  <td class="tc" style="background:#f0f7ff;font-weight:${m.todayContacts ? '700' : '400'};color:${m.todayContacts ? '#2563eb' : 'var(--text-muted)'}">${m.todayContacts}</td>
+                  <td class="tc" style="background:#f0f7ff;font-weight:${m.todayMeetings ? '700' : '400'};color:${m.todayMeetings ? '#7c3aed' : 'var(--text-muted)'}">${m.todayMeetings}</td>
+                  <td class="tc" style="background:#f0f7ff;font-weight:${m.todayJoins ? '700' : '400'};color:${m.todayJoins ? '#059669' : 'var(--text-muted)'}">${m.todayJoins}</td>
+                  <td class="tc" style="background:#fffef0">${m.yesterdayContacts}</td>
+                  <td class="tc" style="background:#fffef0">${m.yesterdayMeetings}</td>
+                  <td class="tc" style="background:#fffef0">${m.yesterdayJoins}</td>
+                </tr>`).join('')}
+                <tr style="background:var(--bg-secondary);font-weight:700">
+                  <td class="tc" colspan="2">합계</td>
+                  <td class="tc">${cs.totals.db}</td>
+                  <td class="tc" style="color:#2563eb">${cs.totals.todayContacts}</td>
+                  <td class="tc" style="color:#7c3aed">${cs.totals.todayMeetings}</td>
+                  <td class="tc" style="color:#059669">${cs.totals.todayJoins}</td>
+                  <td class="tc">${cs.totals.yesterdayContacts}</td>
+                  <td class="tc">${cs.totals.yesterdayMeetings}</td>
+                  <td class="tc">${cs.totals.yesterdayJoins}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 7일 컨텍 추이 -->
+        <div class="card" style="margin:0">
+          <div class="card__header"><h3 class="card__title" style="font-size:13px">컨텍 추이 (7일)</h3></div>
+          <div class="card__body" style="display:flex;flex-direction:column;justify-content:flex-end;gap:0;padding:12px 16px 16px">
+            <div style="display:flex;align-items:flex-end;gap:6px;height:160px">
+              ${cs.trendDays.map(d => {
+                const h = Math.max(8, (d.value / cs.maxTrend) * 140);
+                const isToday = d === cs.trendDays[cs.trendDays.length - 1];
+                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <span style="font-size:10px;font-weight:600;color:${isToday ? '#2563eb' : 'var(--text-muted)'}">${d.value}</span>
+                  <div style="width:100%;height:${h}px;background:${isToday ? 'linear-gradient(180deg,#3b82f6,#2563eb)' : 'linear-gradient(180deg,#e0e7ff,#c7d2fe)'};border-radius:4px 4px 0 0;transition:height 0.3s"></div>
+                  <span style="font-size:9px;color:var(--text-muted)">${d.label}</span>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오늘 방문예약 현황 -->
+      <div class="card" style="margin:0">
+        <div class="card__header">
+          <h3 class="card__title" style="font-size:13px">금일 방문예약 현황</h3>
+          <span class="badge badge--accent">${cs.visitData.length}건</span>
+        </div>
+        <div class="card__body" style="padding:0;overflow-x:auto">
+          ${cs.visitData.length ? `
+          <table class="std-table" style="font-size:11px">
+            <thead><tr>
+              <th style="width:40px">No</th><th>지사</th><th>매니저</th><th>회원명</th>
+              <th>일자</th><th>시간</th><th>내용</th><th>상태</th>
+            </tr></thead>
+            <tbody>
+              ${cs.visitData.map((v, i) => `<tr>
+                <td class="tc">${i + 1}</td>
+                <td class="tc">${v.branch || '-'}</td>
+                <td class="tc">${v.consultant || '-'}</td>
+                <td class="tc" style="font-weight:600">${v.memberName || '-'}</td>
+                <td class="tc">${(v.date || '').slice(0, 10)}</td>
+                <td class="tc">${v.time || '-'}</td>
+                <td class="tl">${v.content || '-'}</td>
+                <td class="tc"><span class="badge badge--${v.status === '완료' ? 'green' : v.status === '취소' ? 'red' : 'blue'}">${v.status || '예약'}</span></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>` : `<div style="padding:30px;text-align:center;color:var(--text-muted);font-size:12px">금일 방문예약 내역이 없습니다.</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
