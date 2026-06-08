@@ -1,0 +1,156 @@
+/* ========================================
+   상세페이지 공통 섹션·테이블 스타일
+   — detail-tab-basic / extra / payment / matching 공용
+   ======================================== */
+
+/* ── 섹션 카드 (.sec) ── */
+.sec {
+  margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.sec__header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #cbd5e1;
+  font-weight: 800;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.sec__header--flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sec__body {
+  padding: 0;
+}
+
+/* ── 상세 테이블 (.dtbl) ── */
+.dtbl {
+  font-size: 14px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* 라벨 셀 */
+.dtbl .lbl,
+td.lbl,
+th.lbl {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  white-space: nowrap;
+  padding: 6px 8px;
+}
+
+/* 헤더 기본정보 테이블 — val 흰색 배경 */
+.dtbl--white-lbl .val {
+  background: #fff;
+}
+
+/* 값 셀 */
+.dtbl .val,
+td.val {
+  font-size: 13px;
+  padding: 6px 10px;
+  color: #1e3a5f;
+}
+
+/* ── 매칭탭 카드 (.mcard) ── */
+.mcard {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  max-height: 900px;
+  background: #fff;
+  border: 1px solid var(--border-light);
+}
+
+.mcard__header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.mcard__title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.mcard__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* ── 필터 행 (매칭탭 공용) ── */
+.mcard__filter {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 14px;
+  border-bottom: 1px solid #cbd5e1;
+  flex-shrink: 0;
+}
+
+/* ── 상세페이지 헤더 바 ── */
+.detail-header-bar {
+  padding: 14px 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-header-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-header-bar__name {
+  font-size: 20px;
+  font-weight: 900;
+  margin: 0;
+}
+
+.detail-header-bar__id {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.detail-header-bar__actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── 변경이력 조회 가능 셀 링크 표시 ── */
+td[data-history],
+.val[data-history] {
+  cursor: pointer;
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+td[data-history]:hover,
+.val[data-history]:hover {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+/* 뱃지가 들어있는 셀은 밑줄 대신 배경으로 구분 */
+td[data-history] .badge {
+  cursor: pointer;
+}
+

@@ -1,7 +1,7 @@
 /* 결제정보 탭 렌더링 */
 import { Formatters } from '@utils/formatters.js';
 
-const SEC = (t) => `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const SEC = (t) => `<div class="sec"><div class="sec__header">${t}</div><div class="sec__body">`;
 const SEC_END = '</div></div>';
 
 export function renderPayment(m) {
@@ -64,10 +64,10 @@ export function renderPayment(m) {
     </div>
     ${SEC_END}
 
-    <div style="margin-bottom:12px;overflow:hidden">
-    <div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">결제 내역</div>
-    <div style="padding:0">
-    <table class="data-table data-table--bordered data-table--no-outer" style="font-size:12px">
+    <div class="sec">
+    <div class="sec__header">결제 내역</div>
+    <div class="sec__body">
+    <table class="data-table data-table--bordered data-table--no-outer dtbl" style="font-size:12px">
       <thead><tr><th>No</th><th>결제일</th><th>분류</th><th>가입프로그램</th><th>결제수단</th><th>금액</th><th>수당옵션</th><th>쉐어매니저</th><th>쉐어비율</th><th>실매출액</th><th>상태</th><th>비고</th></tr></thead>
       <tbody>
         ${payments.length === 0 ? '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:20px">결제 내역이 없습니다.</td></tr>' :

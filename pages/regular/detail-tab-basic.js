@@ -1,10 +1,10 @@
 /* 기본정보 탭 렌더링 — 구성안 기반 (좌: 계약관리+자산정보+직업 / 우: 특이사항) */
 import { Formatters } from '@utils/formatters.js';
 
-const LBL = 'background:var(--bg-secondary);font-weight:600;font-size:14px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px';
-const VAL = 'font-size:14px;padding:6px 10px;color:#1e3a5f';
-const TBL = 'class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%"';
-const SEC = (t) => `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const LBL = 'lbl';
+const VAL = 'val';
+const TBL = 'class="data-table data-table--bordered data-table--no-outer dtbl"';
+const SEC = (t) => `<div class="sec"><div class="sec__header">${t}</div><div class="sec__body">`;
 const SEC_END = '</div></div>';
 
 export function renderBasicInfo(m) {
@@ -23,48 +23,48 @@ export function renderBasicInfo(m) {
   var leftHtml = ''
     // 연락처/주소
     + SEC('연락처 / 주소')
-    + `<table class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;width:100%">
+    + `<table class="data-table data-table--bordered data-table--no-outer dtbl">
       <tbody>
-        <tr><td style="${LBL}">직장주소</td><td style="${VAL}" colspan="3">${m.workAddress || '-'}</td></tr>
-        <tr><td style="${LBL}">호적주소</td><td style="${VAL}" colspan="3">${m.registerAddress || m.hometown || '-'}</td></tr>
-        <tr><td style="${LBL}">본인핸드폰</td><td style="${VAL}">${fmtPhone(m.phone)}</td><td style="${LBL}">자택전화</td><td style="${VAL}">${m.homePhone ? fmtPhone(m.homePhone) : '-'}</td></tr>
-        <tr><td style="${LBL}">기타연락처</td><td style="${VAL}">${m.subPhone ? fmtPhone(m.subPhone) : '-'}</td><td style="${LBL}">직장전화</td><td style="${VAL}">${m.workPhone ? fmtPhone(m.workPhone) : '-'}</td></tr>
+        <tr><td class="${LBL}">직장주소</td><td class="${VAL}" colspan="3">${m.workAddress || '-'}</td></tr>
+        <tr><td class="${LBL}">호적주소</td><td class="${VAL}" colspan="3">${m.registerAddress || m.hometown || '-'}</td></tr>
+        <tr><td class="${LBL}">본인핸드폰</td><td class="${VAL}">${fmtPhone(m.phone)}</td><td class="${LBL}">자택전화</td><td class="${VAL}">${m.homePhone ? fmtPhone(m.homePhone) : '-'}</td></tr>
+        <tr><td class="${LBL}">기타연락처</td><td class="${VAL}">${m.subPhone ? fmtPhone(m.subPhone) : '-'}</td><td class="${LBL}">직장전화</td><td class="${VAL}">${m.workPhone ? fmtPhone(m.workPhone) : '-'}</td></tr>
       </tbody>
     </table>` + SEC_END
     // 계약관리
-    + SEC('계약관리')
+    + `<div class="sec"><div class="sec__header sec__header--flex">계약관리<div style="display:flex;gap:6px"><button class="btn btn--ghost btn--sm" id="btn-contract-view" style="font-size:11px;padding:3px 10px;border:1px solid #333;color:#333">계약서확인</button></div></div><div class="sec__body">`
     + `<table ${TBL}>
       <colgroup><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"></colgroup>
       <tbody>
-        <tr><td style="${LBL}">프로그램</td><td style="${VAL};cursor:pointer" data-history="프로그램" title="클릭하여 프로그램 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.program || '-'}</span></td><td style="${LBL}">가입일</td><td style="${VAL}">${Formatters.date(m.joinDate)}</td><td style="${LBL}">가입횟수</td><td style="${VAL};cursor:pointer" data-history="가입횟수" title="클릭하여 가입이력 보기"><span style="color:#2563eb;text-decoration:underline">${(m.rejoinCount || 1) + '가입'}</span></td><td style="${LBL}">재가입비</td><td style="${VAL}">${m.rejoinFee ? Formatters.money(m.rejoinFee) : '-'}</td></tr>
-        <tr><td style="${LBL}">가입비</td><td style="${VAL}">${Formatters.money(m.programFee || 0)}</td><td style="${LBL}">성혼비</td><td style="${VAL}">${Formatters.money(m.marriageFee || 0)}</td><td style="${LBL}">계약형태</td><td style="${VAL}">${ctLabel}</td><td style="${LBL}">만료일</td><td style="${VAL};cursor:pointer" data-history="만료일" title="클릭하여 만료일 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.expiryDate ? Formatters.date(m.expiryDate) : '-'}</span></td></tr>
-        <tr><td style="${LBL}">미팅횟수</td><td style="${VAL};cursor:pointer" data-history="미팅횟수" title="클릭하여 미팅횟수 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.meetingCount != null ? m.meetingCount + '회' : '-'}</span></td><td style="${LBL}">남은기간</td><td style="${VAL}">${m.expiryDate ? (() => { var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return d > 0 ? d + '일' : '만료'; })() : '-'}</td><td style="${LBL}">업그레이드</td><td style="${VAL}">${m.upgrade || '-'}</td><td style="${LBL}">결제방법</td><td style="${VAL}">${m.payMethod || '-'}</td></tr>
-        <tr><td style="${LBL}">무이자</td><td style="${VAL}">${m.interestFree || '-'}</td><td style="${LBL}">할인율</td><td style="${VAL}">${m.discountRate || '-'}</td><td style="${LBL}"></td><td style="${VAL}"></td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
+        <tr><td class="${LBL}">프로그램</td><td class="${VAL}" data-history="프로그램">${m.program || '-'}</td><td class="${LBL}">가입일</td><td class="${VAL}">${Formatters.date(m.joinDate)}</td><td class="${LBL}">가입횟수</td><td class="${VAL}" data-history="가입횟수">${(m.rejoinCount || 1) + '가입'}</td><td class="${LBL}">재가입비</td><td class="${VAL}">${m.rejoinFee ? Formatters.money(m.rejoinFee) : '-'}</td></tr>
+        <tr><td class="${LBL}">가입비</td><td class="${VAL}">${Formatters.money(m.programFee || 0)}</td><td class="${LBL}">성혼비</td><td class="${VAL}">${Formatters.money(m.marriageFee || 0)}</td><td class="${LBL}">계약형태</td><td class="${VAL}">${ctLabel}</td><td class="${LBL}">만료일</td><td class="${VAL}" data-history="만료일">${m.expiryDate ? Formatters.date(m.expiryDate) : '-'}</td></tr>
+        <tr><td class="${LBL}">미팅횟수</td><td class="${VAL}" data-history="미팅횟수">${m.meetingCount != null ? m.meetingCount + '회' : '-'}</td><td class="${LBL}">남은기간</td><td class="${VAL}">${m.expiryDate ? (() => { var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return d > 0 ? d + '일' : '만료'; })() : '-'}</td><td class="${LBL}">업그레이드</td><td class="${VAL}">${m.upgrade || '-'}</td><td class="${LBL}">결제방법</td><td class="${VAL}">${m.payMethod || '-'}</td></tr>
+        <tr><td class="${LBL}">무이자</td><td class="${VAL}">${m.interestFree || '-'}</td><td class="${LBL}">할인율</td><td class="${VAL}">${m.discountRate || '-'}</td><td class="${LBL}"></td><td class="${VAL}"></td><td class="${LBL}"></td><td class="${VAL}"></td></tr>
       </tbody>
     </table>` + SEC_END
 
     // 자산정보
     + SEC('자산정보')
-    + `<table class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%">
+    + `<table class="data-table data-table--bordered data-table--no-outer dtbl">
       <colgroup><col style="width:12%"><col style="width:13%"><col style="width:25%"><col style="width:12%"><col style="width:13%"><col style="width:25%"></colgroup>
       <tbody>
         <tr>
-          <td style="${LBL};border-bottom:none" rowspan="4">본인재산</td>
-          <td style="${LBL}">금융</td><td style="${VAL}">${m.selfFinance || '-'}</td>
-          <td style="${LBL};border-bottom:none" rowspan="4">가족재산</td>
-          <td style="${LBL}">금융</td><td style="${VAL}">${m.familyFinance || '-'}</td>
+          <td class="${LBL}" style="border-bottom:none" rowspan="4">본인재산</td>
+          <td class="${LBL}">금융</td><td class="${VAL}">${m.selfFinance || '-'}</td>
+          <td class="${LBL}" style="border-bottom:none" rowspan="4">가족재산</td>
+          <td class="${LBL}">금융</td><td class="${VAL}">${m.familyFinance || '-'}</td>
         </tr>
         <tr>
-          <td style="${LBL}">부동산</td><td style="${VAL}">${m.selfRealEstate || m.realEstate || '-'}</td>
-          <td style="${LBL}">부동산</td><td style="${VAL}">${m.familyRealEstate || '-'}</td>
+          <td class="${LBL}">부동산</td><td class="${VAL}">${m.selfRealEstate || m.realEstate || '-'}</td>
+          <td class="${LBL}">부동산</td><td class="${VAL}">${m.familyRealEstate || '-'}</td>
         </tr>
         <tr>
-          <td style="${LBL}">기타</td><td style="${VAL}">${m.selfOtherAsset || '-'}</td>
-          <td style="${LBL}">기타</td><td style="${VAL}">${m.familyOtherAsset || '-'}</td>
+          <td class="${LBL}">기타</td><td class="${VAL}">${m.selfOtherAsset || '-'}</td>
+          <td class="${LBL}">기타</td><td class="${VAL}">${m.familyOtherAsset || '-'}</td>
         </tr>
         <tr>
-          <td style="${LBL}">총</td><td style="${VAL};font-weight:700">${m.personalWealth || '-'}</td>
-          <td style="${LBL}">총</td><td style="${VAL};font-weight:700">${m.familyWealth || '-'}</td>
+          <td class="${LBL}">총</td><td class="${VAL}" style="font-weight:700">${m.personalWealth || '-'}</td>
+          <td class="${LBL}">총</td><td class="${VAL}" style="font-weight:700">${m.familyWealth || '-'}</td>
         </tr>
       </tbody>
     </table>` + SEC_END
@@ -74,10 +74,10 @@ export function renderBasicInfo(m) {
     + `<table ${TBL}>
       <colgroup><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"></colgroup>
       <tbody>
-        <tr><td style="${LBL}">직장명</td><td style="${VAL}">${m.company || '-'}</td><td style="${LBL}">업종</td><td style="${VAL}">${m.industry || '-'}</td><td style="${LBL}">직원수</td><td style="${VAL}">${m.employees || '-'}</td><td style="${LBL}">부서</td><td style="${VAL}">${m.department || '-'}</td></tr>
-        <tr><td style="${LBL}">직위</td><td style="${VAL}">${m.position || '-'}</td><td style="${LBL}">입사년도</td><td style="${VAL}">${m.joinCompanyYear || '-'}</td><td style="${LBL}">담당업무</td><td style="${VAL}">${m.duty || '-'}</td><td style="${LBL}">연수입</td><td style="${VAL}">${m.income || '-'}</td></tr>
-        <tr><td style="${LBL}">담당업무</td><td style="${VAL}">${m.subDuty || '-'}</td><td style="${LBL}"></td><td style="${VAL}"></td><td style="${LBL}">기업형태</td><td style="${VAL}">${m.companyType || '-'}</td><td style="${LBL}">기타수입</td><td style="${VAL}">${m.otherIncome || '-'}</td></tr>
-        <tr><td style="${LBL}">업무설명</td><td style="${VAL}" colspan="3">${m.businessField || '-'}</td><td style="${LBL}">재직증명서</td><td style="${VAL}" colspan="3">${m.employmentCert || '-'}</td></tr>
+        <tr><td class="${LBL}">직장명</td><td class="${VAL}">${m.company || '-'}</td><td class="${LBL}">업종</td><td class="${VAL}">${m.industry || '-'}</td><td class="${LBL}">직원수</td><td class="${VAL}">${m.employees || '-'}</td><td class="${LBL}">부서</td><td class="${VAL}">${m.department || '-'}</td></tr>
+        <tr><td class="${LBL}">직위</td><td class="${VAL}">${m.position || '-'}</td><td class="${LBL}">입사년도</td><td class="${VAL}">${m.joinCompanyYear || '-'}</td><td class="${LBL}">담당업무</td><td class="${VAL}">${m.duty || '-'}</td><td class="${LBL}">연수입</td><td class="${VAL}">${m.income || '-'}</td></tr>
+        <tr><td class="${LBL}">담당업무</td><td class="${VAL}">${m.subDuty || '-'}</td><td class="${LBL}"></td><td class="${VAL}"></td><td class="${LBL}">기업형태</td><td class="${VAL}">${m.companyType || '-'}</td><td class="${LBL}">기타수입</td><td class="${VAL}">${m.otherIncome || '-'}</td></tr>
+        <tr><td class="${LBL}">업무설명</td><td class="${VAL}" colspan="3">${m.businessField || '-'}</td><td class="${LBL}">재직증명서</td><td class="${VAL}" colspan="3">${m.employmentCert || '-'}</td></tr>
       </tbody>
     </table>` + SEC_END
 
@@ -86,14 +86,14 @@ export function renderBasicInfo(m) {
     + `<table ${TBL}>
       <colgroup><col style="width:10%"><col style="width:20%"><col style="width:15%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:10%"><col style="width:9%"></colgroup>
       <thead><tr>
-        <th style="${LBL}">학력</th><th style="${LBL}">학교명</th><th style="${LBL}">전공</th><th style="${LBL}">입학년도</th><th style="${LBL}">졸업년도</th><th style="${LBL}">졸업여부</th><th style="${LBL}">소재지</th><th style="${LBL}">관리</th>
+        <th class="${LBL}">학력</th><th class="${LBL}">학교명</th><th class="${LBL}">전공</th><th class="${LBL}">입학년도</th><th class="${LBL}">졸업년도</th><th class="${LBL}">졸업여부</th><th class="${LBL}">소재지</th><th class="${LBL}">관리</th>
       </tr></thead>
       <tbody>
         ${(m.educationList || [
           { level: '고등학교', school: m.school || '-', major: '-', enterYear: '-', gradYear: '-', graduated: '졸업', location: '-' },
           { level: '대학교', school: m.university || '-', major: m.major || '-', enterYear: '-', gradYear: '-', graduated: '졸업', location: '-' }
         ]).map(function(e, i) {
-          return '<tr><td style="' + VAL + ';text-align:center">' + (e.level || '-') + '</td><td style="' + VAL + '">' + (e.school || '-') + '</td><td style="' + VAL + '">' + (e.major || '-') + '</td><td style="' + VAL + ';text-align:center">' + (e.enterYear || '-') + '</td><td style="' + VAL + ';text-align:center">' + (e.gradYear || '-') + '</td><td style="' + VAL + ';text-align:center">' + (e.graduated || '-') + '</td><td style="' + VAL + ';text-align:center">' + (e.location || '-') + '</td><td style="text-align:center;padding:4px"><button class="btn btn--ghost btn--sm edu-del-btn" style="font-size:10px;padding:1px 4px;color:var(--status-red)">삭제</button></td></tr>';
+          return '<tr><td class="' + VAL + '" style="text-align:center">' + (e.level || '-') + '</td><td class="' + VAL + '">' + (e.school || '-') + '</td><td class="' + VAL + '">' + (e.major || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.enterYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.gradYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.graduated || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.location || '-') + '</td><td style="text-align:center;padding:4px"><button class="btn btn--ghost btn--sm edu-del-btn" style="font-size:10px;padding:1px 4px;color:var(--status-red)">삭제</button></td></tr>';
         }).join('')}
     </table>` + SEC_END
 
@@ -102,13 +102,13 @@ export function renderBasicInfo(m) {
     + `<table ${TBL}>
       <colgroup><col style="width:10%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:10%"><col style="width:32%"></colgroup>
       <thead><tr>
-        <th style="${LBL}">구분</th><th style="${LBL}">결혼년도</th><th style="${LBL}">이혼년도</th><th style="${LBL}">결혼기간</th><th style="${LBL}">자녀양육</th><th style="${LBL}">자녀</th><th style="${LBL}">사유</th>
+        <th class="${LBL}">구분</th><th class="${LBL}">결혼년도</th><th class="${LBL}">이혼년도</th><th class="${LBL}">결혼기간</th><th class="${LBL}">자녀양육</th><th class="${LBL}">자녀</th><th class="${LBL}">사유</th>
       </tr></thead>
       <tbody>
         ${(m.marriageList || [
           { type: '-', marriedYear: '-', divorceYear: '-', duration: '-', childCare: '-', children: '-', reason: '-' }
         ]).map(function(mr) {
-          return '<tr><td style="' + VAL + ';text-align:center">' + (mr.type || '-') + '</td><td style="' + VAL + ';text-align:center">' + (mr.marriedYear || '-') + '</td><td style="' + VAL + ';text-align:center">' + (mr.divorceYear || '-') + '</td><td style="' + VAL + ';text-align:center">' + (mr.duration || '-') + '</td><td style="' + VAL + ';text-align:center">' + (mr.childCare || '-') + '</td><td style="' + VAL + ';text-align:center">' + (mr.children || '-') + '</td><td style="' + VAL + '">' + (mr.reason || '-') + '</td></tr>';
+          return '<tr><td class="' + VAL + '" style="text-align:center">' + (mr.type || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.marriedYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.divorceYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.duration || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.childCare || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.children || '-') + '</td><td class="' + VAL + '">' + (mr.reason || '-') + '</td></tr>';
         }).join('')}
       </tbody>
     </table>` + SEC_END;
@@ -122,12 +122,12 @@ export function renderBasicInfo(m) {
 
   var rightHtml = ''
     // 특이사항 카드
-    + `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden">`
-    + `<div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">`
-    + `<span style="font-weight:800;font-size:14px;color:#1e293b">특이사항</span>`
+    + `<div class="sec" style="margin-bottom:12px">`
+    + `<div class="sec__header sec__header--flex">`
+    + `<span class="mcard__title">특이사항</span>`
     + `<button class="btn btn--outline btn--sm" id="btn-add-special-note" style="font-size:11px;padding:2px 10px">등록</button>`
     + `</div><div>`
-    + `<table class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%">
+    + `<table class="data-table data-table--bordered data-table--no-outer dtbl">
         <colgroup><col style="width:10%"><col style="width:18%"><col style="width:14%"><col style="width:58%"></colgroup>
         <thead><tr>
             <th style="padding:6px 4px;text-align:center;vertical-align:middle">번호</th>
@@ -141,9 +141,9 @@ export function renderBasicInfo(m) {
     }).join('')
     + `</tbody></table></div></div>`
     // 소개프로필 카드
-    + `<div style="background:#fff;border:1px solid var(--border-light);overflow:hidden">`
-    + `<div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">`
-    + `<span style="font-weight:800;font-size:14px;color:#1e293b">소개프로필</span>`
+    + `<div class="sec">`
+    + `<div class="sec__header sec__header--flex">`
+    + `<span class="mcard__title">소개프로필</span>`
     + `<button class="btn btn--outline btn--sm" id="btn-edit-intro" style="font-size:11px;padding:2px 10px">${m.introProfile ? '수정' : '등록'}</button>`
     + `</div>`
     + `<div style="padding:12px;font-size:12px;line-height:1.8;min-height:120px">`

@@ -52,4 +52,17 @@ export const Formatters = {
     const color = map[status] || 'gray';
     return `<span class="badge badge--${color} badge--dot">${status}</span>`;
   },
+  /** snake_case 키 → camelCase 키 변환 */
+  snakeToCamel(str) {
+    return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  },
+  /** 객체의 모든 snake_case 키를 camelCase로 변환 (1-depth) */
+  snakeToCamelObj(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    const out = {};
+    for (const k of Object.keys(obj)) {
+      out[Formatters.snakeToCamel(k)] = obj[k];
+    }
+    return out;
+  },
 };

@@ -242,22 +242,22 @@ export function renderMatchingInfo(m) {
   var specials = genSpecialNotes(m);
   var meetings = genMeetings(m);
 
-  var CARD = 'overflow:hidden;display:flex;flex-direction:column;min-height:500px;max-height:900px;background:#fff;border:1px solid var(--border-light)';
-  var CARD_HDR = 'padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-shrink:0';
-  var CARD_BODY = 'flex:1;overflow-y:auto;padding:0';
+  var CARD = 'mcard';
+  var CARD_HDR = 'mcard__header';
+  var CARD_BODY = 'mcard__body';
 
   var html = '<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:stretch">';
 
   /* ── 메모장 (좌상) ── */
-  html += '<div style="' + CARD + '">';
-  html += '<div style="' + CARD_HDR + '">';
-  html += '<span style="font-weight:800;font-size:14px;color:#1e293b">메모장</span>';
+  html += '<div class="' + CARD + '">';
+  html += '<div class="' + CARD_HDR + '">';
+  html += '<span class="mcard__title">메모장</span>';
   html += '<div style="display:flex;gap:4px">';
   html += '<button class="btn btn--outline btn--sm" id="btn-memo-add" style="padding:2px 8px;font-size:11px">+ 등록</button>';
   html += '<button class="btn btn--outline btn--sm" id="btn-memo-all" style="padding:2px 8px;font-size:11px">전체보기</button>';
   html += '</div></div>';
   // 필터 행
-  html += '<div style="display:flex;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid #cbd5e1;flex-shrink:0">';
+  html += '<div class="mcard__filter">';
   html += '<select class="form-input" id="memo-filter-select" style="padding:3px 6px;width:100px;font-size:12px">';
   html += '<option value="전체">구분: 전체</option>';
   Object.keys(MEMO_CATS).forEach(function(cat) { html += '<option value="' + cat + '">' + cat + '</option>'; });
@@ -272,19 +272,19 @@ export function renderMatchingInfo(m) {
   var pinnedMemos = memos.filter(function(x) { return x.pinned; });
   var normalMemos = memos.filter(function(x) { return !x.pinned; });
 
-  html += '<div style="' + CARD_BODY + '" id="memo-timeline">';
+  html += '<div class="' + CARD_BODY + '" id="memo-timeline">';
   html += buildMemoTable(pinnedMemos, normalMemos, 10);
   html += '</div>';
   html += '</div>';
 
   /* ── 특이사항 (우상) ── */
-  html += '<div style="' + CARD + '">';
-  html += '<div style="' + CARD_HDR + '">';
-  html += '<span style="font-weight:800;font-size:14px;color:#1e293b">특이사항</span>';
+  html += '<div class="' + CARD + '">';
+  html += '<div class="' + CARD_HDR + '">';
+  html += '<span class="mcard__title">특이사항</span>';
   html += '<button class="btn btn--outline btn--sm" id="btn-add-special-note" style="font-size:11px;padding:2px 10px">등록</button>';
   html += '</div>';
   // 필터 행 (메모장과 동일 형태)
-  html += '<div style="display:flex;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid #cbd5e1;flex-shrink:0">';
+  html += '<div class="mcard__filter">';
   html += '<select class="form-input" id="sn-filter-select" style="padding:3px 6px;width:100px;font-size:12px">';
   html += '<option value="전체">구분: 전체</option>';
   ['관리','상담','매칭'].forEach(function(t) { html += '<option value="' + t + '">' + t + '</option>'; });
@@ -294,7 +294,7 @@ export function renderMatchingInfo(m) {
   html += '<input type="date" class="form-input" id="sn-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
   html += '<button class="btn btn--primary btn--sm" id="btn-sn-search" style="padding:2px 8px;font-size:11px">검색</button>';
   html += '</div>';
-  html += '<div style="' + CARD_BODY + '">';
+  html += '<div class="' + CARD_BODY + '">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-special-notes" style="table-layout:fixed;width:100%">';
   html += '<colgroup><col style="width:8%"><col style="width:12%"><col style="width:8%"><col style="width:16%"><col style="width:56%"></colgroup>';
   html += '<thead><tr>' + sortableHeader('번호', 'tbl-special-notes', 0, 'num') + '<th style="' + LBL + '">작성자</th><th style="' + LBL + '">구분</th>' + sortableHeader('일시', 'tbl-special-notes', 3, 'date') + '<th style="' + LBL + '">내용</th></tr></thead><tbody>';
@@ -312,11 +312,11 @@ export function renderMatchingInfo(m) {
   html += '</div>';
 
   /* ── 미팅 리스트 (좌하) ── */
-  html += '<div style="' + CARD + '">';
-  html += '<div style="' + CARD_HDR + '">';
-  html += '<span style="font-weight:800;font-size:14px;color:#1e293b">미팅 리스트</span>';
+  html += '<div class="' + CARD + '">';
+  html += '<div class="' + CARD_HDR + '">';
+  html += '<span class="mcard__title">미팅 리스트</span>';
   html += '</div>';
-  html += '<div style="' + CARD_BODY + ';overflow-x:auto">';
+  html += '<div class="' + CARD_BODY + '" style="overflow-x:auto">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-meeting" style="table-layout:fixed;width:100%;min-width:700px">';
   html += '<colgroup><col style="width:36px"><col style="width:36px"><col style="width:70px"><col style="width:160px"><col style="width:56px"><col style="width:56px"><col style="width:150px"><col style="width:100px"><col style="width:50px"></colgroup>';
   html += '<thead><tr>';
@@ -364,15 +364,15 @@ export function renderMatchingInfo(m) {
 
 
   /* ── 소개장 (우하) ── */
-  html += '<div style="' + CARD + '">';
-  html += '<div style="' + CARD_HDR + '">';
-  html += '<span style="font-weight:800;font-size:14px;color:#1e293b">소개장</span>';
+  html += '<div class="' + CARD + '">';
+  html += '<div class="' + CARD_HDR + '">';
+  html += '<span class="mcard__title">소개장</span>';
   html += '<div style="display:flex;gap:4px;align-items:center">';
   html += '<button class="btn btn--sm" id="btn-intro-delete" style="font-size:11px;padding:2px 10px;background:#ef4444;color:#fff;border:none" disabled>삭제</button>';
   html += '<button class="btn btn--outline btn--sm" id="btn-add-intro" style="font-size:11px;padding:2px 10px">소개등록</button>';
   html += '</div>';
   html += '</div>';
-  html += '<div style="' + CARD_BODY + '">';
+  html += '<div class="' + CARD_BODY + '">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-intro" style="table-layout:fixed;width:100%">';
   html += '<colgroup><col style="width:5%"><col style="width:6%"><col style="width:14%"><col style="width:12%"><col style="width:24%"><col style="width:23%"><col style="width:16%"></colgroup>';
   html += '<thead><tr>';

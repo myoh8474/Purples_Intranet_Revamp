@@ -271,6 +271,9 @@ if (useMock()) {
       statusHistory: [
         { date: new Date(joinDate.getTime() - 30*86400000).toISOString(), from: '-', to: '준회원', reason: '최초 상담', processor: randomPick(CONSULTANTS) },
         { date: joinDate.toISOString(), from: '준회원', to: '신규', reason: '전산생성', processor: '인포팀' },
+        { date: new Date(joinDate.getTime() + 3*86400000).toISOString(), from: '신규', to: '활동대기', reason: '서류접수 완료', processor: '인포팀' },
+        { date: new Date(joinDate.getTime() + 7*86400000).toISOString(), from: '활동대기', to: '활동', reason: '인증 완료 (계약정보 확인)', processor: randomPick(CONSULTANTS) },
+        { date: new Date(joinDate.getTime() + 365*86400000).toISOString(), from: '기간만료', to: '리콜대기', reason: '계약기간 만료 → 연장심사', processor: '시스템' },
       ],
       totalContractAmount: totalContract,
       payments: payArr,

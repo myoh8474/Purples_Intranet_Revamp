@@ -1,10 +1,10 @@
 /* 추가정보 탭 렌더링 */
 import { Formatters } from '@utils/formatters.js';
 
-const LBL = 'background:var(--bg-secondary);font-weight:600;font-size:14px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px';
-const VAL = 'font-size:14px;padding:6px 10px;color:#1e3a5f';
-const TBL = 'class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%"';
-const SEC = (t) => `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const LBL = 'lbl';
+const VAL = 'val';
+const TBL = 'class="data-table data-table--bordered data-table--no-outer dtbl"';
+const SEC = (t) => `<div class="sec"><div class="sec__header">${t}</div><div class="sec__body">`;
 const SEC_END = '</div></div>';
 
 export function renderExtraInfo(m) {
@@ -13,30 +13,30 @@ export function renderExtraInfo(m) {
     <table ${TBL}>
       <colgroup><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"></colgroup>
       <tbody>
-        <tr><td style="${LBL}">시력</td><td style="${VAL}">${m.eyesight||'-'}</td><td style="${LBL}">안경</td><td style="${VAL}">${m.glasses||'-'}</td><td style="${LBL}">혈액형</td><td style="${VAL}">${m.bloodType||'-'}</td><td style="${LBL}">건강상태</td><td style="${VAL}">${m.healthStatus||'-'}</td></tr>
-        <tr><td style="${LBL}">청력</td><td style="${VAL}">${m.hearing||'-'}</td><td style="${LBL}">언어</td><td style="${VAL}">${m.language||'-'}</td><td style="${LBL}">얼굴형</td><td style="${VAL}">${m.faceType||'-'}</td><td style="${LBL}">범죄이력</td><td style="${VAL}">${m.criminalRecord||'-'}</td></tr>
-        <tr><td style="${LBL}">음주</td><td style="${VAL}">${m.drinking||'-'}</td><td style="${LBL}">흡연</td><td style="${VAL}">${m.smoking||'-'}</td><td style="${LBL}">신장</td><td style="${VAL}">${m.height ? m.height+'cm' : '-'}</td><td style="${LBL}">체중</td><td style="${VAL}">${m.weight ? m.weight+'kg' : '-'}</td></tr>
-        <tr><td style="${LBL}">병역</td><td style="${VAL}">${m.military||'-'}</td><td style="${LBL}">종교</td><td style="${VAL}">${m.religion||'-'}</td><td style="${LBL}">본인신앙</td><td style="${VAL}">${m.ownFaith||'-'}</td><td style="${LBL}">부모신앙</td><td style="${VAL}">${m.parentFaith||'-'}</td></tr>
-        <tr><td style="${LBL}">동성동본</td><td style="${VAL}">${m.sameClan||'-'}</td><td style="${LBL}">미팅사유</td><td style="${VAL}">${m.meetingReason||'-'}</td><td style="${LBL}">특기</td><td style="${VAL}">${m.specialty||'-'}</td><td style="${LBL}">보유면허증</td><td style="${VAL}">${m.license||'-'}</td></tr>
+        <tr><td class="${LBL}">시력</td><td class="${VAL}">${m.eyesight||'-'}</td><td class="${LBL}">안경</td><td class="${VAL}">${m.glasses||'-'}</td><td class="${LBL}">혈액형</td><td class="${VAL}">${m.bloodType||'-'}</td><td class="${LBL}">건강상태</td><td class="${VAL}">${m.healthStatus||'-'}</td></tr>
+        <tr><td class="${LBL}">청력</td><td class="${VAL}">${m.hearing||'-'}</td><td class="${LBL}">언어</td><td class="${VAL}">${m.language||'-'}</td><td class="${LBL}">얼굴형</td><td class="${VAL}">${m.faceType||'-'}</td><td class="${LBL}">범죄이력</td><td class="${VAL}">${m.criminalRecord||'-'}</td></tr>
+        <tr><td class="${LBL}">음주</td><td class="${VAL}">${m.drinking||'-'}</td><td class="${LBL}">흡연</td><td class="${VAL}">${m.smoking||'-'}</td><td class="${LBL}">신장</td><td class="${VAL}">${m.height ? m.height+'cm' : '-'}</td><td class="${LBL}">체중</td><td class="${VAL}">${m.weight ? m.weight+'kg' : '-'}</td></tr>
+        <tr><td class="${LBL}">병역</td><td class="${VAL}">${m.military||'-'}</td><td class="${LBL}">종교</td><td class="${VAL}">${m.religion||'-'}</td><td class="${LBL}">본인신앙</td><td class="${VAL}">${m.ownFaith||'-'}</td><td class="${LBL}">부모신앙</td><td class="${VAL}">${m.parentFaith||'-'}</td></tr>
+        <tr><td class="${LBL}">동성동본</td><td class="${VAL}">${m.sameClan||'-'}</td><td class="${LBL}">미팅사유</td><td class="${VAL}">${m.meetingReason||'-'}</td><td class="${LBL}">특기</td><td class="${VAL}">${m.specialty||'-'}</td><td class="${LBL}">보유면허증</td><td class="${VAL}">${m.license||'-'}</td></tr>
       </tbody>
     </table>${SEC_END}
 
-    <div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden">
-    <div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-weight:800;font-size:14px;color:#1e293b">가족관계</span>
+    <div class="sec">
+    <div class="sec__header sec__header--flex">
+      <span class="mcard__title">가족관계</span>
       <span style="font-size:12px;color:var(--text-muted)">${m.familySummary || ''}</span>
-    </div><div style="padding:0">
+    </div><div class="sec__body">
     <table ${TBL}>
       <colgroup><col style="width:8%"><col style="width:10%"><col style="width:12%"><col style="width:10%"><col style="width:14%"><col style="width:8%"><col style="width:8%"><col style="width:14%"><col style="width:16%"></colgroup>
       <thead><tr>
-        <th style="${LBL}">관계</th><th style="${LBL}">성명</th><th style="${LBL}">생년월일</th><th style="${LBL}">학력</th><th style="${LBL}">직업</th><th style="${LBL}">동거</th><th style="${LBL}">결혼</th><th style="${LBL}">거주지</th><th style="${LBL}">비고</th>
+        <th class="${LBL}">관계</th><th class="${LBL}">성명</th><th class="${LBL}">생년월일</th><th class="${LBL}">학력</th><th class="${LBL}">직업</th><th class="${LBL}">동거</th><th class="${LBL}">결혼</th><th class="${LBL}">거주지</th><th class="${LBL}">비고</th>
       </tr></thead>
       <tbody>
         ${(m.familyList || [
           { relation: '부', name: '-', birth: '-', edu: '-', job: '-', cohabit: '-', married: '-', residence: '-', note: '' },
           { relation: '모', name: '-', birth: '-', edu: '-', job: '-', cohabit: '-', married: '-', residence: '-', note: '' }
         ]).map(function(f) {
-          return '<tr><td style="' + VAL + ';text-align:center">' + (f.relation || '-') + '</td><td style="' + VAL + ';text-align:center">' + (f.name || '-') + '</td><td style="' + VAL + ';text-align:center">' + (f.birth || '-') + '</td><td style="' + VAL + ';text-align:center">' + (f.edu || '-') + '</td><td style="' + VAL + '">' + (f.job || '-') + '</td><td style="' + VAL + ';text-align:center">' + (f.cohabit || '-') + '</td><td style="' + VAL + ';text-align:center">' + (f.married || '-') + '</td><td style="' + VAL + '">' + (f.residence || '-') + '</td><td style="' + VAL + '">' + (f.note || '-') + '</td></tr>';
+          return '<tr><td class="' + VAL + '" style="text-align:center">' + (f.relation || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (f.name || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (f.birth || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (f.edu || '-') + '</td><td class="' + VAL + '">' + (f.job || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (f.cohabit || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (f.married || '-') + '</td><td class="' + VAL + '">' + (f.residence || '-') + '</td><td class="' + VAL + '">' + (f.note || '-') + '</td></tr>';
         }).join('')}
       </tbody>
     </table></div></div>
@@ -45,23 +45,23 @@ export function renderExtraInfo(m) {
     <table ${TBL}>
       <colgroup><col style="width:7%"><col style="width:8%"><col style="width:10%"><col style="width:8%"><col style="width:10%"><col style="width:7%"><col style="width:7%"><col style="width:10%"><col style="width:8%"><col style="width:8%"><col style="width:17%"></colgroup>
       <thead><tr>
-        <th style="${LBL}">관계</th><th style="${LBL}">성명</th><th style="${LBL}">생년월일</th><th style="${LBL}">학력</th><th style="${LBL}">직업</th><th style="${LBL}">동거</th><th style="${LBL}">결혼</th><th style="${LBL}">거주지</th><th style="${LBL}">양육권</th><th style="${LBL}">친권</th><th style="${LBL}">비고</th>
+        <th class="${LBL}">관계</th><th class="${LBL}">성명</th><th class="${LBL}">생년월일</th><th class="${LBL}">학력</th><th class="${LBL}">직업</th><th class="${LBL}">동거</th><th class="${LBL}">결혼</th><th class="${LBL}">거주지</th><th class="${LBL}">양육권</th><th class="${LBL}">친권</th><th class="${LBL}">비고</th>
       </tr></thead>
       <tbody>
         ${(m.childrenList || [
           { relation: '-', name: '-', birth: '-', edu: '-', job: '-', cohabit: '-', married: '-', residence: '-', custody: '-', parental: '-', note: '' }
         ]).map(function(c) {
-          return '<tr><td style="' + VAL + ';text-align:center">' + (c.relation || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.name || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.birth || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.edu || '-') + '</td><td style="' + VAL + '">' + (c.job || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.cohabit || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.married || '-') + '</td><td style="' + VAL + '">' + (c.residence || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.custody || '-') + '</td><td style="' + VAL + ';text-align:center">' + (c.parental || '-') + '</td><td style="' + VAL + '">' + (c.note || '-') + '</td></tr>';
+          return '<tr><td class="' + VAL + '" style="text-align:center">' + (c.relation || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.name || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.birth || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.edu || '-') + '</td><td class="' + VAL + '">' + (c.job || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.cohabit || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.married || '-') + '</td><td class="' + VAL + '">' + (c.residence || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.custody || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (c.parental || '-') + '</td><td class="' + VAL + '">' + (c.note || '-') + '</td></tr>';
         }).join('')}
       </tbody>
     </table>${SEC_END}
 
     ${SEC('희망상대')}
-    <table class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%">
+    <table class="data-table data-table--bordered data-table--no-outer dtbl">
       <colgroup><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"></colgroup>
       <tbody>
-        <tr><td style="${LBL}">연수입</td><td style="${VAL}">${m.preferIncome || '-'}</td><td style="${LBL}">신장</td><td style="${VAL}">${m.preferHeight || '-'}</td><td style="${LBL}">연령</td><td style="${VAL}">${m.preferAge || '-'}</td><td style="${LBL}">학력</td><td style="${VAL}">${m.preferEdu || '-'}</td></tr>
-        <tr><td style="${LBL}">기피종교</td><td style="${VAL}">${m.avoidReligion || '-'}</td><td style="${LBL}">혼인경력</td><td style="${VAL}">${m.preferMarital || '-'}</td><td style="${LBL}">상대자녀</td><td style="${VAL}">${m.acceptChildren || '-'}</td><td style="${LBL}">학력상세</td><td style="${VAL}">${m.preferEduDetail || '-'}</td></tr>
+        <tr><td class="${LBL}">연수입</td><td class="${VAL}">${m.preferIncome || '-'}</td><td class="${LBL}">신장</td><td class="${VAL}">${m.preferHeight || '-'}</td><td class="${LBL}">연령</td><td class="${VAL}">${m.preferAge || '-'}</td><td class="${LBL}">학력</td><td class="${VAL}">${m.preferEdu || '-'}</td></tr>
+        <tr><td class="${LBL}">기피종교</td><td class="${VAL}">${m.avoidReligion || '-'}</td><td class="${LBL}">혼인경력</td><td class="${VAL}">${m.preferMarital || '-'}</td><td class="${LBL}">상대자녀</td><td class="${VAL}">${m.acceptChildren || '-'}</td><td class="${LBL}">학력상세</td><td class="${VAL}">${m.preferEduDetail || '-'}</td></tr>
       </tbody>
     </table>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:1px solid var(--border-light)">
