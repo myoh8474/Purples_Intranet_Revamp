@@ -222,9 +222,9 @@ content.innerHTML = ''
   + '</div>';
 
 /* ── 이벤트 ── */
-// 취소 → 상세 페이지로 돌아가기
+// 취소 → 현재 탭 닫기 (상세 페이지는 이미 별도 탭에 존재)
 function goBack() {
-  window.location.href = '/pages/regular/detail.html?id=' + m.id;
+  window.close();
 }
 var cancelBtn = document.getElementById('btn-cancel');
 if (cancelBtn) cancelBtn.addEventListener('click', goBack);
@@ -246,7 +246,7 @@ function handleSave() {
   // 실제로는 API 호출
   Toast.show('회원 정보가 저장되었습니다.', 'success');
   setTimeout(function() {
-    window.location.href = '/pages/regular/detail.html?id=' + m.id;
+    window.close();
   }, 1000);
 }
 var saveBtn = document.getElementById('btn-save');

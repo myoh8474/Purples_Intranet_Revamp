@@ -1,7 +1,7 @@
 /* ========================================
    정회원 상세 페이지 (4탭 · 1단 레이아웃)
+   - 사이드바 없이 새 탭에서 노출
    ======================================== */
-import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
@@ -15,7 +15,7 @@ import { renderMatchingInfo } from './detail-tab-matching.js';
 import { addHistory } from '@services/history.js';
 import { supabase } from '@services/supabase.js';
 
-initLayout({ pageId: 'regular-detail', breadcrumbs: ['정회원 관리', '정회원 상세'] });
+// 독립 팝업 페이지 (사이드바 없음)
 
 var content = document.getElementById('content');
 var params = new URLSearchParams(window.location.search);

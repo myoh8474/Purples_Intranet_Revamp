@@ -139,7 +139,7 @@ function buildTable(data) {
 
       return '<tr>'
         + '<td>' + m.id + '</td>'
-        + '<td style="white-space:nowrap"><a href="/pages/regular/detail.html?id=' + m.id + '" style="color:var(--primary);text-decoration:underline;font-weight:600">' + m.name + '</a> <span style="color:var(--text-muted)">' + m.memberId + '</span></td>'
+        + '<td style="white-space:nowrap"><a href="/pages/regular/detail.html?id=' + m.id + '" target="_blank" style="color:var(--primary);text-decoration:underline;font-weight:600">' + m.name + '</a> <span style="color:var(--text-muted)">' + m.memberId + '</span></td>'
         + '<td><span class="badge badge--' + (m.gender==='남'?'blue':'pink') + '">' + m.gender + '</span></td>'
         + '<td style="white-space:nowrap">' + m.birthDate + '</td>'
         + '<td style="white-space:nowrap">' + m.manager + '</td>'
