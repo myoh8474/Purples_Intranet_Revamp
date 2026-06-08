@@ -174,7 +174,7 @@ function renderTable(logs) {
   } else {
     tbody.innerHTML = pageData.map((l, i) => `<tr style="cursor:pointer" data-mid="${l.memberId}">
       <td class="tc col-no">${filtered.length - start - i}</td>
-      <td class="tc">${branchName(l.branch)}</td>
+      <td class="tc" style="white-space:nowrap">${branchName(l.branch)}</td>
       <td class="tc">${formatDT(l.date)}</td>
       <td class="tc"><a href="detail.html?id=${l.memberId}" target="_blank" class="col-link">${l.memberName}</a></td>
       <td class="tc">${l.consultant}</td>
@@ -212,79 +212,6 @@ function formatDT(d) {
 
 
 
-/* ── 상담 등록 모달 ── */
-function showAddModal(logs) {
-  const data = getStatusData().filter(m => m.consultant);
-  const today = new Date().toISOString().slice(0, 10);
-  Modal.show({ title: '상담 기록 등록', size: 'lg',
-    content: `<div style="display:flex;flex-direction:column;gap:12px">
-      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:600">회원 검색 *</label>
-        <div><input type="text" id="add-member-search" class="form-input" placeholder="이름 또는 전화번호" style="width:100%">
-        <div id="add-member-list" style="max-height:120px;overflow-y:auto;border:1px solid var(--border-light);display:none;margin-top:4px"></div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:600">상담일 *</label>
-        <input type="date" id="add-date" value="${today}" class="form-input">
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:600">상담유형 *</label>
-        <select id="add-type" class="form-select">${CONSULT_TYPES.map(t => `<option>${t}</option>`).join('')}</select>
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:600">상담결과 *</label>
-        <select id="add-result" class="form-select"><option value="">-- 선택 --</option>${CONSULT_RESULTS.map(r => `<option>${r}</option>`).join('')}</select>
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:start">
-        <label style="font-size:12px;font-weight:600">상담내용</label>
-        <textarea id="add-content" class="form-input" rows="4" placeholder="상담 내용을 입력하세요"></textarea>
-      </div>
-    </div>`,
-    footer: '<button class="btn btn--secondary" onclick="document.getElementById(\'modal-root\').innerHTML=\'\'">취소</button><button class="btn btn--primary" id="btn-add-ok">등록</button>'
-  });
-
-  let selectedMember = null;
-  setTimeout(() => {
-    const searchInput = document.getElementById('add-member-search');
-    const listDiv = document.getElementById('add-member-list');
-    searchInput?.addEventListener('input', () => {
-      const q = searchInput.value.trim().toLowerCase();
-      if (q.length < 1) { listDiv.style.display = 'none'; return; }
-      const matches = data.filter(m => m.name.toLowerCase().includes(q) || m.phone.includes(q)).slice(0, 10);
-      if (!matches.length) { listDiv.style.display = 'none'; return; }
-      listDiv.style.display = 'block';
-      listDiv.innerHTML = matches.map(m => `<div style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border-light)" data-id="${m.id}">${m.name} (${Formatters.phone(m.phone)}) - ${m.consultant}</div>`).join('');
-      listDiv.querySelectorAll('div').forEach(d => d.addEventListener('click', () => {
-        selectedMember = data.find(x => x.id === parseInt(d.dataset.id));
-        searchInput.value = `${selectedMember.name} (${Formatters.phone(selectedMember.phone)})`;
-        listDiv.style.display = 'none';
-      }));
-    });
-
-    document.getElementById('btn-add-ok')?.addEventListener('click', () => {
-      if (!selectedMember) { Toast.show('회원을 선택해 주세요.', 'warning'); return; }
-      const result = document.getElementById('add-result')?.value;
-      if (!result) { Toast.show('상담결과를 선택해 주세요.', 'warning'); return; }
-      const rec = {
-        id: Date.now(), date: document.getElementById('add-date').value,
-        consultant: selectedMember.consultant, result,
-        content: document.getElementById('add-content')?.value?.trim() || `${result} - 상담 진행`,
-        type: document.getElementById('add-type').value,
-        createdAt: new Date().toISOString()
-      };
-      const key = 'purples_call_history_' + selectedMember.id;
-      const hist = JSON.parse(localStorage.getItem(key) || '[]');
-      hist.unshift(rec);
-      localStorage.setItem(key, JSON.stringify(hist));
-      Toast.show('상담 기록이 등록되었습니다.', 'success');
-      document.getElementById('modal-root').innerHTML = '';
-      // 새로고침
-      const newLogs = collectAllLogs();
-
-      renderTable(newLogs);
-    });
-  }, 100);
-}
 
 /* ── 메인 렌더 ── */
 function render() {
@@ -301,9 +228,6 @@ function render() {
       <div>
         <h1 class="page-header__title">상담내역 조회</h1>
         <p class="page-header__subtitle">전체 상담 기록 통합 조회 · 전화 / 방문 / SMS</p>
-      </div>
-      <div class="page-header__actions">
-        <button class="btn btn--primary btn--sm" id="btn-add-consult">+ 상담 기록 등록</button>
       </div>
     </div>
 
@@ -328,7 +252,7 @@ function render() {
               <option value="">컨설턴트 전체</option>
               ${consultants.map(c => `<option>${c}</option>`).join('')}
             </select>
-            <select class="form-input form-input--sm fi" id="f-branch" style="width:100px">
+            <select class="form-input form-input--sm fi" id="f-branch" style="width:130px">
               <option value="">지사 전체</option>
               ${branches.map(b => `<option value="${b}">${branchMap[b] || b}</option>`).join('')}
             </select>
@@ -344,7 +268,7 @@ function render() {
     </table>
     <div class="search-actions">
       <button class="btn btn--sm search-btn" id="btn-search">검색</button>
-      <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+      <button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>
     </div>
 
     <!-- 테이블 -->
@@ -357,7 +281,7 @@ function render() {
         <table class="std-table">
           <thead><tr>
             <th style="width:50px">No</th>
-            <th style="width:60px">지사</th>
+            <th style="width:90px">지사</th>
             <th style="width:100px">상담일</th>
             <th style="width:70px">회원명</th>
             <th style="width:80px">상담매니저</th>
@@ -383,7 +307,6 @@ function render() {
     ['f-date-from','f-date-to','f-consultant','f-branch','f-result','f-keyword'].forEach(id => { document.getElementById(id).value = ''; });
     currentPage = 1; renderTable(allLogs);
   });
-  document.getElementById('btn-add-consult').addEventListener('click', () => showAddModal(allLogs));
 }
 
 render();

@@ -129,6 +129,7 @@ if (useMock()) {
         status: randomPick(ASSOC_STATUSES),
         channel: randomPick(CHANNELS.slice(0, 10)),
         consultant: mgr,
+        distMethod: Math.random() > 0.4 ? '자동분배' : '수동분배',
         registeredAt: regDate.toISOString(),
         distributedAt: distDate.toISOString(),
         lastContactAt: lastContact.toISOString(),

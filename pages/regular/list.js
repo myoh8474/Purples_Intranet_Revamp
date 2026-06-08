@@ -21,34 +21,34 @@ const WEALTH_OPTIONS = ['10억미만','10~20억','20~30억','30~50억','50~100�
 const OVERSEAS_OPTIONS = ['없음','시민권자','영주권자'];
 const REJOIN_OPTIONS = [1,2,3,4,5,6];
 const JOB_TREE = {
-  '전문직': ['의사','치과의사','한의사','약사','변호사','판검사','회계사','세무사','변리사','법무사','감정평가사','관세사','노무사','건축사','수의사'],
-  '의료직': ['간호사','물리치료사','방사선사','임상병리사','치위생사','작업치료사','의료기사'],
-  '교육직': ['교수','교사','강사','학원장','유치원교사','특수교육교사'],
-  '금융직': ['은행원','증권사','보험사','자산운용','펀드매니저','애널리스트','보험설계사'],
-  '공무원': ['일반행정','경찰','소방','군인','외교관','검찰','교정','세관','우정'],
-  '대기업': ['삼성','LG','현대','SK','롯데','포스코','한화','GS','CJ','두산','KT','네이버','카카오'],
-  '공기업': ['한전','가스공사','수자원공사','도로공사','철도공사','토지공사','인천공항'],
-  'IT/개발': ['SW개발','프론트엔드','백엔드','데이터분석','AI/ML','보안','DBA','PM/PO','UX/UI'],
-  '자영업': ['자영업','프랜차이즈','온라인쇼핑몰','요식업','카페','병원경영','학원경영'],
-  '사업가': ['대표이사','이사','법인대표','스타트업','투자'],
-  '방송/예체능': ['방송인','배우','모델','음악가','체육인','무용가','디자이너','사진작가'],
+  '고시/법조': ['고시출신(5급)','법조인','판검사','변호사','변리사','법무사','회계사','세무사','감정평가사','관세사','노무사'],
+  '의사': ['의사','의사-개원의','내과','외과','성형외과','피부과','안과','이비인후과','정형외과','산부인과','소아청소년과','신경외과','비뇨의학과','영상의학과','마취통증의학과','정신건강의학과','재활의학과','가정의학과','응급의학과','흉부외과','신경과'],
+  '한의사': ['한의사','한의사-개원의'],
+  '치과의사': ['치과의사','치과의사-개원의'],
+  '수의사': ['수의사','수의사-개원의'],
+  '약사': ['약사','약사-개원의'],
+  '의료인': ['의료인','의료인-개원의','간호사','물리치료사','방사선사','임상병리사','치위생사','작업치료사','의료기사','대병원'],
+  '교육직': ['교수','교사','강사','유치원','초등학교','중고등','특수교사','학원장'],
+  '공무원': ['공무원-5급(사무관)','공무원-6급(주사)','공무원-7급(주사보)','공무원-8급(서기)','공무원-9급(서기보)','경찰','소방','군인','외교관','검찰'],
+  '금융계': ['금융계','은행원','증권사','보험사','자산운용','펀드매니저','애널리스트'],
+  '대기업': ['대기업','삼성','LG','현대','SK','롯데','포스코','한화','GS','CJ','네이버','카카오'],
+  '사업가': ['사업가','사업승계','대표이사','법인대표','스타트업','투자'],
   '연구직': ['연구원','박사후연구원','국책연구소','기업연구소'],
-  '일반사무': ['회사원','사무직','경리','인사','영업','마케팅','무역','비서','총무'],
-  '기타': ['프리랜서','주부','무직','기타'],
+  '기타직종': ['자영업','프리랜서','승무원/항공','예체능','건축사','학생','기타'],
 };
 const JOB_OPTIONS = Object.values(JOB_TREE).flat();
 const JOB_CATEGORIES = Object.keys(JOB_TREE);
 
 function selectHtml(id, label, options, w) {
-  return `<select class="form-select form-input--sm" id="${id}" style="width:auto;font-size:12px">
+  return `<div class="select-wrap"><select class="form-select form-input--sm" id="${id}" style="width:100%;font-size:12px">
       <option value="">${label} 전체</option>
       ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
-    </select>`;
+    </select></div>`;
 }
 
 function multiSelectHtml(id, label, options) {
   return `<div class="multi-select" id="${id}-wrap" style="position:relative">
-    <button type="button" class="form-select form-input--sm" id="${id}-btn" style="width:auto;font-size:12px;text-align:left;cursor:pointer;min-width:100px">${label} 전체</button>
+    <button type="button" class="form-select form-input--sm" id="${id}-btn" style="width:100%;font-size:12px;text-align:left;cursor:pointer">${label} 전체</button>
     <div class="multi-select__dropdown" id="${id}-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:320px;overflow-y:auto;min-width:200px;padding:6px 0;margin-top:2px">
       ${options.map(o => `<label style="display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
         <input type="checkbox" class="${id}-chk" value="${o}" style="accent-color:var(--accent)">${o}
@@ -60,14 +60,19 @@ function multiSelectHtml(id, label, options) {
 function jobTreeSelectHtml() {
   let inner = '';
   for (const [cat, jobs] of Object.entries(JOB_TREE)) {
-    inner += `<div style="padding:4px 12px 2px;font-size:11px;font-weight:700;color:var(--accent);margin-top:4px;border-top:1px solid var(--border-light)">${cat}</div>`;
+    const catId = 'jcat-' + cat.replace(/[^a-zA-Z가-힣]/g, '');
+    inner += `<div class="job-cat-header" data-target="${catId}" style="padding:5px 12px;font-size:11px;font-weight:700;color:var(--accent);margin-top:0;border-top:1px solid var(--border-light);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
+      <span>${cat}</span><span class="job-cat-arrow" style="font-size:9px;color:#999;transition:transform .2s">▶</span>
+    </div>`;
+    inner += `<div class="job-cat-items" id="${catId}" style="display:none">`;
     inner += jobs.map(j => `<label style="display:flex;align-items:center;gap:6px;padding:3px 12px 3px 20px;font-size:12px;cursor:pointer;white-space:nowrap" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
       <input type="checkbox" class="rf-job-chk" value="${j}" style="accent-color:var(--accent)">${j}
     </label>`).join('');
+    inner += '</div>';
   }
   return `<div class="multi-select" id="rf-job-wrap" style="position:relative">
-    <button type="button" class="form-select form-input--sm" id="rf-job-btn" style="width:auto;font-size:12px;text-align:left;cursor:pointer;min-width:120px">직업 전체</button>
-    <div class="multi-select__dropdown" id="rf-job-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:360px;overflow-y:auto;min-width:220px;padding:6px 0;margin-top:2px">
+    <button type="button" class="form-select form-input--sm" id="rf-job-btn" style="width:100%;font-size:12px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center">직업 전체 <span style="font-size:9px;color:#666">▼</span></button>
+    <div class="multi-select__dropdown" id="rf-job-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:360px;overflow-y:auto;width:100%;padding:6px 0;margin-top:2px">
       ${inner}
     </div>
   </div>`;
@@ -80,96 +85,97 @@ content.innerHTML = `
       <p class="page-header__subtitle">정회원 리스트 조회 및 관리</p>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn--secondary btn--sm" id="btn-reg-manager">담당자 일부변경</button>
+      <button class="btn btn--outline btn--sm" id="btn-reg-manager">담당자 일부변경</button>
     </div>
   </div>
 
-  <!-- 기본 필터 (항상 노출) -->
-  <div class="filter-bar" style="margin-bottom:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
-    <div class="filter-bar__row">
-      ${selectHtml('rf-brand','브랜드',BRANDS)}
-      ${selectHtml('rf-branch','지사',BRANCHES)}
-      ${selectHtml('rf-consultant','상담자',CONSULTANTS)}
-      ${selectHtml('rf-match-mgr','커플매니저',MATCH_MANAGERS)}
-      ${selectHtml('rf-status','상태',REGULAR_STATUSES)}
-      <input type="text" class="form-input form-input--sm" id="rf-keyword" placeholder="이름, 전화번호, ID 검색..." style="flex:1;min-width:150px">
-      <button class="btn btn--primary btn--sm" id="btn-search" style="align-self:flex-end">검색</button>
-    </div>
-  </div>
+  <!-- 통합 필터 테이블 -->
+  <table class="std-table" id="filter-table" style="margin-bottom:0;table-layout:fixed">
+    <colgroup>
+      <col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col>
+    </colgroup>
+    <tbody>
+      <tr>
+        <th>통합검색</th>
+        <td colspan="3"><input type="text" class="form-input form-input--sm" id="rf-keyword" placeholder="이름, 전화번호, ID 검색..." style="width:100%"></td>
+        <th>상태</th>
+        <td colspan="3">${selectHtml('rf-status','상태',REGULAR_STATUSES)}</td>
+      </tr>
+      <tr>
+        <th>브랜드</th>
+        <td>${selectHtml('rf-brand','브랜드',BRANDS)}</td>
+        <th>지사</th>
+        <td>${selectHtml('rf-branch','지사',BRANCHES)}</td>
+        <th>상담자</th>
+        <td>${selectHtml('rf-consultant','상담자',CONSULTANTS)}</td>
+        <th>커플매니저</th>
+        <td>${selectHtml('rf-match-mgr','커플매니저',MATCH_MANAGERS)}</td>
+      </tr>
+    </tbody>
+    <!-- 상세 필터 행 (기본 숨김) -->
+    <tbody id="adv-rows" style="display:none">
+      <tr>
+        <th>성별</th>
+        <td>${selectHtml('rf-gender','성별',['남','여'])}</td>
+        <th>결혼경력</th>
+        <td>${selectHtml('rf-marital','결혼경력',MARITAL_OPTIONS)}</td>
+        <th>나이</th>
+        <td><div style="display:flex;gap:4px;align-items:center"><input type="number" class="form-input form-input--sm" id="rf-age-min" placeholder="최소" style="width:55px"><span>~</span><input type="number" class="form-input form-input--sm" id="rf-age-max" placeholder="최대" style="width:55px"></div></td>
+        <th>키</th>
+        <td><div style="display:flex;gap:4px;align-items:center"><input type="number" class="form-input form-input--sm" id="rf-height-min" placeholder="최소" style="width:55px"><span>~</span><input type="number" class="form-input form-input--sm" id="rf-height-max" placeholder="최대" style="width:55px"></div></td>
+      </tr>
+      <tr>
+        <th>학력</th>
+        <td>${selectHtml('rf-edu','학력',EDUCATION_OPTIONS)}</td>
+        <th>종교</th>
+        <td>${selectHtml('rf-religion','종교',RELIGION_OPTIONS)}</td>
+        <th>직업</th>
+        <td>${jobTreeSelectHtml()}</td>
+        <th>해외</th>
+        <td>${selectHtml('rf-overseas','해외',OVERSEAS_OPTIONS)}</td>
+      </tr>
+      <tr>
+        <th>자녀양육</th>
+        <td>${selectHtml('rf-child','자녀양육',CHILD_OPTIONS)}</td>
+        <th>프로그램</th>
+        <td>${selectHtml('rf-program','프로그램명',PROGRAMS_FLAT)}</td>
+        <th>재가입</th>
+        <td>${selectHtml('rf-rejoin','재가입횟수',REJOIN_OPTIONS.map(n => n+'가입'))}</td>
+        <th>난매칭</th>
+        <td>${selectHtml('rf-difficult','난매칭여부',['해당','미해당'])}</td>
+      </tr>
+      <tr>
+        <th>본적지</th>
+        <td>${selectHtml('rf-hometown','본적지',REGIONS)}</td>
+        <th>거주지역</th>
+        <td>${selectHtml('rf-region','거주지역',[...REGIONS,'거주지역 상관없음'])}</td>
+        <th>본인재산</th>
+        <td>${selectHtml('rf-p-wealth','본인재산',WEALTH_OPTIONS)}</td>
+        <th>가족재산</th>
+        <td>${selectHtml('rf-f-wealth','가족재산',WEALTH_OPTIONS)}</td>
+      </tr>
+    </tbody>
+  </table>
 
-  <!-- 기본 필터 하단: 상세검색 펼치기 (접힌 상태에서만 보임) -->
-  <div id="adv-toggle-closed" style="background:#fff;border:1px solid var(--border-light);border-top:1px dashed var(--border-light);padding:6px 0;text-align:center;border-radius:0 0 var(--radius-lg) var(--radius-lg)">
+  <!-- 토글/검색/초기화 바 -->
+  <div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px">
     <button id="btn-toggle-open" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);font-family:inherit">▼ 상세검색 펼치기</button>
+    <button id="btn-toggle-close" style="display:none;background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);font-family:inherit">▲ 상세검색 접기</button>
+    <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
+    <button class="btn btn--reset btn--sm" id="btn-reset" style="display:none">초기화</button>
   </div>
 
-  <!-- 상세 필터 영역 (기본 숨김) -->
-  <div id="adv-filters" style="display:none;margin-top:-1px">
-    <!-- 인적사항 -->
-    <div style="background:#fff;border:1px solid var(--border-light);padding:16px 20px;margin-bottom:-1px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">인적사항</div>
-      <div class="filter-bar__row">
-        ${selectHtml('rf-gender','성별',['남','여'])}
-        ${selectHtml('rf-marital','결혼경력',MARITAL_OPTIONS)}
-        <div style="display:flex;gap:4px;align-items:center">
-          <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">나이</span>
-          <input type="number" class="form-input form-input--sm" id="rf-age-min" placeholder="최소" style="width:60px">
-          <span style="color:var(--text-muted)">~</span>
-          <input type="number" class="form-input form-input--sm" id="rf-age-max" placeholder="최대" style="width:60px">
-        </div>
-        <div style="display:flex;gap:4px;align-items:center">
-          <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">키</span>
-          <input type="number" class="form-input form-input--sm" id="rf-height-min" placeholder="최소" style="width:60px">
-          <span style="color:var(--text-muted)">~</span>
-          <input type="number" class="form-input form-input--sm" id="rf-height-max" placeholder="최대" style="width:60px">
-        </div>
-        ${selectHtml('rf-child','자녀양육',CHILD_OPTIONS)}
-      </div>
-    </div>
-
-    <!-- 스펙 -->
-    <div style="background:#fff;border:1px solid var(--border-light);padding:16px 20px;margin-bottom:-1px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">스펙</div>
-      <div class="filter-bar__row">
-        ${selectHtml('rf-edu','학력',EDUCATION_OPTIONS)}
-        ${selectHtml('rf-religion','종교',RELIGION_OPTIONS)}
-        ${jobTreeSelectHtml()}
-        ${selectHtml('rf-overseas','해외',OVERSEAS_OPTIONS)}
-      </div>
-    </div>
-
-    <!-- 프로그램 -->
-    <div style="background:#fff;border:1px solid var(--border-light);padding:16px 20px;margin-bottom:-1px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">프로그램</div>
-      <div class="filter-bar__row">
-        ${selectHtml('rf-program','프로그램명',PROGRAMS_FLAT)}
-        ${selectHtml('rf-rejoin','재가입횟수',REJOIN_OPTIONS.map(n => n+'가입'))}
-        ${selectHtml('rf-difficult','난매칭여부',['해당','미해당'])}
-      </div>
-    </div>
-
-    <!-- 지역/재산 -->
-    <div style="background:#fff;border:1px solid var(--border-light);padding:16px 20px;margin-bottom:-1px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">지역 / 재산</div>
-      <div class="filter-bar__row">
-        ${selectHtml('rf-hometown','본적지',REGIONS)}
-        ${selectHtml('rf-region','거주지역',[...REGIONS,'거주지역 상관없음'])}
-        ${selectHtml('rf-p-wealth','본인재산',WEALTH_OPTIONS)}
-        ${selectHtml('rf-f-wealth','가족재산',WEALTH_OPTIONS)}
-      </div>
-    </div>
-
-    <!-- 상세 필터 하단: 접기 + 초기화 -->
-    <div style="background:#fff;border:1px solid var(--border-light);border-top:1px dashed var(--border-light);padding:6px 20px;text-align:center;border-radius:0 0 var(--radius-lg) var(--radius-lg);display:flex;justify-content:center;align-items:center;gap:16px">
-      <button id="btn-toggle-close" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);font-family:inherit">▲ 상세검색 접기</button>
-      <button class="btn btn--secondary btn--sm" id="btn-reset" style="font-size:11px">초기화</button>
+  <!-- 건수 + 컴러범례 + 테이블 -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="reg-count"></div>
+    <div style="display:flex;gap:14px;align-items:center;font-size:11px;color:#555">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#fde2e2;border:1px solid #f87171;display:inline-block"></span>최종미팅 30일 초과</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#fef3c7;border:1px solid #f59e0b;display:inline-block"></span>소개장 30일 초과</span>
     </div>
   </div>
 
-  <!-- 건수 + 테이블 -->
-  <div style="font-size:12px;font-weight:600;margin:16px 0 8px;color:var(--text-secondary)" id="reg-count"></div>
-
-  <div style="background:#fff;border:1px solid var(--border-light);border-radius:var(--radius-lg);overflow-x:auto">
-    <table class="data-table" style="font-size:12px;white-space:nowrap">
+  <div style="overflow-x:auto">
+    <table class="std-table" style="white-space:nowrap">
       <thead>
         <tr>
           <th style="width:28px"><input type="checkbox" id="reg-check-all"></th>
@@ -190,7 +196,8 @@ content.innerHTML = `
           <th id="th-join" style="cursor:pointer">가입일 ▼</th>
           <th>계약</th>
           <th>미팅(횟수)</th>
-          <th>최종미팅</th>
+          <th>미팅등록</th>
+          <th>소개장등록</th>
           <th>만료</th>
           <th>서류재인증</th>
         </tr>
@@ -202,26 +209,47 @@ content.innerHTML = `
 `;
 
 // ── 상세필터 토글 ──
-const advEl = document.getElementById('adv-filters');
-const toggleClosed = document.getElementById('adv-toggle-closed');
+const advRows = document.getElementById('adv-rows');
+const btnOpen = document.getElementById('btn-toggle-open');
+const btnClose = document.getElementById('btn-toggle-close');
+const btnReset = document.getElementById('btn-reset');
 
 function openAdvFilters() {
-  advEl.style.display = 'block';
-  toggleClosed.style.display = 'none';
+  advRows.style.display = '';
+  btnOpen.style.display = 'none';
+  btnClose.style.display = '';
+  btnReset.style.display = '';
 }
 function closeAdvFilters() {
-  advEl.style.display = 'none';
-  toggleClosed.style.display = 'block';
+  advRows.style.display = 'none';
+  btnOpen.style.display = '';
+  btnClose.style.display = 'none';
+  btnReset.style.display = 'none';
 }
 
-document.getElementById('btn-toggle-open').addEventListener('click', openAdvFilters);
-document.getElementById('btn-toggle-close').addEventListener('click', closeAdvFilters);
+btnOpen.addEventListener('click', openAdvFilters);
+btnClose.addEventListener('click', closeAdvFilters);
 
 // ── 필터 초기화 ──
-document.getElementById('btn-reset').addEventListener('click', () => {
-  document.querySelectorAll('#adv-filters select').forEach(s => s.value = '');
-  document.querySelectorAll('#adv-filters input').forEach(i => i.value = '');
+btnReset.addEventListener('click', () => {
+  advRows.querySelectorAll('select').forEach(s => s.value = '');
+  advRows.querySelectorAll('input').forEach(i => i.value = '');
   applyFilters(true);
+});
+
+// ── 직업 카테고리 아코디언 ──
+document.querySelectorAll('.job-cat-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const target = document.getElementById(header.dataset.target);
+    const arrow = header.querySelector('.job-cat-arrow');
+    if (target.style.display === 'none') {
+      target.style.display = '';
+      arrow.textContent = '▼';
+    } else {
+      target.style.display = 'none';
+      arrow.textContent = '▶';
+    }
+  });
 });
 
 // ── 페이징 + 정렬 ──
@@ -312,7 +340,7 @@ function applyFilters(resetPage) {
   if (!tbody) return;
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;padding:30px;color:var(--text-muted)">조건에 맞는 회원이 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="22" style="text-align:center;padding:30px;color:var(--text-muted)">조건에 맞는 회원이 없습니다.</td></tr>';
     document.getElementById('reg-pagination').innerHTML = '';
     return;
   }
@@ -335,36 +363,65 @@ function applyFilters(resetPage) {
     const first = photos[0];
     if (first) {
       return `<div style="width:28px;height:28px;cursor:pointer" class="photo-thumb" data-mid="${m.id}">
-        <img src="${first}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">
+        <img src="${first}" style="width:28px;height:28px;object-fit:cover">
       </div>`;
     }
-    return `<div style="width:28px;height:28px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);cursor:pointer" class="photo-thumb" data-mid="${m.id}">${m.gender === '남' ? '👨' : '👩'}</div>`;
+    return `<div style="width:28px;height:28px;background:#d1d5db;cursor:pointer" class="photo-thumb" data-mid="${m.id}"></div>`;
   };
 
   const isMeeting = (m) => m.status === '활동' && m.marriageConfirm !== '소송중';
+  const now = new Date();
+  const DAY_MS = 86400000;
 
-  tbody.innerHTML = paged.map((m, i) => `<tr data-id="${m.id}" class="${isMeeting(m) ? 'meeting-active' : ''}" style="${m.marriageConfirm === '소송중' ? 'background:#fef2f2' : ''}">
-    <td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="reg-check" value="${m.id}"></td>
-    <td style="text-align:center">${start + i + 1}</td>
-    <td style="text-align:center">${photoHtml(m)}</td>
-    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><div style="font-weight:600;color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};line-height:1.3">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="color:#ef4444;font-size:10px;font-weight:700">● 미팅중</span>' : ''}</div><div style="font-size:11px;color:var(--text-muted)">${m.memberId}</div></a></td>
-    <td style="text-align:center">${m.gender}</td>
-    <td style="text-align:center">${m.age}세</td>
-    <td><span style="font-weight:600;color:${m.brand==='퍼플스'?'#7c3aed':m.brand==='디노블'?'#b8860b':'#db2777'}">${m.brand}</span></td>
-    <td>${Formatters.statusBadge(m.status, 'regular')}</td>
-    <td><span class="badge badge--blue">${m.program}</span></td>
-    <td style="text-align:center"><span class="badge badge--${(m.rejoinCount || 1) >= 2 ? 'orange' : 'gray'}" style="font-size:11px">${m.rejoinCount || 1}가입</span></td>
-    <td>${m.region || '-'}</td>
-    <td>${m.maritalHistory || '-'}</td>
-    <td>${m.branch || '-'}</td>
-    <td>${m.matchingManager || '-'}</td>
-    <td>${m.consultantManager || '-'}</td>
-    <td>${Formatters.date(m.joinDate)}</td>
-    <td style="text-align:center;font-weight:600">${m.contractType === '기간제' ? `${m.contractCount || 12}개월` : `${m.contractCount || '-'}회`}</td>
-    <td style="text-align:center;font-weight:600;color:${(m.meetingCount || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)'}">${m.meetingCount || 0}회</td>
-    <td>${m.lastMeetingDate ? Formatters.date(m.lastMeetingDate) : '-'}</td>
-    <td style="text-align:center">${m.expiryStatus === '없음' || !m.expiryStatus ? '-' : `<span style="color:var(--danger);font-weight:600">${m.expiryStatus}</span>`}</td>
-    <td style="text-align:center">${m.docReauth ? '<span style="color:var(--warning);font-weight:600">필요</span>' : '-'}</td>
+  // 30일 초과 판별
+  function isMeetingOver30(m) {
+    if (!m.lastMeetingDate || m.status !== '활동') return false;
+    return Math.floor((now - new Date(m.lastMeetingDate)) / DAY_MS) > 30;
+  }
+  function isIntroOver30(m) {
+    if (!m.lastIntroDate) return false;
+    return Math.floor((now - new Date(m.lastIntroDate)) / DAY_MS) > 30;
+  }
+
+  // 행 구분 클래스: 30일 초과만 적용 (미팅 > 소개장)
+  function rowClass(m) {
+    if (isMeetingOver30(m)) return 'row-meeting-over';
+    if (isIntroOver30(m)) return 'row-intro-over';
+    return '';
+  }
+
+  // 미팅등록 여부 셀
+  function meetingRegHtml(m) {
+    return m.lastMeetingDate ? 'Y' : 'N';
+  }
+  // 소개장등록 여부 셀
+  function introRegHtml(m) {
+    return m.lastIntroDate ? 'Y' : 'N';
+  }
+
+  tbody.innerHTML = paged.map((m, i) => `<tr data-id="${m.id}" class="${rowClass(m)}">
+    <td class="tc" onclick="event.stopPropagation()"><input type="checkbox" class="reg-check" value="${m.id}"></td>
+    <td class="tc">${start + i + 1}</td>
+    <td class="tc">${photoHtml(m)}</td>
+    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link col-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><div class="col-name" style="color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};line-height:1.3">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="display:inline-block;background:#ef4444;color:#fff;font-size:10px !important;font-weight:600;padding:1px 5px;border-radius:3px;line-height:14px;vertical-align:middle">미팅중</span>' : ''}</div><div style="font-size:11px;color:var(--text-muted)">${m.memberId}</div></a></td>
+    <td class="tc">${m.gender}</td>
+    <td class="tc">${m.age}세</td>
+    <td class="tc">${m.brand}</td>
+    <td class="tc">${m.status}</td>
+    <td class="tc">${m.program}</td>
+    <td class="tc">${m.rejoinCount || 1}</td>
+    <td class="tc">${m.region || '-'}</td>
+    <td class="tc">${m.maritalHistory || '-'}</td>
+    <td class="tc">${m.branch || '-'}</td>
+    <td class="tc">${m.matchingManager || '-'}</td>
+    <td class="tc">${m.consultantManager || '-'}</td>
+    <td class="tc">${Formatters.date(m.joinDate)}</td>
+    <td class="tc">${m.contractType === '기간제' ? `${m.contractCount || 12}개월` : `${m.contractCount || '-'}회`}</td>
+    <td class="tc">${m.meetingCount || 0}회</td>
+    <td class="tc">${meetingRegHtml(m)}</td>
+    <td class="tc">${introRegHtml(m)}</td>
+    <td class="tc">${m.expiryStatus === '없음' || !m.expiryStatus ? '-' : `<span class="col-bad">${m.expiryStatus}</span>`}</td>
+    <td class="tc">${m.docReauth ? '<span class="col-warn">필요</span>' : '-'}</td>
   </tr>`).join('');
 
   // 소송중 회원 클릭 시 경고 팝업

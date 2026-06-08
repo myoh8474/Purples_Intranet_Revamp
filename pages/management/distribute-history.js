@@ -20,6 +20,7 @@ let sortDir = 'desc';           // 기본 정렬 방향: 최신순
 const COLUMNS = [
   { key: 'no',            label: 'No',       sortable: false, width: '40px', align: 'center' },
   { key: 'name',          label: '이름',      sortable: false },
+  { key: 'distMethod',    label: '분배방식',   sortable: false, align: 'center' },
   { key: 'channel',       label: '유입구분',   sortable: false, align: 'center' },
   { key: 'gender',        label: '성별',      sortable: false, align: 'center' },
   { key: 'age',           label: '나이',      sortable: false, align: 'center' },
@@ -42,81 +43,100 @@ function render() {
       <p class="page-header__desc">분배 완료된 회원의 이력을 조회합니다.</p>
     </div>
 
-    <!-- 검색 영역 (테이블 형식) -->
-    <table class="search-table" id="filter-bar">
+    <!-- 검색 영역 (std-table 형식) -->
+    <table class="std-table" id="filter-bar" style="margin-bottom:0;table-layout:fixed">
+      <colgroup>
+        <col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col>
+      </colgroup>
       <tbody>
         <tr>
-          <th class="search-table__th">회원검색</th>
-          <td class="search-table__td">
-            <input type="text" class="form-input form-input--sm fi" id="h-search" placeholder="이름 또는 연락처 입력" style="width:200px">
+          <th>회원검색</th>
+          <td colspan="3"><input type="text" class="form-input form-input--sm" id="h-search" placeholder="이름 또는 연락처 입력" style="width:100%"></td>
+          <th>분배방식</th>
+          <td>
+            <div class="select-wrap"><select class="form-select form-input--sm" id="h-distmethod" style="width:100%">
+              <option value="">분배방식 전체</option>
+              <option value="자동분배">자동분배</option>
+              <option value="수동분배">수동분배</option>
+            </select></div>
+          </td>
+          <th>유입구분</th>
+          <td>
+            <div class="select-wrap"><select class="form-select form-input--sm" id="h-dtype" style="width:100%">
+              <option value="">유입구분 전체</option>
+              <option value="신규">신규</option>
+              <option value="기간만료">기간만료</option>
+              <option value="중복">중복</option>
+            </select></div>
           </td>
         </tr>
         <tr>
-          <th class="search-table__th">상세검색</th>
-          <td class="search-table__td">
-            <select class="form-input form-input--sm fi" id="h-dtype" style="width:90px">
-              <option value="">유입구분</option>
-              <option value="신규">신규</option>
-              <option value="기간만료">기간만료</option>
-            </select>
-            <select class="form-input form-input--sm fi" id="h-channel" style="width:110px">
+          <th>등록일</th>
+          <td colspan="3">
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="date" class="form-input form-input--sm" id="h-reg-from" style="width:130px">
+              <span style="font-size:11px;color:#94a3b8">~</span>
+              <input type="date" class="form-input form-input--sm" id="h-reg-to" style="width:130px">
+            </div>
+          </td>
+          <th>분배일</th>
+          <td colspan="3">
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="date" class="form-input form-input--sm" id="h-dist-from" style="width:130px">
+              <span style="font-size:11px;color:#94a3b8">~</span>
+              <input type="date" class="form-input form-input--sm" id="h-dist-to" style="width:130px">
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th>성별</th>
+          <td>
+            <div class="select-wrap"><select class="form-select form-input--sm" id="h-gender" style="width:100%">
+              <option value="">성별 전체</option>
+              <option value="남">남</option><option value="여">여</option>
+            </select></div>
+          </td>
+          <th>유입경로</th>
+          <td>
+            <div class="select-wrap"><select class="form-select form-input--sm" id="h-channel" style="width:100%">
               <option value="">경로 전체</option>
               <option value="카카오커플">카카오커플</option><option value="네이버커플">네이버커플</option>
               <option value="구글커플">구글커플</option><option value="블라인드커플">블라인드커플</option>
               <option value="실시간상담">실시간상담</option><option value="전화문의">전화문의</option>
               <option value="지인소개">지인소개</option><option value="기간만료(재컨텍)">기간만료(재컨텍)</option>
-            </select>
-            <select class="form-input form-input--sm fi" id="h-gender" style="width:70px">
-              <option value="">성별</option>
-              <option value="남">남</option><option value="여">여</option>
-            </select>
-            <select class="form-input form-input--sm fi" id="h-status" style="width:120px">
+            </select></div>
+          </td>
+          <th>상태</th>
+          <td>
+            <div class="select-wrap"><select class="form-select form-input--sm" id="h-status" style="width:100%">
               <option value="">상태 전체</option>
               ${ASSOCIATE_STATUSES.filter(s => s !== '컨텍전').map(s => `<option value="${s}">${s}</option>`).join('')}
-            </select>
+            </select></div>
           </td>
-        </tr>
-        <tr>
-          <th class="search-table__th">등록일</th>
-          <td class="search-table__td">
-            <input type="date" class="form-input form-input--sm fi" id="h-reg-from" title="등록일 시작" style="width:130px">
-            <span style="font-size:11px;color:#94a3b8">~</span>
-            <input type="date" class="form-input form-input--sm fi" id="h-reg-to" title="등록일 종료" style="width:130px">
-          </td>
-        </tr>
-        <tr>
-          <th class="search-table__th">분배일</th>
-          <td class="search-table__td">
-            <input type="date" class="form-input form-input--sm fi" id="h-dist-from" title="분배일 시작" style="width:130px">
-            <span style="font-size:11px;color:#94a3b8">~</span>
-            <input type="date" class="form-input form-input--sm fi" id="h-dist-to" title="분배일 종료" style="width:130px">
-          </td>
-        </tr>
-        <tr>
-          <th class="search-table__th">매니저</th>
-          <td class="search-table__td">
-            <select class="form-input form-input--sm fi" id="h-manager" style="width:140px">
+          <th>매니저</th>
+          <td>
+            <div class="select-wrap"><select class="form-select form-input--sm" id="h-manager" style="width:100%">
               <option value="">매니저 전체</option>
               ${CONSULTANTS.map(c => {
                 const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
                 const bName = branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || '';
                 return `<option value="${c}">${c} (${bName})</option>`;
               }).join('')}
-            </select>
+            </select></div>
           </td>
         </tr>
       </tbody>
     </table>
-    <div class="search-actions">
-      <button class="btn btn--sm search-btn" id="btn-search">검색</button>
-      <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+    <div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px">
+      <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
+      <button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>
     </div>
 
     <!-- 리스트 영역 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 6px">
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="h-count"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary)" id="h-count"></div>
     </div>
-    <table class="data-table" style="font-size:12px">
+    <table class="std-table" style="white-space:nowrap">
       <thead>
         <tr id="h-thead-row"></tr>
       </thead>
@@ -127,44 +147,11 @@ function render() {
     <style>
       .page-header { margin-bottom: 20px; }
       .page-header__title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
-      .page-header__desc { font-size: 12px; color: var(--text-muted); margin: 0; }
+      .page-header__desc { font-size: 13px; color: var(--text-muted); margin: 0; }
 
-      .search-table {
-        width: 100%; border-collapse: collapse;
-        margin-bottom: 16px; font-size: 12px;
-        border: 1px solid #cbd5e1;
-      }
-      .search-table__th {
-        background: #f1f5f9; color: #334155; font-weight: 700;
-        padding: 8px 14px; text-align: left; white-space: nowrap;
-        width: 80px; border-bottom: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0; font-size: 11px;
-      }
-      .search-table__td {
-        padding: 6px 14px; border-bottom: 1px solid #e2e8f0;
-        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-        background: #fff;
-      }
-      .search-table tr:last-child .search-table__th,
-      .search-table tr:last-child .search-table__td { border-bottom: none; }
-      .fi { font-size: 11px !important; height: 30px; }
-      .search-actions {
-        display: flex; justify-content: center; gap: 8px;
-        margin-bottom: 16px;
-      }
-      .search-btn {
-        font-size: 12px !important; background: #0369a1; color: #fff;
-        border: none; padding: 6px 24px; border-radius: 6px;
-        cursor: pointer; font-weight: 600; transition: background 0.15s;
-      }
-      .search-btn:hover { background: #0284c7; }
-      .filter-reset-btn {
-        font-size: 11px !important; background: #fff;
-        border: 1px solid #e2e8f0; color: #475569;
-        padding: 4px 10px; border-radius: 6px; cursor: pointer;
-        transition: all 0.15s ease;
-      }
-      .filter-reset-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+      /* 폰트 13px 통일 */
+      #filter-bar, #filter-bar th, #filter-bar td,
+      .std-table, .std-table th, .std-table td { font-size: 13px; }
 
       /* 정렬 헤더 */
       .sortable-th {
@@ -221,6 +208,7 @@ function renderThead() {
 
 function applyFilter() {
   const search = (document.getElementById('h-search')?.value || '').trim().toLowerCase();
+  const distmethod = document.getElementById('h-distmethod')?.value || '';
   const dtype = document.getElementById('h-dtype')?.value || '';
   const channel = document.getElementById('h-channel')?.value || '';
   const gender = document.getElementById('h-gender')?.value || '';
@@ -234,8 +222,9 @@ function applyFilter() {
   let filtered = MockAssociates.filter(m => {
     if (!(m.consultant && m.consultant !== '-' && m.status !== '컨텍전')) return false;
     if (search && !m.name.toLowerCase().includes(search) && !m.phone.includes(search)) return false;
+    if (distmethod && (m.distMethod || '수동분배') !== distmethod) return false;
     if (dtype) {
-      const mType = m.channel === '기간만료(재컨텍)' ? '기간만료' : '신규';
+      const mType = m.isDuplicate ? '중복' : (m.channel === '기간만료(재컨텍)' ? '기간만료' : '신규');
       if (mType !== dtype) return false;
     }
     if (channel && m.channel !== channel) return false;
@@ -256,9 +245,9 @@ function applyFilter() {
       va = parseInt(a.age) || 0;
       vb = parseInt(b.age) || 0;
     } else if (sortKey === 'channel') {
-      // 유입구분: 기간만료 vs 신규
-      va = a.channel === '기간만료(재컨텍)' ? '기간만료' : '신규';
-      vb = b.channel === '기간만료(재컨텍)' ? '기간만료' : '신규';
+      // 유입구분: 중복/기간만료/신규
+      va = a.isDuplicate ? '중복' : (a.channel === '기간만료(재컨텍)' ? '기간만료' : '신규');
+      vb = b.isDuplicate ? '중복' : (b.channel === '기간만료(재컨텍)' ? '기간만료' : '신규');
     } else if (sortKey === 'channel_raw') {
       va = a.channel || '';
       vb = b.channel || '';
@@ -294,21 +283,29 @@ function renderTable(filtered) {
 
   tbody.innerHTML = paged.map((m, i) => {
     const no = start + i + 1;
-    const dtype = m.channel === '기간만료(재컨텍)' ? '기간만료' : '신규';
-    const dtTag = dtype === '기간만료'
-      ? '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd">기간만료</span>'
-      : '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">신규</span>';
+    const dtype = m.isDuplicate ? '중복' : (m.channel === '기간만료(재컨텍)' ? '기간만료' : '신규');
+    const dtTag = dtype === '중복'
+      ? '<span style="font-weight:600;color:#dc2626">중복</span>'
+      : dtype === '기간만료'
+        ? '<span style="font-weight:600;color:#7c3aed">기간만료</span>'
+        : '<span style="font-weight:600;color:#16a34a">신규</span>';
+    const dm = m.distMethod || '수동분배';
+    const dmTag = dm === '자동분배'
+      ? '<span style="font-weight:600;color:#1d4ed8">자동</span>'
+      : '<span style="font-weight:600;color:#a16207">수동</span>';
     return `<tr>
-      <td style="text-align:center">${no}</td>
-      <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
-      <td style="text-align:center">${dtTag}</td>
-      <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
-      <td>${Formatters.phone(m.phone)}</td>
-      <td style="font-size:11px">${m.channel || '-'}</td>
-      <td>${Formatters.date(m.registeredAt)}</td>
-      <td>${Formatters.date(m.distributedAt)}</td>
-      <td><span style="font-weight:600;color:#0369a1">${m.consultant}</span></td>
-      <td style="text-align:center"><span class="badge badge--green" style="font-size:10px;padding:2px 8px">${m.status}</span></td>
+      <td class="tc">${no}</td>
+      <td class="tc"><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none">${m.name}</a></td>
+      <td class="tc">${dmTag}</td>
+      <td class="tc">${dtTag}</td>
+      <td class="tc">${m.gender}</td>
+      <td class="tc">${m.age}세</td>
+      <td class="tc">${Formatters.phone(m.phone)}</td>
+      <td class="tc">${m.channel || '-'}</td>
+      <td class="tc">${Formatters.date(m.registeredAt)}</td>
+      <td class="tc">${Formatters.date(m.distributedAt)}</td>
+      <td class="tc"><span style="font-weight:600;color:#0369a1">${m.consultant}</span></td>
+      <td class="tc">${m.status}</td>
     </tr>`;
   }).join('');
 
@@ -341,6 +338,7 @@ function bindEvents() {
   // 초기화
   document.getElementById('btn-reset')?.addEventListener('click', () => {
     document.getElementById('h-search').value = '';
+    document.getElementById('h-distmethod').value = '';
     document.getElementById('h-dtype').value = '';
     document.getElementById('h-channel').value = '';
     document.getElementById('h-gender').value = '';
@@ -358,7 +356,7 @@ function bindEvents() {
   });
 
   // 필터 변경 시 자동 검색
-  ['h-dtype', 'h-channel', 'h-gender', 'h-status', 'h-manager', 'h-reg-from', 'h-reg-to', 'h-dist-from', 'h-dist-to'].forEach(id => {
+  ['h-distmethod', 'h-dtype', 'h-channel', 'h-gender', 'h-status', 'h-manager', 'h-reg-from', 'h-reg-to', 'h-dist-from', 'h-dist-to'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', () => { currentPage = 1; applyFilter(); });
   });
 }

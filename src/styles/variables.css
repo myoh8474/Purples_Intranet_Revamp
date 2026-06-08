@@ -55,7 +55,7 @@
   --text-inverse: #f5f3ff;
 
   /* ── 보더 ── */
-  --border-light: #e8e5f0;
+  --border-light: #cbd5e1;
   --border-medium: #d4d0e0;
   --border-dark: #a09bb5;
 
@@ -98,14 +98,28 @@
 
   /* ── 폰트 ── */
   --font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-size-xs: 0.6875rem;
-  --font-size-sm: 0.8125rem;
-  --font-size-base: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
+
+  /* ── 폰트 사이즈 (4단계 체계) ──
+     - title (18~20px): 페이지 메인 타이틀
+     - heading (16px): 탭 메뉴, 팝업 제목, 1Depth 메뉴
+     - base (14px): 기본 텍스트, 테이블 데이터, 버튼
+     - sub (12~13px): 보조 텍스트, 날짜, 작은 뱃지, 안내문구
+  */
+  --font-size-sub: 0.75rem;      /* 12px — 보조 텍스트 (날짜, 시간, 안내문구) */
+  --font-size-sub-md: 0.8125rem; /* 13px — 보조 텍스트 (작은 뱃지, 부가정보) */
+  --font-size-base: 0.875rem;    /* 14px — 기본 사이즈 (테이블, 버튼, 일반 텍스트) */
+  --font-size-heading: 1rem;     /* 16px — 탭 메뉴, 팝업 제목, 섹션 제목 */
+  --font-size-title: 1.125rem;   /* 18px — 페이지 메인 타이틀 */
+  --font-size-title-lg: 1.25rem; /* 20px — 대형 페이지 타이틀 */
+  --font-size-2xl: 1.5rem;       /* 24px — KPI 값 등 */
+  --font-size-3xl: 1.875rem;     /* 30px — 대시보드 큰 숫자 */
+
+  /* 하위 호환 별칭 */
+  --font-size-xs: 0.75rem;       /* = sub (12px) */
+  --font-size-sm: 0.8125rem;     /* = sub-md (13px) */
+  --font-size-md: 0.875rem;      /* = base (14px) */
+  --font-size-lg: 1rem;          /* = heading (16px) */
+  --font-size-xl: 1.125rem;      /* = title (18px) */
 
   /* ── 간격 ── */
   --spacing-xs: 0.25rem;

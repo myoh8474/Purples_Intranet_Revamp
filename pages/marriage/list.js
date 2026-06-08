@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    성혼 관리 리스트 페이지
    - 성혼사례금 및 법무 진행 통합 관리
    - 자체 더미데이터 포함 프로토타입
@@ -100,7 +100,7 @@ content.innerHTML = `
         <option>납부완료</option><option>미납</option><option>소송진행</option><option>미정</option>
       </select>
       <input type="text" class="form-input form-input--sm" id="f-keyword" placeholder="이름, ID 검색..." style="flex:1;min-width:120px;font-size:12px">
-      <button class="btn btn--primary btn--sm" id="btn-search" style="white-space:nowrap">검색</button>
+      <button class="btn btn--secondary btn--sm" id="btn-search" style="white-space:nowrap">검색</button>
     </div>
   </div>
 

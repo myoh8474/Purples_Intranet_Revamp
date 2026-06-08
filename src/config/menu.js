@@ -62,6 +62,7 @@ export function getMenuItems(basePath = '/') {
         { id: 'associate-consult-status', text: '상담통계', href: `${basePath}pages/associate/consult-status.html` },
         { id: 'associate-consult', text: '상담내역 조회', href: `${basePath}pages/associate/consult.html` },
         { id: 'associate-visit', text: '방문상담 관리', href: `${basePath}pages/associate/visit.html` },
+        { id: 'associate-change-history', text: '담당자 변경이력', href: `${basePath}pages/associate/change-history.html` },
       ],
     },
     {
@@ -71,6 +72,7 @@ export function getMenuItems(basePath = '/') {
       children: [
         { id: 'regular-list', text: '정회원 목록', href: `${basePath}pages/regular/list.html` },
         { id: 'matching-search', text: '매칭 대상자 검색', href: `${basePath}pages/matching/search.html` },
+        { id: 'regular-change-history', text: '변경이력 관리', href: `${basePath}pages/regular/change-history.html` },
         { type: 'group', text: '약속 및 미팅 관리' },
         { id: 'meeting-calendar', text: '약속/미팅 조회', href: `${basePath}pages/meeting/calendar.html` },
         { id: 'meeting-stats', text: '미팅 현황', href: `${basePath}pages/meeting/stats.html` },
@@ -81,6 +83,8 @@ export function getMenuItems(basePath = '/') {
         { id: 'cert-register', text: '서류인증 등록', href: `${basePath}pages/management/cert-register.html` },
         { type: 'group', text: '특별회원 관리' },
         { id: 'regular-trinity', text: '트리니티 관리', href: `${basePath}pages/regular/trinity.html` },
+        { type: 'group', text: '리콜 관리' },
+        { id: 'regular-recall', text: '리콜 관리', href: `${basePath}pages/regular/recall.html` },
         { type: 'group', text: '성혼관리' },
         { id: 'marriage-list', text: '성혼 현황', href: `${basePath}pages/marriage/list.html` },
       ],

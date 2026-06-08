@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    매니저 상세 — 기간별 성과 추이
    ======================================== */
 import { Formatters } from '@utils/formatters.js';
@@ -149,7 +149,7 @@ function render() {
     </table>
     <div class="search-actions">
       <button class="btn btn--sm search-btn" id="btn-search">검색</button>
-      <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+      <button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>
     </div>
 
     <!-- 기간별 성과 테이블 -->

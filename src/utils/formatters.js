@@ -6,12 +6,12 @@ export const Formatters = {
   date(dateStr) {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `<span class="fmt-date">${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}</span>`;
   },
   shortDate(dateStr) {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
-    return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    return `<span class="fmt-date">${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}</span>`;
   },
   money(num) {
     if (!num && num !== 0) return '-';
@@ -47,6 +47,7 @@ export const Formatters = {
       '약정보류': 'amber', '임시보류': 'orange', '장기보류': 'orange', '강제보류': 'red',
       '약정만료': 'gray', '자동만료': 'gray', '만료': 'gray', '기타만료': 'gray',
       '탈회진행': 'red', '탈회': 'red', '결혼예정': 'purple-dark', '성혼': 'gold',
+      '리콜대기': 'amber', '리콜': 'blue',
     };
     const color = map[status] || 'gray';
     return `<span class="badge badge--${color} badge--dot">${status}</span>`;

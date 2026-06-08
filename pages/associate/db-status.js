@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    상담매니저 관리
    탭1: 보유DB 현황 | 탭2: 성과 관리
    ======================================== */
@@ -245,7 +245,7 @@ function render() {
       </table>
       <div class="search-actions">
         <button class="btn btn--sm search-btn" id="pf-search">검색</button>
-        <button class="btn btn--sm filter-reset-btn" id="pf-reset">초기화</button>
+        <button class="btn btn--reset btn--sm" id="pf-reset">초기화</button>
       </div>
 
       <div class="list-section">

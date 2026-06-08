@@ -1,7 +1,7 @@
 /* 결제정보 탭 렌더링 */
 import { Formatters } from '@utils/formatters.js';
 
-const SEC = (t) => `<div style="margin-bottom:12px;overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const SEC = (t) => `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
 const SEC_END = '</div></div>';
 
 export function renderPayment(m) {

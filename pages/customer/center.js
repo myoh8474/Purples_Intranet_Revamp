@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    고객센터 (표준 디자인 시스템)
    회원 직접 등록: 칭찬/제안/불편 접수
    ======================================== */
@@ -89,7 +89,7 @@ function render() {
         <div class="filter-bar__search"><label>검색</label>
           <input class="form-input form-input--sm" id="f-keyword" placeholder="회원명, 제목 검색...">
         </div>
-        <button class="btn btn--primary btn--sm" id="btn-search">검색</button>
+        <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
       </div>
     </div>
 

@@ -53,7 +53,7 @@ export const DataTable = {
       const pageIds = pageData.map(r => r.id);
       const allPageChecked = pageIds.length > 0 && pageIds.every(id => checkedSet.has(id));
 
-      let html = `<div style="overflow-x:auto"><table class="data-table${compactClass}" style="font-size:11px;white-space:nowrap"><thead><tr>`;
+      let html = `<div style="overflow-x:auto"><table class="std-table${compactClass}" style="white-space:nowrap"><thead><tr>`;
 
       // 체크박스 헤더
       if (checkbox) {
@@ -83,7 +83,8 @@ export const DataTable = {
 
           columns.forEach(col => {
             const value = col.render ? col.render(row[col.key], row, start + idx) : (row[col.key] ?? '-');
-            html += `<td>${value}</td>`;
+            const align = col.align || 'center';
+            html += `<td style="text-align:${align}">${value}</td>`;
           });
           html += '</tr>';
         });
@@ -100,7 +101,7 @@ export const DataTable = {
 
       // 페이지네이션
       if (totalPages > 1) {
-        html += `<div class="table-footer"><span>전체 ${total}건</span><div class="pagination">`;
+        html += `<div class="table-footer" style="justify-content:center;gap:16px"><span>전체 ${total}건</span><div class="pagination">`;
         html += `<button class="pagination__btn" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>&lt;</button>`;
         for (let p = 1; p <= totalPages; p++) {
           if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
@@ -112,7 +113,7 @@ export const DataTable = {
         html += `<button class="pagination__btn" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>&gt;</button>`;
         html += '</div></div>';
       } else {
-        html += `<div class="table-footer"><span>전체 ${total}건</span></div>`;
+        html += `<div class="table-footer" style="justify-content:center"><span>전체 ${total}건</span></div>`;
       }
 
       container.innerHTML = html;

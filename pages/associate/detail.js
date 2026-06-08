@@ -1,4 +1,8 @@
-import { initLayout } from '@core/layout.js';
+import '@styles/variables.css';
+import '@styles/base.css';
+import '@styles/layout.css';
+import '@styles/components.css';
+import '@styles/main.css';
 import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { Formatters } from '@utils/formatters.js';
@@ -8,8 +12,11 @@ import { renderBasicTab, renderSalesTab, renderConsultTab } from './detail-tabs.
 
 const params = new URLSearchParams(window.location.search);
 const memberId = parseInt(params.get('id'));
-initLayout({ pageId: 'associate-detail', breadcrumbs: ['준회원 관리', '준회원 목록', '상세'] });
-const content = document.getElementById('content');
+
+// 독립 새 탭 페이지 — 사이드바/헤더 없음
+document.body.style.cssText = 'background:#f5f5f5;margin:0';
+document.getElementById('app').style.cssText = 'max-width:1400px;margin:0 auto;padding:20px 24px;min-height:100vh';
+const content = document.getElementById('app');
 const CALL_RESULTS = ['부재중','낮음(컨텍)','중간(컨텍)','높음(컨텍)','장기상담','방문상담'];
 let selectedProgram = '골드(사파이어)', selectedGrade = '', regIdOk = false;
 
@@ -35,41 +42,66 @@ async function render(){
   if(!m){ content.innerHTML='<div class="coming-soon"><div class="coming-soon__title">회원을 찾을 수 없습니다</div><a class="btn btn--outline" href="list.html">목록으로</a></div>'; return; }
   document.title=`준회원 상세 - ${m.name}`;
 
+  const _LBL = 'background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px';
+  const _VAL = 'font-size:13px;padding:6px 10px;color:#1e3a5f;white-space:nowrap';
+
   content.innerHTML=`
-  <!-- 상단 회원 헤더 -->
-  <div class="card" style="margin-bottom:20px">
-    <div class="card__body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <div style="display:flex;align-items:center;gap:20px">
-        <div style="width:64px;height:64px;border-radius:50%;background:${m.gender==='남'?'var(--status-blue-bg)':'var(--status-pink-bg)'};display:flex;align-items:center;justify-content:center;font-size:28px">${m.gender==='남'?'M':'F'}</div>
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-            <h2 style="font-size:var(--font-size-xl);font-weight:700">${m.name}</h2>
-            ${Formatters.statusBadge(m.status, 'associate')}
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span class="badge badge--gray">${m.branch}</span>
-            <span class="badge badge--gray">${m.channel}</span>
-            <span style="font-size:11px;color:var(--text-muted)">담당: ${m.consultant} | ${m.gender} / ${m.age}세</span>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn--ghost btn--sm" onclick="window.location.href='list.html'">목록</button>
-        <button class="btn btn--primary btn--sm" id="btn-reg">정회원 등록</button>
-      </div>
+  <!-- ═══ 상단: 헤더 바 ═══ -->
+  <div style="padding:14px 0;margin-bottom:0;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:48px;height:48px;border-radius:50%;background:${m.gender==='남'?'#dbeafe':'#fce7f3'};display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:${m.gender==='남'?'#1e40af':'#be185d'}">${m.gender==='남'?'M':'F'}</div>
+      <h2 style="font-size:20px;font-weight:900;margin:0">${m.name}</h2>
+      <span style="font-size:13px;color:var(--text-muted);font-weight:400">${m.gender} / ${m.age}세</span>
+      ${Formatters.statusBadge(m.status, 'associate')}
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn--ghost btn--sm" onclick="window.location.href='list.html'" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">목록</button>
+      <button class="btn btn--ghost btn--sm" id="btn-sms" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">SMS</button>
+      <button class="btn btn--ghost btn--sm" id="btn-card" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">명함전송</button>
+      <button class="btn btn--primary btn--sm" id="btn-reg" style="font-size:12px;padding:4px 14px">정회원 등록</button>
     </div>
   </div>
 
-  <!-- 3탭 구조 -->
-  <div class="card">
-    <div class="card__header" style="padding-bottom:0;border-bottom:none">
+  <!-- ═══ 기본정보 카드 ═══ -->
+  <div style="padding:16px 0 20px">
+    <table class="data-table data-table--bordered" style="font-size:13px;width:100%;background:#fff">
+      <tbody>
+        <tr>
+          <td style="${_LBL}">상태</td><td style="${_VAL}">${Formatters.statusBadge(m.status,'associate')}</td>
+          <td style="${_LBL}">지사</td><td style="${_VAL}">${m.branch||'-'}</td>
+          <td style="${_LBL}">브랜드</td><td style="${_VAL}">${m.brand||'-'}</td>
+          <td style="${_LBL}">담당자</td><td style="${_VAL}">${m.consultant||'-'}</td>
+        </tr>
+        <tr>
+          <td style="${_LBL}">생년월일</td><td style="${_VAL}">${Formatters.date(m.birthDate)} (${m.age}세)</td>
+          <td style="${_LBL}">결혼여부</td><td style="${_VAL}">${m.maritalStatus||'-'}</td>
+          <td style="${_LBL}">가입경로</td><td style="${_VAL}">${m.channel||'-'}</td>
+          <td style="${_LBL}">등록일</td><td style="${_VAL}">${Formatters.date(m.registeredAt)}</td>
+        </tr>
+        <tr>
+          <td style="${_LBL}">연락처</td><td style="${_VAL}">${Formatters.phone(m.phone)}</td>
+          <td style="${_LBL}">지역</td><td style="${_VAL}">${m.region||'-'}</td>
+          <td style="${_LBL}">학력</td><td style="${_VAL}">${m.education||'-'} / ${m.school||'-'}</td>
+          <td style="${_LBL}">최종컨텍</td><td style="${_VAL}">${Formatters.date(m.lastContactAt)}</td>
+        </tr>
+        <tr>
+          <td style="${_LBL}">직업</td><td style="${_VAL}">${m.job||'-'}</td>
+          <td style="${_LBL}">직장</td><td style="${_VAL}" colspan="5">${m.company||'-'}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ 하단: 3탭 구조 ═══ -->
+  <div>
+    <div style="margin-bottom:16px">
       <div class="tabs__nav" id="detail-tabs" style="width:100%">
-        <button class="tabs__btn active" data-tab="basic">기본정보</button>
+        <button class="tabs__btn active" data-tab="basic" style="color:#e53e3e;border-bottom-color:#e53e3e">기본정보</button>
         <button class="tabs__btn" data-tab="sales">결제/매출</button>
         <button class="tabs__btn" data-tab="consult">상담이력</button>
       </div>
     </div>
-    <div class="card__body">
+    <div>
       <div class="tab-panel active" id="panel-basic">${renderBasicTab(m)}</div>
       <div class="tab-panel" id="panel-sales">${renderSalesTab(m)}</div>
       <div class="tab-panel" id="panel-consult">${renderConsultTab(m, renderCallTable, renderMeetTable)}</div>

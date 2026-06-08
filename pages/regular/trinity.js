@@ -45,28 +45,41 @@ function render() {
   var today = new Date().toISOString().slice(0,10);
   var yearStart = today.slice(0,4) + '-01-01';
 
-  var h = '<div class="page-header"><div>';
+  var h = '<div class="page-header" style="margin-bottom:20px;"><div>';
   h += '<h1 class="page-header__title">트리니티 관리</h1>';
   h += '<p class="page-header__subtitle">다이아몬드 이상 바우처 발송 회원 관리</p>';
   h += '</div></div>';
 
-  // 필터
-  h += '<div class="card"><div class="card__body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
-  h += '<label class="form-label" style="margin:0;font-weight:600;white-space:nowrap">바우처 발송일</label>';
-  h += '<input type="date" class="form-input" id="f-start" value="'+yearStart+'" style="width:150px">';
-  h += '<span style="color:var(--text-muted)">~</span>';
-  h += '<input type="date" class="form-input" id="f-end" value="'+today+'" style="width:150px">';
-  h += '<button class="btn btn--primary btn--sm" id="btn-search">검색</button>';
-  h += '<div style="flex:1"></div>';
-  h += '<button class="btn btn--secondary btn--sm" id="btn-excel">엑셀저장</button>';
-  h += '</div></div>';
+  // 검색 필터 (std-table 형식)
+  h += '<table class="std-table" style="margin-bottom:0;table-layout:fixed;">';
+  h += '<colgroup><col style="width:80px"><col><col style="width:80px"><col></colgroup>';
+  h += '<tbody>';
+  h += '<tr>';
+  h += '<th>회원명</th>';
+  h += '<td><input type="text" class="form-input form-input--sm" id="f-name" placeholder="회원명 검색" style="width:100%;"></td>';
+  h += '<th>바우처발송일</th>';
+  h += '<td>';
+  h += '<div style="display:flex;align-items:center;gap:4px;">';
+  h += '<input type="date" class="form-input form-input--sm" id="f-start" value="'+yearStart+'" style="width:130px;">';
+  h += '<span style="font-size:11px;color:#94a3b8;">~</span>';
+  h += '<input type="date" class="form-input form-input--sm" id="f-end" value="'+today+'" style="width:130px;">';
+  h += '</div>';
+  h += '</td>';
+  h += '</tr>';
+  h += '</tbody></table>';
+  h += '<div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px;">';
+  h += '<button class="btn btn--secondary btn--sm" id="btn-search">검색</button>';
+  h += '<button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>';
+  h += '</div>';
 
-  // 리스트
-  h += '<div class="card" style="margin-top:12px">';
-  h += '<div class="card__header"><h3 class="card__title" style="font-size:14px">트리니티 회원 리스트</h3>';
-  h += '<span class="text-muted" style="font-size:12px" id="total-count">총 '+data.length+'건</span></div>';
-  h += '<div class="card__body" style="padding:0;overflow-x:auto">';
-  h += '<table class="std-table" style="font-size:12px" id="trinity-table"><thead><tr>';
+  // 결과 건수
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 6px;">';
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text-secondary);">조회 결과 <span style="color:var(--accent);" id="total-count">'+data.length+'</span>건</div>';
+  h += '<button class="btn btn--outline btn--sm" id="btn-excel">엑셀 다운로드</button>';
+  h += '</div>';
+
+  // 리스트 테이블
+  h += '<table class="std-table" style="white-space:nowrap;font-size:12px;" id="trinity-table"><thead><tr>';
   h += '<th style="width:40px">No</th>';
   h += '<th style="width:55px">지사</th>';
   h += '<th style="width:65px">회원명</th>';
@@ -83,7 +96,6 @@ function render() {
   h += '<th style="width:80px">상품권발송</th>';
   h += '<th style="min-width:120px">메모</th>';
   h += '</tr></thead><tbody id="tbody"></tbody></table>';
-  h += '</div></div>';
 
   root.innerHTML = h;
 
@@ -92,13 +104,22 @@ function render() {
   document.getElementById('btn-search').onclick = function() {
     var s = document.getElementById('f-start').value;
     var e = document.getElementById('f-end').value;
+    var nameVal = (document.getElementById('f-name').value || '').trim();
     var filtered = data.filter(function(d) {
+      if (nameVal && d.name.indexOf(nameVal) === -1) return false;
       if (!d.voucherDate) return false;
       if (s && d.voucherDate < s) return false;
       if (e && d.voucherDate > e) return false;
       return true;
     });
     renderTable(filtered);
+  };
+
+  document.getElementById('btn-reset').onclick = function() {
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-start').value = yearStart;
+    document.getElementById('f-end').value = today;
+    renderTable(data);
   };
 
   document.getElementById('btn-excel').onclick = function() {
@@ -111,7 +132,7 @@ function renderTable(list) {
 
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="15" class="tc text-muted" style="padding:24px">데이터가 없습니다</td></tr>';
-    document.getElementById('total-count').textContent = '총 0건';
+    document.getElementById('total-count').textContent = '0';
     return;
   }
 
@@ -153,7 +174,7 @@ function renderTable(list) {
     h += '</tr>';
   }
   tbody.innerHTML = h;
-  document.getElementById('total-count').textContent = '총 '+list.length+'건';
+  document.getElementById('total-count').textContent = list.length;
 
   // 이벤트 위임
   tbody.onclick = function(e) {

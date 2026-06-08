@@ -242,7 +242,7 @@ export function renderMatchingInfo(m) {
   var specials = genSpecialNotes(m);
   var meetings = genMeetings(m);
 
-  var CARD = 'overflow:hidden;display:flex;flex-direction:column;min-height:500px;max-height:900px';
+  var CARD = 'overflow:hidden;display:flex;flex-direction:column;min-height:500px;max-height:900px;background:#fff;border:1px solid var(--border-light)';
   var CARD_HDR = 'padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-shrink:0';
   var CARD_BODY = 'flex:1;overflow-y:auto;padding:0';
 

@@ -1,4 +1,4 @@
-import { initLayout } from '@core/layout.js';
+﻿import { initLayout } from '@core/layout.js';
 import { Toast } from '@components/Toast.js';
 import { Formatters } from '@utils/formatters.js';
 import { CONSULTANTS } from '@config/constants.js';
@@ -169,7 +169,7 @@ content.innerHTML = `
   <!-- 액션 -->
   <div class="form-actions">
     <button class="btn btn--secondary" id="btn-cancel">취소</button>
-    <button class="btn btn--secondary" id="btn-reset">초기화</button>
+    <button class="btn btn--reset" id="btn-reset">초기화</button>
     <button class="btn btn--primary" id="btn-submit">준회원 등록</button>
   </div>
 </div>

@@ -166,8 +166,16 @@ export async function deleteHistory(historyId) {
 export function seedHistoryFromMember(member) {
   if (!useMock()) return; // Supabase 모드에서는 DB에 이미 있음
 
-  const existing = getAllHistoryLocal().filter(h => String(h.memberId) === String(member.id));
-  if (existing.length > 0) return;
+  const all = getAllHistoryLocal();
+  const existing = all.filter(h => String(h.memberId) === String(member.id));
+  // 구 형식 데이터(content에 상태값 → 포함) 감지 시 재시딩
+  const hasOldFormat = existing.some(h => h.category === '상태변경' && h.content && /→/.test(h.content));
+  if (existing.length > 0 && !hasOldFormat) return;
+  // 구 형식이면 해당 회원 데이터 삭제 후 재시딩
+  if (hasOldFormat) {
+    const cleaned = all.filter(h => String(h.memberId) !== String(member.id));
+    saveAllHistoryLocal(cleaned);
+  }
 
   const entries = [];
 
@@ -175,7 +183,7 @@ export function seedHistoryFromMember(member) {
     member.statusHistory.forEach(sh => {
       entries.push({
         memberId: member.id, category: '상태변경',
-        content: `${sh.from || '-'} → ${sh.to}`, detail: sh.reason || '',
+        content: sh.reason || '', detail: `${sh.from || '-'}→${sh.to}`,
         processor: sh.processor || '시스템', date: sh.date,
       });
     });
@@ -245,14 +253,14 @@ export function seedHistoryFromMember(member) {
     });
   }
 
-  const all = getAllHistoryLocal();
+  const currentAll = getAllHistoryLocal();
   entries.forEach(e => {
-    all.push({
+    currentAll.push({
       id: Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '_' + Math.random().toString(36).substr(2, 3),
       ...e, createdAt: e.date,
     });
   });
-  saveAllHistoryLocal(all);
+  saveAllHistoryLocal(currentAll);
 }
 
 /**

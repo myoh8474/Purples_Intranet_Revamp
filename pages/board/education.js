@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    퍼플스 교육 자료
    - 이미지 참고 디자인: 분류명 / 설명 / 유효 기간 / 보기
    ======================================== */
@@ -42,7 +42,7 @@ function render() {
       <div class="filter-bar__item"><label>검색</label>
         <input class="form-input form-input--sm" id="f-keyword" placeholder="분류명, 설명 검색...">
       </div>
-      <button class="btn btn--primary btn--sm" id="btn-search">검색</button>
+      <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
     </div></div>
 
     <div class="card">

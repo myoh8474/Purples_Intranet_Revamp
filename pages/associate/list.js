@@ -19,9 +19,9 @@ function roleName(r){ return {admin:'관리자 (본사)',branch:'지사장',mana
 function roleButtons(role){
   if(role==='manager') return '';
   let b='';
-  if(role==='admin') b+=`<button class="btn btn--secondary" id="btn-bulk">일괄변경</button>`;
-  b+=`<button class="btn btn--secondary" id="btn-partial">일부변경</button>`;
-  b+=`<button class="btn btn--secondary" id="btn-status-chg">상태+담당자</button>`;
+  if(role==='admin') b+=`<button class="btn btn--outline" id="btn-bulk">일괄변경</button>`;
+  b+=`<button class="btn btn--outline" id="btn-partial">일부변경</button>`;
+  b+=`<button class="btn btn--outline" id="btn-status-chg">상태+담당자</button>`;
   return b;
 }
 
@@ -56,74 +56,100 @@ async function render(){
   <span style="font-size:11px;color:var(--text-secondary)">현재: <strong>${roleName(role)}</strong></span>
 </div>
 
-<!-- 검색 영역 (테이블 형식) -->
-<table class="search-table" id="filter-bar">
+<!-- 검색 영역 (std-table 형식) -->
+<table class="std-table" id="filter-bar" style="margin-bottom:0;table-layout:fixed">
+  <colgroup>
+    <col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col>
+  </colgroup>
   <tbody>
     <tr>
-      <th class="search-table__th">회원검색</th>
-      <td class="search-table__td">
-        <input type="text" class="form-input form-input--sm fi" id="f-keyword" placeholder="이름, 전화번호, 직장 검색" style="width:220px">
+      <th>회원검색</th>
+      <td colspan="3">
+        <input type="text" class="form-input form-input--sm" id="f-keyword" placeholder="이름, 전화번호, 직장 검색" style="width:100%">
+      </td>
+      <th>성별</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-gender" style="width:100%">
+          <option value="">성별 전체</option><option value="남">남</option><option value="여">여</option>
+        </select></div>
+      </td>
+      <th>결혼여부</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-marital" style="width:100%">
+          <option value="">전체</option><option value="초혼">초혼</option><option value="재혼">재혼</option>
+        </select></div>
       </td>
     </tr>
     <tr>
-      <th class="search-table__th">상세검색</th>
-      <td class="search-table__td">
-        <select class="form-input form-input--sm fi" id="f-gender" style="width:70px">
-          <option value="">성별</option><option value="남">남</option><option value="여">여</option>
-        </select>
-        <select class="form-input form-input--sm fi" id="f-marital" style="width:80px">
-          <option value="">결혼여부</option><option value="초혼">초혼</option><option value="재혼">재혼</option>
-        </select>
-        <select class="form-input form-input--sm fi" id="f-edu" style="width:80px">
-          <option value="">학력</option>${EDUCATIONS.map(e=>`<option>${e}</option>`).join('')}
-        </select>
-        <select class="form-input form-input--sm fi" id="f-status" style="width:120px">
+      <th>학력</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-edu" style="width:100%">
+          <option value="">학력 전체</option>${EDUCATIONS.map(e=>`<option>${e}</option>`).join('')}
+        </select></div>
+      </td>
+      <th>상태</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-status" style="width:100%">
           <option value="">상태 전체</option>${ASSOCIATE_STATUSES.map(s=>`<option>${s}</option>`).join('')}
-        </select>
-        <select class="form-input form-input--sm fi" id="f-region" style="width:80px">
-          <option value="">지역</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}
-        </select>
-        <select class="form-input form-input--sm fi" id="f-channel" style="width:110px">
+        </select></div>
+      </td>
+      <th>지역</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-region" style="width:100%">
+          <option value="">지역 전체</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}
+        </select></div>
+      </td>
+      <th>가입경로</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-channel" style="width:100%">
           <option value="">경로 전체</option>${CHANNELS.map(c=>`<option>${c}</option>`).join('')}
-        </select>
+        </select></div>
       </td>
     </tr>
     <tr>
-      <th class="search-table__th">매니저</th>
-      <td class="search-table__td">
-        <select class="form-input form-input--sm fi" id="f-branch" style="width:100px">
+      <th>지사</th>
+      <td>
+        <div class="select-wrap"><select class="form-select form-input--sm" id="f-branch" style="width:100%">
           <option value="">지사 전체</option>${BRANCHES.map(b=>`<option value="${b.name}">${b.name}</option>`).join('')}
-        </select>
-        <select class="form-input form-input--sm fi" id="f-consult" style="width:140px">
+        </select></div>
+      </td>
+      <th>매니저</th>
+      <td colspan="5">
+        <div class="select-wrap" style="width:200px"><select class="form-select form-input--sm" id="f-consult" style="width:100%">
           <option value="">매니저 전체</option>
           ${CONSULTANTS.map(c => {
             const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
             const bName = branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || '';
             return `<option value="${c}">${c} (${bName})</option>`;
           }).join('')}
-        </select>
+        </select></div>
       </td>
     </tr>
   </tbody>
 </table>
-<div class="search-actions">
-  <button class="btn btn--sm search-btn" id="btn-search">검색</button>
-  <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+<div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px">
+  <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
+  <button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>
 </div>
 
-
-
-
-${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:8px">${roleButtons(role)}</div>`:''}
+<!-- 건수 + 버튼 영역 -->
+<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px">
+  <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">검색결과 <span id="member-count" style="color:var(--accent)">0</span>명</div>
+  <div style="display:flex;gap:8px">${roleButtons(role)}</div>
+</div>
 <div id="tbl"></div>`;
 
   const initData=getStatusData();
 
+  // 건수 표시 업데이트 함수
+  function updateCount(count){ document.getElementById('member-count').textContent = count; }
+  updateCount(initData.length);
+
   table=DataTable.render('tbl',{
     columns:[
-      {key:'_no',label:'No.',width:'45px',render:(v,r,i)=>i+1},
+      {key:'_no',label:'No.',width:'45px',render:(v,r,i)=>i+1,sortable:false},
       {key:'name',label:'이름',render:(v,r)=>`<a href="detail.html?id=${r.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none" onclick="event.stopPropagation()">${v}</a>`},
-      {key:'phone',label:'연락처',render:v=>Formatters.phone(v)},
+      {key:'phone',label:'연락처',render:v=>Formatters.phone(v),sortable:false},
       {key:'gender',label:'성별',width:'50px'},
       {key:'age',label:'나이',width:'50px',render:v=>v+'세'},
       {key:'status',label:'상태',render:v=>Formatters.statusBadge(v,'associate')},
@@ -132,8 +158,8 @@ ${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-ite
       {key:'maritalStatus',label:'결혼',width:'50px'},
       {key:'branch',label:'지사',width:'60px'},
       {key:'consultant',label:'담당자',width:'70px'},
-      {key:'registeredAt',label:'등록일',render:v=>Formatters.date(v),width:'100px'},
-      {key:'lastContactAt',label:'최종컨텍',render:v=>Formatters.date(v),width:'100px'},
+      {key:'registeredAt',label:'등록일 ▼',render:v=>Formatters.date(v),width:'100px',sortable:true},
+      {key:'lastContactAt',label:'최종컨텍 ▼',render:v=>Formatters.date(v),width:'100px',sortable:true},
     ],
     data:initData, pageSize:20, checkbox:true,
     onRowClick:r=>{ window.open(`detail.html?id=${r.id}`, '_blank'); },
@@ -153,6 +179,7 @@ ${roleButtons(role)?`<div style="display:flex;justify-content:flex-end;align-ite
     const kw=gv('f-keyword').toLowerCase();
     if(kw) d=d.filter(x=>x.name.includes(kw)||x.phone.includes(kw)||(x.company&&x.company.toLowerCase().includes(kw)));
     table.update(d);
+    updateCount(d.length);
   }
 
   document.getElementById('btn-search').onclick=applyFilters;

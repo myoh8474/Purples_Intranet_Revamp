@@ -4,7 +4,7 @@ import { Formatters } from '@utils/formatters.js';
 const LBL = 'background:var(--bg-secondary);font-weight:600;font-size:14px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px';
 const VAL = 'font-size:14px;padding:6px 10px;color:#1e3a5f';
 const TBL = 'class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%"';
-const SEC = (t) => `<div style="margin-bottom:12px;overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const SEC = (t) => `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
 const SEC_END = '</div></div>';
 
 export function renderBasicInfo(m) {
@@ -36,9 +36,9 @@ export function renderBasicInfo(m) {
     + `<table ${TBL}>
       <colgroup><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:12%"><col style="width:13%"></colgroup>
       <tbody>
-        <tr><td style="${LBL}">프로그램</td><td style="${VAL};cursor:pointer" data-history-program title="클릭하여 프로그램 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.program || '-'}</span></td><td style="${LBL}">가입일</td><td style="${VAL}">${Formatters.date(m.joinDate)}</td><td style="${LBL}">가입횟수</td><td style="${VAL};cursor:pointer" data-history-rejoin title="클릭하여 가입이력 보기"><span style="color:#2563eb;text-decoration:underline">${(m.rejoinCount || 1) + '가입'}</span></td><td style="${LBL}">재가입비</td><td style="${VAL}">${m.rejoinFee ? Formatters.money(m.rejoinFee) : '-'}</td></tr>
-        <tr><td style="${LBL}">가입비</td><td style="${VAL}">${Formatters.money(m.programFee || 0)}</td><td style="${LBL}">성혼비</td><td style="${VAL}">${Formatters.money(m.marriageFee || 0)}</td><td style="${LBL}">계약형태</td><td style="${VAL}">${ctLabel}</td><td style="${LBL}">만료일</td><td style="${VAL};cursor:pointer" data-history-expiry title="클릭하여 만료일 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.expiryDate ? Formatters.date(m.expiryDate) : '-'}</span></td></tr>
-        <tr><td style="${LBL}">미팅횟수</td><td style="${VAL};cursor:pointer" data-history-meeting title="클릭하여 미팅횟수 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.meetingCount != null ? m.meetingCount + '회' : '-'}</span></td><td style="${LBL}">남은기간</td><td style="${VAL}">${m.expiryDate ? (() => { var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return d > 0 ? d + '일' : '만료'; })() : '-'}</td><td style="${LBL}">업그레이드</td><td style="${VAL}">${m.upgrade || '-'}</td><td style="${LBL}">결제방법</td><td style="${VAL}">${m.payMethod || '-'}</td></tr>
+        <tr><td style="${LBL}">프로그램</td><td style="${VAL};cursor:pointer" data-history="프로그램" title="클릭하여 프로그램 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.program || '-'}</span></td><td style="${LBL}">가입일</td><td style="${VAL}">${Formatters.date(m.joinDate)}</td><td style="${LBL}">가입횟수</td><td style="${VAL};cursor:pointer" data-history="가입횟수" title="클릭하여 가입이력 보기"><span style="color:#2563eb;text-decoration:underline">${(m.rejoinCount || 1) + '가입'}</span></td><td style="${LBL}">재가입비</td><td style="${VAL}">${m.rejoinFee ? Formatters.money(m.rejoinFee) : '-'}</td></tr>
+        <tr><td style="${LBL}">가입비</td><td style="${VAL}">${Formatters.money(m.programFee || 0)}</td><td style="${LBL}">성혼비</td><td style="${VAL}">${Formatters.money(m.marriageFee || 0)}</td><td style="${LBL}">계약형태</td><td style="${VAL}">${ctLabel}</td><td style="${LBL}">만료일</td><td style="${VAL};cursor:pointer" data-history="만료일" title="클릭하여 만료일 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.expiryDate ? Formatters.date(m.expiryDate) : '-'}</span></td></tr>
+        <tr><td style="${LBL}">미팅횟수</td><td style="${VAL};cursor:pointer" data-history="미팅횟수" title="클릭하여 미팅횟수 변경이력 보기"><span style="color:#2563eb;text-decoration:underline">${m.meetingCount != null ? m.meetingCount + '회' : '-'}</span></td><td style="${LBL}">남은기간</td><td style="${VAL}">${m.expiryDate ? (() => { var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return d > 0 ? d + '일' : '만료'; })() : '-'}</td><td style="${LBL}">업그레이드</td><td style="${VAL}">${m.upgrade || '-'}</td><td style="${LBL}">결제방법</td><td style="${VAL}">${m.payMethod || '-'}</td></tr>
         <tr><td style="${LBL}">무이자</td><td style="${VAL}">${m.interestFree || '-'}</td><td style="${LBL}">할인율</td><td style="${VAL}">${m.discountRate || '-'}</td><td style="${LBL}"></td><td style="${VAL}"></td><td style="${LBL}"></td><td style="${VAL}"></td></tr>
       </tbody>
     </table>` + SEC_END
@@ -122,7 +122,7 @@ export function renderBasicInfo(m) {
 
   var rightHtml = ''
     // 특이사항 카드
-    + `<div style="margin-bottom:12px;overflow:hidden">`
+    + `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden">`
     + `<div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">`
     + `<span style="font-weight:800;font-size:14px;color:#1e293b">특이사항</span>`
     + `<button class="btn btn--outline btn--sm" id="btn-add-special-note" style="font-size:11px;padding:2px 10px">등록</button>`
@@ -141,7 +141,7 @@ export function renderBasicInfo(m) {
     }).join('')
     + `</tbody></table></div></div>`
     // 소개프로필 카드
-    + `<div style="overflow:hidden">`
+    + `<div style="background:#fff;border:1px solid var(--border-light);overflow:hidden">`
     + `<div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">`
     + `<span style="font-weight:800;font-size:14px;color:#1e293b">소개프로필</span>`
     + `<button class="btn btn--outline btn--sm" id="btn-edit-intro" style="font-size:11px;padding:2px 10px">${m.introProfile ? '수정' : '등록'}</button>`

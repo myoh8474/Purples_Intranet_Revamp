@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    준회원 상담통계 — KPI + 기간검색 + 매니저별 리스트
    공통 스타일(search-table, kpi-stat) 사용
    ======================================== */
@@ -115,7 +115,7 @@ function render() {
     </table>
     <div class="search-actions">
       <button class="btn btn--sm search-btn" id="btn-search">검색</button>
-      <button class="btn btn--sm filter-reset-btn" id="btn-reset">초기화</button>
+      <button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>
     </div>
 
     <!-- KPI 카드 (공통 kpi-stat 스타일) -->

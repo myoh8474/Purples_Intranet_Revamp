@@ -9,6 +9,7 @@ import { Formatters } from '@utils/formatters.js';
 import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { MockAssociates, saveMemberChange } from '@mock/associates.js';
+import { MockRegulars } from '@mock/regulars.js';
 import { screenIncomingDB } from '@services/screening.service.js';
 import { CONSULTANTS, BRANCHES, CONSULTANT_BRANCH } from '@config/constants.js';
 
@@ -108,29 +109,25 @@ function render() {
       </button>
     </div>
 
-    <!-- 검색 영역 (테이블 형식) -->
-    <table class="search-table" id="filter-bar">
+    <!-- 검색 영역 (std-table 형식) -->
+    <table class="std-table" id="filter-bar" style="margin-bottom:0;table-layout:fixed">
+      <colgroup>
+        <col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col>
+      </colgroup>
       <tbody>
         <tr>
-          <th class="search-table__th">회원검색</th>
-          <td class="search-table__td">
-            <input type="text" class="form-input form-input--sm fi" id="member-search" placeholder="이름 또는 연락처 입력" style="width:200px">
-          </td>
-        </tr>
-        <tr>
-          <th class="search-table__th">상세검색</th>
-          <td class="search-table__td">
-            <input type="date" class="form-input form-input--sm fi" id="filter-date-from" title="시작일" style="width:130px">
-            <span style="font-size:11px;color:#94a3b8">~</span>
-            <input type="date" class="form-input form-input--sm fi" id="filter-date-to" title="종료일" style="width:130px">
-            <select class="form-input form-input--sm fi" id="filter-channel" style="width:110px">
-              <option value="">경로 전체</option>
-              <option value="카카오커플">카카오커플</option><option value="네이버커플">네이버커플</option>
-              <option value="구글커플">구글커플</option><option value="블라인드커플">블라인드커플</option>
-              <option value="실시간상담">실시간상담</option><option value="전화문의">전화문의</option>
-              <option value="지인소개">지인소개</option><option value="기간만료(재컨텍)">기간만료(재컨텍)</option>
+          <th>회원검색</th>
+          <td colspan="3"><input type="text" class="form-input form-input--sm" id="member-search" placeholder="이름 또는 연락처 입력" style="width:100%"></td>
+          <th>성별</th>
+          <td>
+            <select class="form-select form-input--sm" id="filter-gender" style="width:100%">
+              <option value="">성별 전체</option>
+              <option value="남">남</option><option value="여">여</option>
             </select>
-            <select class="form-input form-input--sm fi" id="filter-edu" style="width:100px">
+          </td>
+          <th>학력</th>
+          <td>
+            <select class="form-select form-input--sm" id="filter-edu" style="width:100%">
               <option value="">학력 전체</option>
               <option value="고졸">고졸</option>
               <option value="전문대 재중">전문대 재중</option><option value="전문대 중퇴">전문대 중퇴</option><option value="전문대 졸업">전문대 졸업</option>
@@ -138,36 +135,54 @@ function render() {
               <option value="대학원 재중">대학원 재중</option><option value="대학원 중퇴">대학원 중퇴</option><option value="대학원 졸업">대학원 졸업</option>
               <option value="박사 과정">박사 과정</option><option value="박사 수료">박사 수료</option><option value="박사">박사</option>
             </select>
-            <select class="form-input form-input--sm fi" id="filter-gender" style="width:70px">
-              <option value="">성별</option>
-              <option value="남">남</option><option value="여">여</option>
+          </td>
+        </tr>
+        <tr>
+          <th>등록일</th>
+          <td colspan="3">
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="date" class="form-input form-input--sm" id="filter-date-from" style="width:130px">
+              <span style="font-size:11px;color:#94a3b8">~</span>
+              <input type="date" class="form-input form-input--sm" id="filter-date-to" style="width:130px">
+            </div>
+          </td>
+          <th>유입경로</th>
+          <td colspan="3">
+            <select class="form-select form-input--sm" id="filter-channel" style="width:160px">
+              <option value="">경로 전체</option>
+              <option value="카카오커플">카카오커플</option><option value="네이버커플">네이버커플</option>
+              <option value="구글커플">구글커플</option><option value="블라인드커플">블라인드커플</option>
+              <option value="실시간상담">실시간상담</option><option value="전화문의">전화문의</option>
+              <option value="지인소개">지인소개</option><option value="기간만료(재컨텍)">기간만료(재컨텍)</option>
             </select>
           </td>
         </tr>
         ${currentTab !== 'new' ? `<tr>
-          <th class="search-table__th">매니저</th>
-          <td class="search-table__td">
-            <div style="position:relative;display:inline-block">
-              <input type="text" class="form-input form-input--sm fi" id="mgr-search-input" placeholder="매니저 이름 입력" style="width:140px">
-              <div class="mgr-autocomplete" id="mgr-autocomplete"></div>
+          <th>매니저</th>
+          <td colspan="7">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <div style="position:relative;display:inline-block">
+                <input type="text" class="form-input form-input--sm" id="mgr-search-input" placeholder="매니저 이름 입력" style="width:140px">
+                <div class="mgr-autocomplete" id="mgr-autocomplete"></div>
+              </div>
+              <button class="mgr-modal-btn" id="btn-open-mgr-modal">매니저 선택</button>
+              <div class="mgr-tags" id="mgr-tags"></div>
             </div>
-            <button class="mgr-modal-btn" id="btn-open-mgr-modal">매니저 선택</button>
-            <div class="mgr-tags" id="mgr-tags"></div>
           </td>
         </tr>` : ''}
       </tbody>
     </table>
-    <div class="search-actions">
-      <button class="btn btn--sm search-btn" id="btn-search">검색</button>
-      <button class="btn btn--sm filter-reset-btn" id="btn-filter-reset">초기화</button>
+    <div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px">
+      <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
+      <button class="btn btn--reset btn--sm" id="btn-filter-reset">초기화</button>
     </div>
 
     <!-- 리스트 영역 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 6px">
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="dist-count"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary)" id="dist-count"></div>
       <div style="display:flex;gap:6px" id="action-buttons"></div>
     </div>
-    <table class="data-table" style="font-size:12px">
+    <table class="std-table" style="white-space:nowrap">
       <thead>
         <tr id="dist-thead-row"></tr>
       </thead>
@@ -176,58 +191,22 @@ function render() {
     <div id="dist-pagination" class="pagination"></div>
 
     <style>
+      /* 폰트 13px 통일 */
+      #filter-bar, #filter-bar th, #filter-bar td,
+      .std-table, .std-table th, .std-table td { font-size: 13px; }
+
       .screening-tag {
         display: inline-flex; align-items: center; gap: 3px;
-        font-size: 10px; padding: 2px 6px; border-radius: 4px;
+        font-size: 13px; padding: 2px 6px; border-radius: 4px;
         font-weight: 500; line-height: 1.4;
       }
       .screening-tag--block { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
       .screening-tag--alert { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
       .screening-tag--dup { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 
-      /* ── 검색 테이블 ── */
-      .search-table {
-        width: 100%; border-collapse: collapse;
-        margin-bottom: 16px; font-size: 12px;
-        border: 1px solid #cbd5e1;
-      }
-      .search-table__th {
-        background: #f1f5f9; color: #334155; font-weight: 700;
-        padding: 8px 14px; text-align: left; white-space: nowrap;
-        width: 80px; border-bottom: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-        font-size: 11px;
-      }
-      .search-table__td {
-        padding: 6px 14px; border-bottom: 1px solid #e2e8f0;
-        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-        background: #fff;
-      }
-      .search-table tr:last-child .search-table__th,
-      .search-table tr:last-child .search-table__td {
-        border-bottom: none;
-      }
-      .fi { font-size: 11px !important; height: 30px; }
-      .filter-reset-btn {
-        font-size: 11px !important; background: #fff;
-        border: 1px solid #e2e8f0; color: #475569;
-        padding: 4px 10px; border-radius: 6px; cursor: pointer;
-        transition: all 0.15s ease;
-      }
-      .filter-reset-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
-      .search-actions {
-        display: flex; justify-content: center; gap: 8px;
-        margin-bottom: 16px;
-      }
-      .search-btn {
-        font-size: 12px !important; background: #0369a1; color: #fff;
-        border: none; padding: 6px 24px; border-radius: 6px;
-        cursor: pointer; font-weight: 600; transition: background 0.15s;
-      }
-      .search-btn:hover { background: #0284c7; }
       .mgr-modal-btn {
         border: 1px solid #bae6fd; background: #f0f9ff; color: #0369a1;
-        font-size: 11px; padding: 0 10px; height: 30px;
+        font-size: 11px; padding: 0 10px; height: 28px;
         cursor: pointer; border-radius: 6px; font-weight: 600;
         font-family: inherit; transition: all 0.15s ease;
       }
@@ -602,17 +581,22 @@ function renderActionButtons() {
   const btnArea = document.getElementById('action-buttons');
   if (!btnArea) return;
   const stats = getManagerStats();
-  btnArea.innerHTML = `<select class="form-input form-input--sm" id="dist-mgr-select" style="font-size:11px;height:28px;width:140px">
+  btnArea.innerHTML = `<select class="form-input form-input--sm" id="dist-mgr-select" style="height:28px;width:140px">
     <option value="">매니저 선택</option>
     ${CONSULTANTS.map(c => {
       const cnt = stats[c] ? stats[c].total : 0;
       return `<option value="${c}">${c} (${cnt}명)</option>`;
     }).join('')}
   </select>
-  <button class="btn btn--sm" id="btn-manual" style="font-size:11px;background:#0369a1;color:#fff;border:none">상담매니저 등록</button>
-  <button class="btn btn--sm" id="btn-sourceout" style="font-size:11px;background:#fff;border:1px solid #dc2626;color:#dc2626">소스외 처리</button>`;
+  <button class="btn btn--primary btn--sm" id="btn-manual">상담매니저 등록</button>
+  <button class="btn btn--outline btn--sm" id="btn-sourceout">소스외 처리</button>
+  ${currentTab === 'recontact' ? '<button class="btn btn--sm" id="btn-recall-reg" style="background:#7c3aed;color:#fff;border:none;font-weight:600">리콜대기 등록</button>' : ''}`;
   document.getElementById('btn-manual').addEventListener('click', handleManualDist);
   document.getElementById('btn-sourceout').addEventListener('click', () => Toast.show('소스외 처리 기능은 추후 구현 예정입니다.', 'info'));
+
+  // 리콜대기등록 버튼
+  const recallBtn = document.getElementById('btn-recall-reg');
+  if (recallBtn) recallBtn.addEventListener('click', handleRecallRegister);
 }
 
 function renderTable(filtered) {
@@ -656,40 +640,40 @@ function renderTable(filtered) {
     if (currentTab === 'duplicate') {
       const info = screening.duplicateInfo || {};
       return `<tr>
-        <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
-        <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
-        <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
-        <td>${Formatters.phone(m.phone)}</td>
-        <td style="font-size:11px">${m.channel || '-'}</td><td>${Formatters.date(m.registeredAt)}</td>
-        <td><span style="font-weight:600;color:#d97706">${info.existingManager || '미배정'}</span></td>
-        <td><span class="screening-tag screening-tag--dup">${info.existingStatus || '-'}</span></td>
-        <td style="font-size:11px">${info.lastContactAt ? Formatters.date(info.lastContactAt) : '-'}</td>
+        <td class="tc"><input type="checkbox" class="dist-check" value="${m.id}"></td>
+        <td class="tc">${no}</td>
+        <td class="tc"><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none">${m.name}</a></td>
+        <td class="tc">${m.gender}</td><td class="tc">${m.age}세</td>
+        <td class="tc">${Formatters.phone(m.phone)}</td>
+        <td class="tc">${m.channel || '-'}</td><td class="tc">${Formatters.date(m.registeredAt)}</td>
+        <td class="tc"><span style="font-weight:600;color:#d97706">${info.existingManager || '미배정'}</span></td>
+        <td class="tc">${info.existingStatus || '-'}</td>
+        <td class="tc">${info.lastContactAt ? Formatters.date(info.lastContactAt) : '-'}</td>
       </tr>`;
     }
     if (currentTab === 'recontact') {
       const info = screening.recontactInfo || {};
       return `<tr>
-        <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
-        <td style="text-align:center">${no}</td>
-        <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
-        <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
-        <td>${Formatters.phone(m.phone)}</td><td>${Formatters.date(m.registeredAt)}</td>
-        <td style="font-size:11px">${info.program || '-'}</td>
-        <td style="text-align:center">${info.meetingCount || 0}회</td>
-        <td style="text-align:right">${info.totalPayment ? info.totalPayment.toLocaleString() + '원' : '-'}</td>
-        <td style="text-align:center">${info.hasClaim ? '<span style="color:#dc2626;font-weight:600">있음</span>' : '-'}</td>
+        <td class="tc"><input type="checkbox" class="dist-check" value="${m.id}"></td>
+        <td class="tc">${no}</td>
+        <td class="tc"><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none">${m.name}</a></td>
+        <td class="tc">${m.gender}</td><td class="tc">${m.age}세</td>
+        <td class="tc">${Formatters.phone(m.phone)}</td><td class="tc">${Formatters.date(m.registeredAt)}</td>
+        <td class="tc">${info.program || '-'}</td>
+        <td class="tc">${info.meetingCount || 0}회</td>
+        <td class="tc">${info.totalPayment ? info.totalPayment.toLocaleString() + '원' : '-'}</td>
+        <td class="tc">${info.hasClaim ? '<span style="color:#dc2626;font-weight:600">있음</span>' : '-'}</td>
       </tr>`;
     }
     // new
     return `<tr>
-      <td style="text-align:center"><input type="checkbox" class="dist-check" value="${m.id}"></td>
-      <td style="text-align:center">${no}</td>
-      <td><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:underline">${m.name}</a></td>
-      <td style="text-align:center">${m.gender}</td><td style="text-align:center">${m.age}세</td>
-      <td>${Formatters.phone(m.phone)}</td>
-      <td style="font-size:11px">${m.education || '-'}</td>
-      <td style="font-size:11px">${m.channel || '-'}</td><td>${Formatters.date(m.registeredAt)}</td>
+      <td class="tc"><input type="checkbox" class="dist-check" value="${m.id}"></td>
+      <td class="tc">${no}</td>
+      <td class="tc"><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none">${m.name}</a></td>
+      <td class="tc">${m.gender}</td><td class="tc">${m.age}세</td>
+      <td class="tc">${Formatters.phone(m.phone)}</td>
+      <td class="tc">${m.education || '-'}</td>
+      <td class="tc">${m.channel || '-'}</td><td class="tc">${Formatters.date(m.registeredAt)}</td>
     </tr>`;
   }).join('');
 
@@ -744,6 +728,47 @@ function handleManualDist() {
   });
   screeningCache.clear();
   Toast.show(`${selected.length}명이 ${manager} 매니저에게 등록되었습니다.`, 'success');
+  render();
+}
+
+/** 리콜대기 등록 핸들러 */
+function handleRecallRegister() {
+  const checks = document.querySelectorAll('.dist-check:checked');
+  const selectedIds = [];
+  checks.forEach(c => selectedIds.push(parseInt(c.value)));
+  if (selectedIds.length === 0) { Toast.show('리콜대기 등록할 회원을 선택하세요.', 'warning'); return; }
+
+  // 선택된 회원의 recontactInfo 가져오기
+  const targets = MockAssociates.filter(m => selectedIds.includes(m.id));
+  const names = targets.map(m => m.name).join(', ');
+  if (!confirm(names + ' 회원을 리콜대기로 등록하시겠습니까?\n정회원 > 리콜관리 리스트에 추가됩니다.')) return;
+
+  targets.forEach(m => {
+    const screening = getScreening(m);
+    const info = screening.recontactInfo || {};
+    // 정회원 MockRegulars에서 해당 회원 찾기 (이름+전화번호 매칭)
+    let regular = MockRegulars.find(r => r.name === m.name);
+    if (regular) {
+      regular.status = '리콜대기';
+      regular._esignStatus = '미발송';
+      regular._esignDocId = null;
+      regular._recallRegisteredAt = new Date().toISOString();
+      if (!regular.statusHistory) regular.statusHistory = [];
+      regular.statusHistory.push({
+        date: new Date().toISOString(),
+        from: '만료',
+        to: '리콜대기',
+        reason: '회원분배에서 리콜대기 등록',
+        processor: '영업기획',
+      });
+    }
+    // 분배 리스트에서 처리 완료 표시
+    m.status = '리콜대기등록';
+    m.consultant = '리콜관리';
+  });
+
+  screeningCache.clear();
+  Toast.show(targets.length + '명이 리콜대기로 등록되었습니다. 정회원 > 리콜관리에서 확인하세요.', 'success');
   render();
 }
 

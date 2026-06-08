@@ -19,8 +19,8 @@ export const ROLE_PERMISSIONS = {
   admin: ['*'],
   director: [
     'dashboard',
-    'associate-list', 'associate-detail', 'associate-consult-status', 'associate-db-status', 'associate-visit',
-    'regular-list', 'regular-detail', 'regular-register',
+    'associate-list', 'associate-detail', 'associate-consult-status', 'associate-db-status', 'associate-visit', 'associate-change-history',
+    'regular-list', 'regular-detail', 'regular-register', 'regular-change-history',
     'member-distribute',
     'matching-search',
     // 약속 및 미팅 관리
@@ -39,8 +39,8 @@ export const ROLE_PERMISSIONS = {
   ],
   manager: [
     'dashboard',
-    'associate-list', 'associate-detail', 'associate-consult-status', 'associate-db-status', 'associate-visit',
-    'regular-list', 'regular-detail', 'regular-register',
+    'associate-list', 'associate-detail', 'associate-consult-status', 'associate-db-status', 'associate-visit', 'associate-change-history',
+    'regular-list', 'regular-detail', 'regular-register', 'regular-change-history',
     'member-distribute',
     'matching-search',
     'meeting-calendar', 'meeting-schedule', 'meeting-stats', 'meeting-place',

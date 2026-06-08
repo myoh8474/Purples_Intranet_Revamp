@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    요청사항 게시판 — 통합 (3가지 구분)
    구분: 일반 업무요청 / 개인정보 삭제요청 / 인증요청
    ======================================== */
@@ -96,7 +96,7 @@ function render(){
         <select class="form-select form-input--sm" id="f-status"><option value="">전체</option>${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div>
       <div class="filter-bar__item"><label>검색</label>
         <input class="form-input form-input--sm" id="f-keyword" placeholder="제목, 회원명, 작성자..."></div>
-      <button class="btn btn--primary btn--sm" id="btn-search">검색</button>
+      <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
     </div></div>
     <div class="card">
       <div class="card__header"><h3 class="card__title" style="font-size:14px">요청 목록</h3>

@@ -4,7 +4,7 @@ import { Formatters } from '@utils/formatters.js';
 const LBL = 'background:var(--bg-secondary);font-weight:600;font-size:14px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px';
 const VAL = 'font-size:14px;padding:6px 10px;color:#1e3a5f';
 const TBL = 'class="data-table data-table--bordered data-table--no-outer" style="font-size:14px;table-layout:fixed;width:100%"';
-const SEC = (t) => `<div style="margin-bottom:12px;overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const SEC = (t) => `<div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
 const SEC_END = '</div></div>';
 
 export function renderExtraInfo(m) {
@@ -21,7 +21,7 @@ export function renderExtraInfo(m) {
       </tbody>
     </table>${SEC_END}
 
-    <div style="margin-bottom:12px;overflow:hidden">
+    <div style="margin-bottom:12px;background:#fff;border:1px solid var(--border-light);overflow:hidden">
     <div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">
       <span style="font-weight:800;font-size:14px;color:#1e293b">가족관계</span>
       <span style="font-size:12px;color:var(--text-muted)">${m.familySummary || ''}</span>

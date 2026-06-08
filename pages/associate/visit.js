@@ -14,33 +14,68 @@ const content = document.getElementById('content');
 
 const VISIT_RESULTS = ['기타','취소','변경','보류','가입'];
 
-/* ── Mock 방문상담 데이터 ── */
+/* ── Mock 방문상담 데이터 (조회 전용 — 등록은 개별 회원 상세페이지에서만 가능) ── */
 function generateVisitData() {
   const stored = localStorage.getItem('purples_visit_data');
   if (stored) { try { return JSON.parse(stored); } catch (e) {} }
   const visits = [];
-  const members = [...MockAssociates];
+  const members = [...MockAssociates].filter(m => m.consultant);
   const now = new Date();
   const thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const places = ['강남 본사','서초 상담실','잠실 라운지','여의도 상담실','판교 지사','본사 VIP룸','홍대 상담실'];
+  const memos = [
+    '첫 방문 상담, 프로필 작성 예정','재방문 - 매칭 결과 상담','가입 상담 진행 예정',
+    '프로그램 안내 및 비용 상담','매칭 후 피드백 상담','VIP 프로그램 소개',
+    '가입 의사 높음, 결제 상담 예정','기존 회원 재상담','소개 후 피드백 면담',
+    '오후 방문 예정','실시간 상담 후 방문 확정','1차 상담 후 2차 방문'
+  ];
+  const resultNotes = {
+    '가입': ['골드 프로그램 가입 완료','플래티넘 가입 결정','실버 프로그램 계약 체결','VIP 가입 완료'],
+    '보류': ['비용 검토 후 재방문 예정','일정 조율 필요','2주 후 재상담 예정','가족 상의 후 결정'],
+    '취소': ['개인 사정으로 취소','일정 변경 요청','No-show','연락 두절'],
+    '변경': ['다음 주 화요일로 변경','오후 시간대로 변경','매니저 변경 요청','장소 변경'],
+    '기타': ['전화 상담으로 전환','온라인 상담 진행','추가 자료 요청','']
+  };
   let id = 1;
-  for (let day = 1; day <= 30; day++) {
-    const count = Math.floor(Math.random() * 4);
-    for (let j = 0; j < count; j++) {
-      const m = members[Math.floor(Math.random() * members.length)];
-      const hours = [9,10,11,13,14,15,16,17,19][Math.floor(Math.random()*9)];
-      const mins = [0,0,30,30][Math.floor(Math.random()*4)];
-      const date = new Date(thisYear, thisMonth, day, hours, mins);
-      const isPast = date <= now;
-      const result = isPast ? VISIT_RESULTS[Math.floor(Math.random()*5)] : '';
-      visits.push({ id: id++, branch: m.branch, consultant: m.consultant,
-        memberName: m.name, memberId: m.id, date: date.toISOString(),
-        time: `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}`,
-        visitStatus: isPast ? '방문예정' : (Math.random() > 0.3 ? '방문예정' : '방문미정'),
-        content: ['1시경필 기로함','방문예정','보고 싶은 여성','실시간상담','오후방문 예정',''][Math.floor(Math.random()*6)],
-        result, resultNote: result === '가입' ? '골드 가입 완료' : result === '취소' ? '미팅취소' : '',
-        amount: result === '가입' ? [2000000,3000000,5000000][Math.floor(Math.random()*3)] : 0 });
+
+  // 이번 달 + 지난 달 데이터 생성
+  for (let monthOffset = -1; monthOffset <= 0; monthOffset++) {
+    const m = thisMonth + monthOffset;
+    const y = m < 0 ? thisYear - 1 : thisYear;
+    const mm = m < 0 ? m + 12 : m;
+    const daysInMonth = new Date(y, mm + 1, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dow = new Date(y, mm, day).getDay();
+      if (dow === 0) continue; // 일요일 제외
+      const count = dow === 6 ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 5) + 1;
+      for (let j = 0; j < count; j++) {
+        const mem = members[Math.floor(Math.random() * members.length)];
+        const hours = [9,10,10,11,11,13,14,14,15,15,16,17,19][Math.floor(Math.random()*13)];
+        const mins = [0,0,0,30,30][Math.floor(Math.random()*5)];
+        const date = new Date(y, mm, day, hours, mins);
+        const isPast = date <= now;
+        const result = isPast ? VISIT_RESULTS[Math.floor(Math.random()*5)] : '';
+        const visitStatus = isPast
+          ? (result === '취소' ? '방문취소' : (Math.random() > 0.1 ? '방문완료' : 'No-show'))
+          : (Math.random() > 0.2 ? '방문예정' : '방문미정');
+        const place = places[Math.floor(Math.random() * places.length)];
+        const amount = result === '가입' ? [2000000,3000000,3500000,5000000][Math.floor(Math.random()*4)] : 0;
+        const rNotes = resultNotes[result] || [''];
+
+        visits.push({
+          id: id++, branch: mem.branch, consultant: mem.consultant,
+          memberName: mem.name, memberId: mem.id, date: date.toISOString(),
+          time: `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}`,
+          place, visitStatus,
+          content: memos[Math.floor(Math.random() * memos.length)],
+          result, resultNote: isPast ? rNotes[Math.floor(Math.random() * rNotes.length)] : '',
+          amount
+        });
+      }
     }
   }
+
   visits.sort((a, b) => new Date(a.date) - new Date(b.date));
   localStorage.setItem('purples_visit_data', JSON.stringify(visits));
   return visits;
@@ -53,6 +88,8 @@ function init() {
   const now = new Date();
   currentYear = now.getFullYear(); currentMonth = now.getMonth();
   selectedDate = now.toISOString().slice(0, 10);
+  // 더미 데이터 갱신 (v2)
+  localStorage.removeItem('purples_visit_data');
   allVisits = generateVisitData();
 }
 
@@ -148,18 +185,23 @@ function renderListTable() {
   data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   document.getElementById('list-count').textContent = `${data.length}건`;
+  const statusBadge = (s) => {
+    const m = {'방문완료':'green','방문예정':'blue','방문미정':'amber','방문취소':'red','No-show':'red'};
+    return `<span class="badge badge--${m[s]||'gray'}" style="font-size:10px">${s}</span>`;
+  };
   document.getElementById('list-tbody').innerHTML = data.map((v, i) => `<tr>
     <td class="tc col-no">${data.length - i}</td>
-    <td class="tc">${v.branch}</td>
+    <td class="tc" style="white-space:nowrap">${v.branch}</td>
     <td class="tc col-name"><a href="consult-detail.html?manager=${encodeURIComponent(v.consultant)}&date=${v.date.slice(0,10)}" target="_blank" class="col-link" style="text-decoration:none">${v.consultant}</a></td>
     <td class="tc"><a href="detail.html?id=${v.memberId}" target="_blank" class="col-link" style="text-decoration:none">${v.memberName}</a></td>
     <td class="tc">${v.date.slice(0,10)}</td>
     <td class="tc">${v.time}</td>
-    <td class="tc"><span class="badge badge--${v.visitStatus==='방문예정'?'blue':'amber'}" style="font-size:10px">${v.visitStatus}</span></td>
+    <td class="tc" style="white-space:nowrap">${v.place||'-'}</td>
+    <td class="tc">${statusBadge(v.visitStatus)}</td>
     <td class="tl ellipsis">${v.content||'-'}</td>
     <td class="tc">${resultBadge(v.result)||'<span class="text-muted">-</span>'}</td>
     <td class="tl ellipsis">${v.resultNote||'-'}</td>
-  </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;padding:30px" class="text-muted">해당 기간 방문상담 내역이 없습니다.</td></tr>';
+  </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;padding:30px" class="text-muted">해당 기간 방문상담 내역이 없습니다.</td></tr>';
 }
 
 /* ── 이벤트 ── */
@@ -222,7 +264,7 @@ function render() {
 
     <div class="page-header">
       <div><h1 class="page-header__title">방문상담 관리</h1>
-      <p class="page-header__subtitle">준회원 방문상담 예약 및 결과 관리</p></div>
+      <p class="page-header__subtitle">준회원 방문상담 일정 조회 (조회 전용 — 등록은 개별 상세페이지에서 진행)</p></div>
     </div>
 
     <!-- 탭 -->
@@ -260,7 +302,7 @@ function render() {
       </table>
       <div class="search-actions">
         <button class="btn btn--sm search-btn" id="btn-list-search">검색</button>
-        <button class="btn btn--sm filter-reset-btn" id="btn-list-reset">초기화</button>
+        <button class="btn btn--reset btn--sm" id="btn-list-reset">초기화</button>
       </div>
 
       <div class="list-section">
@@ -272,7 +314,7 @@ function render() {
           <table class="std-table">
             <thead><tr>
               <th style="width:40px">번호</th><th>지사</th><th>매니저</th><th>회원명</th>
-              <th>일자</th><th>시간</th><th>방문형태</th><th>내용</th>
+              <th>일자</th><th>시간</th><th>장소</th><th>방문형태</th><th>내용</th>
               <th>결과</th><th>결과내용</th>
             </tr></thead>
             <tbody id="list-tbody"></tbody>

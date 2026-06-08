@@ -188,63 +188,101 @@ var tabMatchingHtml = safeRender('매칭관리', function(){ return renderMatchi
 
 // 전체 HTML
 content.innerHTML = ''
-  // ── 헤더: 사진 + 이름/ID + 뱃지 + 버튼 ──
-  + '<div class="card" style="margin-bottom:20px">'
-  + '  <div class="card__body" style="padding:14px 20px">'
-  + '    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">'
-  // 왼쪽: 사진 + 이름 + 뱃지
-  + '      <div style="display:flex;align-items:center;gap:14px">'
-  + '        <div style="flex-shrink:0;cursor:pointer" id="btn-photo-more">'
-  + photoHtml
-  + '        </div>'
-  + '        <div>'
-  + '          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
-  + '            <h2 style="font-size:var(--font-size-lg);font-weight:700;margin:0">' + m.name + '</h2>'
-  + (m.status === '활동' && m.marriageConfirm !== '소송중' ? '            <span style="color:#ef4444;font-size:11px;font-weight:700;border:1px solid #ef4444;padding:1px 6px;border-radius:4px">● 미팅중</span>' : '')
-  + '            <span style="color:var(--text-muted);font-size:var(--font-size-sm)">' + m.memberId + '</span>'
-  + '          </div>'
-  + '          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-  + '            ' + Formatters.statusBadge(m.status, 'regular')
-  + '            <span class="badge badge--purple">' + m.brand + '</span>'
-  + '            <span class="badge badge--blue">' + m.program + '</span>'
-  + (dDay ? '            <span class="badge badge--' + (dDay.startsWith('D+') ? 'red' : 'green') + '">만료 ' + dDay + '</span>' : '')
-  + (m.noEvent ? '            <span class="badge badge--red">이벤트불가</span>' : '')
-  + (m.noRejoin ? '            <span class="badge badge--red">재가입불가</span>' : '')
-  + (m.difficultMatch ? '            <span class="badge badge--orange">난매칭</span>' : '')
-  + (m.specialMember ? '            <span class="badge badge--gold">특별회원</span>' : '')
-  + '          </div>'
-  + '        </div>'
-  + '      </div>'
-  // 오른쪽: 액션 버튼
-  + '      <div style="display:flex;gap:6px;align-items:center">'
-  + (m.status === '리콜대기' ? '        <button class="btn btn--sm" id="btn-recall-esign" style="background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:12px;padding:4px 14px;font-weight:700">기간연장 신청서 발송</button>' : '')
-  + '        <button class="btn btn--ghost btn--sm" id="btn-leave" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">탈회접수</button>'
-  + '        <button class="btn btn--ghost btn--sm" id="btn-sms" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">SMS</button>'
-  + '        <button class="btn btn--ghost btn--sm" id="btn-email" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">Email</button>'
-  + '        <button class="btn btn--secondary btn--sm" id="btn-claim" style="font-size:12px;padding:4px 14px">클레임등록</button>'
-  + '        <button class="btn btn--primary btn--sm" id="btn-edit" style="font-size:12px;padding:4px 14px">수정</button>'
-  + '      </div>'
+  // ── 헤더 바: 이름 + 뱃지 + 버튼 ──
+  + '<div style="padding:14px 0;margin-bottom:0;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between">'
+  + '  <div style="display:flex;align-items:center;gap:10px">'
+  + '    <h2 style="font-size:20px;font-weight:900;margin:0">' + m.name + '</h2>'
+  + '    <span style="font-size:13px;color:var(--text-muted)">' + m.memberId + '</span>'
+  + '    ' + Formatters.statusBadge(m.status, 'regular')
+  + '    <span class="badge badge--purple">' + m.brand + '</span>'
+  + '    <span class="badge badge--blue">' + m.program + '</span>'
+  + (dDay ? '    <span class="badge badge--' + (dDay.startsWith('D+') ? 'red' : 'green') + '">만료 ' + dDay + '</span>' : '')
+  + (m.difficultMatch ? '    <span class="badge badge--orange">난매칭</span>' : '')
+  + (m.specialMember ? '    <span class="badge badge--gold">특별회원</span>' : '')
+  + '  </div>'
+  + '  <div style="display:flex;gap:6px">'
+  + (m.status === '리콜대기' ? '    <button class="btn btn--sm" id="btn-recall-esign" style="background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:12px;padding:4px 14px;font-weight:700">기간연장 신청서 발송</button>' : '')
+  + '    <button class="btn btn--ghost btn--sm" id="btn-leave" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">탈회접수</button>'
+  + '    <button class="btn btn--ghost btn--sm" id="btn-sms" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">SMS</button>'
+  + '    <button class="btn btn--ghost btn--sm" id="btn-email" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">Email</button>'
+  + '    <button class="btn btn--secondary btn--sm" id="btn-claim" style="font-size:12px;padding:4px 14px">클레임등록</button>'
+  + '    <button class="btn btn--primary btn--sm" id="btn-edit" style="font-size:12px;padding:4px 14px">수정</button>'
+  + '  </div>'
+  + '</div>'
+
+  // ── 상단: [사진] [기본정보] [유의사항] 3단 ──
+  + '<div style="display:grid;grid-template-columns:auto 3fr 1fr;gap:14px;padding:16px 0 20px;align-items:start">'
+
+  // 좌측: 사진
+  + '  <div style="flex-shrink:0;cursor:pointer" id="btn-photo-more">'
+  + (photos.length > 0
+    ? '<img src="' + photos[0] + '" style="width:120px;height:150px;object-fit:cover;border:1px solid var(--border-light)" id="header-photo">'
+    : '<div style="width:120px;height:150px;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);border:1px dashed var(--border-light)" id="header-photo">사진</div>')
+  + '  </div>'
+
+  // 중앙: 기본정보 테이블
+  + '  <div style="overflow:hidden">'
+  + '    <table class="data-table data-table--bordered" style="font-size:13px;width:100%;background:#fff;white-space:nowrap;table-layout:fixed"><colgroup><col style="width:12.5%"><col style="width:12.5%"><col style="width:12.5%"><col style="width:12.5%"><col style="width:12.5%"><col style="width:12.5%"><col style="width:12.5%"><col style="width:12.5%"></colgroup><tbody>'
+  + '      <tr>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">상태</td><td style="font-size:13px;padding:6px 10px;cursor:pointer" data-history="상태변경">' + Formatters.statusBadge(m.status, 'regular') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">지사</td><td style="font-size:13px;padding:6px 10px;cursor:pointer" data-history="지사">' + (m.branch || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">브랜드</td><td style="font-size:13px;padding:6px 10px">' + (m.brand || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">자녀양육</td><td style="font-size:13px;padding:6px 10px">' + (m.childCare || '-') + '</td>'
+  + '      </tr>'
+  + '      <tr>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">생년월일</td><td style="font-size:13px;padding:6px 10px">' + Formatters.date(m.birthDate) + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">나이</td><td style="font-size:13px;padding:6px 10px">' + (m.age ? m.age + '세' : '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">성별</td><td style="font-size:13px;padding:6px 10px">' + (m.gender || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">결혼여부</td><td style="font-size:13px;padding:6px 10px">' + (m.maritalHistory || '-') + '</td>'
+  + '      </tr>'
+  + '      <tr>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">학력</td><td style="font-size:13px;padding:6px 10px">' + (m.education || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">상담매니저</td><td style="font-size:13px;padding:6px 10px;cursor:pointer" data-history="상담매니저">' + (m.consultantManager || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">매칭매니저</td><td style="font-size:13px;padding:6px 10px;cursor:pointer" data-history="매칭매니저">' + (m.matchingManager || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);padding:6px 8px"></td><td style="padding:6px 10px"></td>'
+  + '      </tr>'
+  + '      <tr>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">직업</td><td style="font-size:13px;padding:6px 10px">' + (m.job || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">직장</td><td style="font-size:13px;padding:6px 10px">' + (m.company || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">지역</td><td style="font-size:13px;padding:6px 10px">' + (m.region || '-') + '</td>'
+  + '        <td style="background:var(--bg-secondary);padding:6px 8px"></td><td style="padding:6px 10px"></td>'
+  + '      </tr>'
+  + '      <tr>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">연락처</td><td style="font-size:13px;padding:6px 10px" colspan="3">' + Formatters.phone(m.phone) + '</td>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">이메일</td><td style="font-size:13px;padding:6px 10px" colspan="3">' + (m.email || '-') + '</td>'
+  + '      </tr>'
+  + '      <tr>'
+  + '        <td style="background:var(--bg-secondary);font-weight:600;font-size:13px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px">집주소</td><td style="font-size:13px;padding:6px 10px" colspan="7">' + (m.homeAddress || '-') + '</td>'
+  + '      </tr>'
+  + '    </tbody></table>'
+  + '  </div>'
+
+  // 우측: 유의사항 (빈 영역 - 등록 버튼만)
+  + '  <div style="background:#fff;border:1px solid var(--border-light);padding:12px;height:100%">'
+  + '    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+  + '      <span style="font-weight:800;font-size:14px;color:#1e293b">유의사항</span>'
+  + '      <button class="btn btn--sm" id="btn-add-note" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333">등록</button>'
+  + '    </div>'
+  + '    <div id="notes-list" style="font-size:12px;max-height:180px;overflow-y:auto">'
+  + '      <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px">등록된 유의사항이 없습니다.</div>'
   + '    </div>'
   + '  </div>'
   + '</div>'
 
-
-  // ── 4탭 구조 ──
-  + '<div class="card">'
-  + '  <div class="card__header" style="padding-bottom:0;border-bottom:none">'
-  + '    <div class="tabs__nav" id="detail-tabs" style="width:100%">'
-  + '      <button class="tabs__btn active" data-tab="basic">기본정보</button>'
-  + '      <button class="tabs__btn" data-tab="extra">추가정보</button>'
-  + '      <button class="tabs__btn" data-tab="payment">결제정보</button>'
-  + '      <button class="tabs__btn" data-tab="matching">매칭관리</button>'
-  + '    </div>'
+  // ── 4탭 구조 (배경 카드 없음) ──
+  + '<div style="margin-bottom:16px">'
+  + '  <div class="tabs__nav" id="detail-tabs" style="width:100%">'
+  + '    <button class="tabs__btn active" data-tab="basic">기본정보</button>'
+  + '    <button class="tabs__btn" data-tab="extra">추가정보</button>'
+  + '    <button class="tabs__btn" data-tab="payment">결제정보</button>'
+  + '    <button class="tabs__btn" data-tab="matching">매칭관리</button>'
   + '  </div>'
-  + '  <div class="card__body">'
-  + '    <div class="tab-panel active" id="panel-basic">' + tabBasicHtml + '</div>'
-  + '    <div class="tab-panel" id="panel-extra">' + tabExtraHtml + '</div>'
-  + '    <div class="tab-panel" id="panel-payment">' + tabPaymentHtml + '</div>'
-  + '    <div class="tab-panel" id="panel-matching">' + tabMatchingHtml + '</div>'
-  + '  </div>'
+  + '</div>'
+  + '<div>'
+  + '  <div class="tab-panel active" id="panel-basic">' + tabBasicHtml + '</div>'
+  + '  <div class="tab-panel" id="panel-extra">' + tabExtraHtml + '</div>'
+  + '  <div class="tab-panel" id="panel-payment">' + tabPaymentHtml + '</div>'
+  + '  <div class="tab-panel" id="panel-matching">' + tabMatchingHtml + '</div>'
   + '</div>';
 
 /* ── 탭 전환 ── */
@@ -258,6 +296,48 @@ document.getElementById('detail-tabs').addEventListener('click', function(e) {
   document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
 });
 
+/* ── 유의사항 등록 ── */
+var addNoteBtn = document.getElementById('btn-add-note');
+if (addNoteBtn) addNoteBtn.addEventListener('click', function() {
+  Modal.show({
+    title: '유의사항 등록',
+    content: '<div style="margin-bottom:12px">'
+      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">구분</label>'
+      + '<select class="form-input" id="note-type" style="width:100%;font-size:13px">'
+      + '  <option value="상담">상담메모</option>'
+      + '  <option value="매칭">매칭메모</option>'
+      + '  <option value="주의">주의사항</option>'
+      + '  <option value="기타">기타</option>'
+      + '</select></div>'
+      + '<div style="margin-bottom:12px">'
+      + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">내용</label>'
+      + '<textarea class="form-input" id="note-content" rows="4" style="width:100%;font-size:13px;resize:vertical" placeholder="유의사항을 입력하세요..."></textarea></div>'
+      + '<div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-submit-note">등록</button></div>',
+  });
+  setTimeout(function() {
+    var submitBtn = document.getElementById('btn-submit-note');
+    if (submitBtn) submitBtn.addEventListener('click', function() {
+      var content = document.getElementById('note-content').value.trim();
+      if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
+      var type = document.getElementById('note-type').value;
+      var notesList = document.getElementById('notes-list');
+      if (notesList) {
+        var emptyMsg = notesList.querySelector('div[style*="text-align:center"]');
+        if (emptyMsg) emptyMsg.remove();
+        var colors = { '상담': { bg: '#fffbeb', border: '#fcd34d', icon: '📌', color: '#92400e' }, '매칭': { bg: '#f0f9ff', border: '#93c5fd', icon: '📋', color: '#1e40af' }, '주의': { bg: '#fef2f2', border: '#fca5a5', icon: '⚠️', color: '#991b1b' }, '기타': { bg: '#f5f3ff', border: '#c4b5fd', icon: '📝', color: '#5b21b6' } };
+        var c = colors[type] || colors['기타'];
+        var today = new Date().toISOString().split('T')[0];
+        notesList.insertAdjacentHTML('afterbegin', '<div style="padding:8px 10px;background:' + c.bg + ';border:1px solid ' + c.border + ';margin-bottom:6px;border-radius:4px;font-size:12px;line-height:1.6">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+          + '  <span style="font-weight:700;color:' + c.color + '">' + c.icon + ' ' + type + '메모</span>'
+          + '  <span style="font-size:10px;color:' + c.color + '">' + today + '</span>'
+          + '</div>' + content + '</div>');
+      }
+      Modal.hide();
+      Toast.show('유의사항이 등록되었습니다.', 'success');
+    });
+  }, 100);
+});
 
 
 /* ── 리콜대기: 기간연장 신청서 발송 (모두싸인 API) ── */
@@ -722,11 +802,43 @@ document.addEventListener('click', async function(ev) {
     '매칭매니저': { label: '매칭매니저', color: '#8b5cf6' },
     '상담매니저': { label: '상담매니저', color: '#06b6d4' },
     '지사': { label: '지사', color: '#64748b' },
+    '가입횟수': { label: '가입횟수', color: '#ec4899' },
   };
   var catInfo = allCats[category] || { label: category, color: '#64748b' };
-  var list = (m.statusHistory || []).filter(function(h) {
-    return !category || category === '상태변경' || h.content.indexOf(category) > -1;
-  });
+
+  // 카테고리별 적절한 데이터 소스 매핑
+  var list = [];
+  if (category === '상태변경') {
+    list = (m.statusHistory || []).map(function(h) {
+      return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-', reserveDate: h.reserveDate || '-' };
+    });
+  } else if (category === '프로그램') {
+    list = (m.programHistory || []).map(function(h) {
+      return { date: h.date, content: h.note || '-', detail: h.program + ' (' + Formatters.money(h.totalFee) + ')', processor: h.changer || '-' };
+    });
+  } else if (category === '미팅횟수') {
+    list = (m.meetingCountHistory || []).map(function(h) {
+      return { date: h.date, content: h.reason || '-', detail: h.before + '회→' + h.after + '회', processor: h.changer || '-' };
+    });
+  } else if (category === '만료일') {
+    list = (m.statusHistory || []).filter(function(h) { return (h.reason || '').indexOf('만료') > -1 || (h.to || '').indexOf('만료') > -1; }).map(function(h) {
+      return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-' };
+    });
+    if (list.length === 0 && m.expiryDate) {
+      list = [{ date: m.joinDate, content: '최초 설정', detail: '만료일: ' + Formatters.date(m.expiryDate), processor: '-' }];
+    }
+  } else if (category === '가입횟수') {
+    list = (m.rejoinHistory || []).map(function(h) {
+      return { date: h.date, content: h.no + '가입 (' + (h.contractType || '-') + ')', detail: h.program + ' → ' + (h.status || '-'), processor: h.manager || '-' };
+    });
+  } else if (category === '매칭매니저' || category === '상담매니저' || category === '지사') {
+    list = (m.statusHistory || []).filter(function(h) { return (h.reason || '').indexOf(category) > -1; }).map(function(h) {
+      return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-' };
+    });
+    if (list.length === 0) {
+      list = [{ date: m.joinDate, content: '최초 배정', detail: category + ': ' + (category === '매칭매니저' ? m.matchingManager : category === '상담매니저' ? m.consultantManager : m.branch) || '-', processor: '-' }];
+    }
+  }
 
   function getAttachment(h) {
     var c = (h.content || '').toLowerCase();

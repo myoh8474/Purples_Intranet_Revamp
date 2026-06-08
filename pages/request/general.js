@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    일반 업무요청 게시판
    ======================================== */
 import { initLayout } from '@core/layout.js';
@@ -69,7 +69,7 @@ function render() {
       <div class="filter-bar__item"><label>검색</label>
         <input class="form-input form-input--sm" id="f-keyword" placeholder="제목, 작성자 검색...">
       </div>
-      <button class="btn btn--primary btn--sm" id="btn-search">검색</button>
+      <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
     </div></div>
 
     <div class="card">
