@@ -1,5 +1,5 @@
 /* ========================================
-   정회원 상세 페이지 (6탭 · 1단 레이아웃)
+   정회원 상세 페이지 (4탭 · 1단 레이아웃)
    ======================================== */
 import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
@@ -10,13 +10,10 @@ import { renderBasicInfo } from './detail-tab-basic.js';
 import { renderExtraInfo } from './detail-tab-extra.js';
 import { renderPayment } from './detail-tab-payment.js';
 import { renderMatchingInfo } from './detail-tab-matching.js';
-import { renderMeetingTab } from './detail-tab-meeting.js';
-import { renderHistoryTab, initHistoryEvents } from './detail-tab-history.js';
-import { addHistory, HISTORY_CATEGORIES } from '@services/history.js';
-import { supabase } from '@services/supabase.js';
 
-// Toast를 전역에 노출 (히스토리 탭에서 참조)
-window.__Toast = Toast;
+
+import { addHistory } from '@services/history.js';
+import { supabase } from '@services/supabase.js';
 
 initLayout({ pageId: 'regular-detail', breadcrumbs: ['정회원 관리', '정회원 상세'] });
 
@@ -177,8 +174,17 @@ if (m.expiryDate) {
   }
 }
 
-// 히스토리 HTML 미리 로드 (async)
-var historyHtml = await renderHistoryTab(m);
+
+
+// ── 탭 렌더링 (에러 방지) ──
+function safeRender(name, fn) {
+  try { var result = fn(); console.log('[Detail] ✅ ' + name + ' 렌더 성공'); return result || ''; }
+  catch(e) { console.error('[Detail] ❌ ' + name + ' 렌더 실패:', e); return '<div style="padding:20px;color:#ef4444;font-size:13px">⚠ ' + name + ' 렌더링 오류: ' + (e.message||e) + '</div>'; }
+}
+var tabBasicHtml = safeRender('기본정보', function(){ return renderBasicInfo(m); });
+var tabExtraHtml = safeRender('추가정보', function(){ return renderExtraInfo(m); });
+var tabPaymentHtml = safeRender('결제정보', function(){ return renderPayment(m); });
+var tabMatchingHtml = safeRender('매칭관리', function(){ return renderMatchingInfo(m); });
 
 // 전체 HTML
 content.innerHTML = ''
@@ -210,83 +216,39 @@ content.innerHTML = ''
   + '        </div>'
   + '      </div>'
   // 오른쪽: 액션 버튼
-  + '      <div style="display:flex;gap:8px">'
-  + '        <button class="btn btn--primary btn--sm" id="btn-edit">수정</button>'
-  + '        <button class="btn btn--ghost btn--sm" id="btn-sms">SMS</button>'
-  + '        <button class="btn btn--ghost btn--sm" id="btn-email">Email</button>'
-  + '        <button class="btn btn--secondary btn--sm" id="btn-claim">클레임등록</button>'
-  + '        <button class="btn btn--danger btn--sm" id="btn-leave">탈회접수</button>'
+  + '      <div style="display:flex;gap:6px;align-items:center">'
+  + (m.status === '리콜대기' ? '        <button class="btn btn--sm" id="btn-recall-esign" style="background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:12px;padding:4px 14px;font-weight:700">기간연장 신청서 발송</button>' : '')
+  + '        <button class="btn btn--ghost btn--sm" id="btn-leave" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">탈회접수</button>'
+  + '        <button class="btn btn--ghost btn--sm" id="btn-sms" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">SMS</button>'
+  + '        <button class="btn btn--ghost btn--sm" id="btn-email" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">Email</button>'
+  + '        <button class="btn btn--secondary btn--sm" id="btn-claim" style="font-size:12px;padding:4px 14px">클레임등록</button>'
+  + '        <button class="btn btn--primary btn--sm" id="btn-edit" style="font-size:12px;padding:4px 14px">수정</button>'
   + '      </div>'
   + '    </div>'
   + '  </div>'
   + '</div>'
 
-  // ── 소개 프로필 + 특이사항 (2단) ──
-  + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">'
-  // 좌: 소개 프로필
-  + '  <div class="card" style="margin:0">'
-  + '    <div class="card__body" style="padding:0">'
-  + '      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
-  + '        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">소개 프로필</span>'
-  + '        <button class="btn btn--outline btn--sm" id="btn-edit-intro">' + (m.introProfile ? '수정' : '등록') + '</button>'
-  + '      </div>'
-  + '      <div style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text-primary);min-height:80px">'
-  + (m.introProfile ? m.introProfile : '<span style="color:var(--text-muted)">등록된 소개 프로필이 없습니다.</span>')
-  + '      </div>'
-  + '    </div>'
-  + '  </div>'
-  // 우: 특이사항
-  + '  <div class="card" style="margin:0">'
-  + '    <div class="card__body" style="padding:0">'
-  + '      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">'
-  + '        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">특이사항</span>'
-  + '        <button class="btn btn--outline btn--sm" id="btn-add-caution">+ 등록</button>'
-  + '      </div>'
-  + '      <div style="padding:10px 16px;min-height:80px" id="caution-area">'
-  + (m.cautionMemo ? '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg-secondary);font-size:12px;line-height:1.6"><div style="flex:1;color:var(--text-primary)">' + m.cautionMemo + '</div><button class="btn btn--ghost btn--sm caution-del-btn" style="font-size:10px;padding:1px 6px;color:var(--danger);white-space:nowrap;margin-left:8px">삭제</button></div>' : '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px">등록된 특이사항이 없습니다.</div>')
-  + '      </div>'
-  + '    </div>'
-  + '  </div>'
-  + '</div>'
 
-  // ── 히스토리 (접기/펼치기) ──
-  + '<div class="card" style="margin-bottom:20px">'
-  + '  <div class="card__body" style="padding:0">'
-  + '    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0;cursor:pointer" id="toggle-history">'
-  + '      <span style="font-size:13px;font-weight:700;color:var(--text-primary)">히스토리</span>'
-  + '      <div style="display:flex;align-items:center;gap:8px">'
-  + '        <button class="btn btn--outline btn--sm" id="btn-add-history">+ 등록</button>'
-  + '        <span id="toggle-history-icon" style="font-size:12px;color:var(--text-muted)">▼</span>'
-  + '      </div>'
-  + '    </div>'
-  + '    <div id="history-body" style="padding:10px 16px;max-height:500px;overflow-y:auto">'
-  + historyHtml
-  + '    </div>'
-  + '  </div>'
-  + '</div>'
-
-  // ── 5탭 구조 ──
+  // ── 4탭 구조 ──
   + '<div class="card">'
   + '  <div class="card__header" style="padding-bottom:0;border-bottom:none">'
   + '    <div class="tabs__nav" id="detail-tabs" style="width:100%">'
   + '      <button class="tabs__btn active" data-tab="basic">기본정보</button>'
   + '      <button class="tabs__btn" data-tab="extra">추가정보</button>'
   + '      <button class="tabs__btn" data-tab="payment">결제정보</button>'
-  + '      <button class="tabs__btn" data-tab="matching">소개관리</button>'
-  + '      <button class="tabs__btn" data-tab="meeting">미팅관리</button>'
+  + '      <button class="tabs__btn" data-tab="matching">매칭관리</button>'
   + '    </div>'
   + '  </div>'
   + '  <div class="card__body">'
-  + '    <div class="tab-panel active" id="panel-basic">' + renderBasicInfo(m) + '</div>'
-  + '    <div class="tab-panel" id="panel-extra">' + renderExtraInfo(m) + '</div>'
-  + '    <div class="tab-panel" id="panel-payment">' + renderPayment(m) + '</div>'
-  + '    <div class="tab-panel" id="panel-matching">' + renderMatchingInfo(m) + '</div>'
-  + '    <div class="tab-panel" id="panel-meeting">' + renderMeetingTab(m) + '</div>'
+  + '    <div class="tab-panel active" id="panel-basic">' + tabBasicHtml + '</div>'
+  + '    <div class="tab-panel" id="panel-extra">' + tabExtraHtml + '</div>'
+  + '    <div class="tab-panel" id="panel-payment">' + tabPaymentHtml + '</div>'
+  + '    <div class="tab-panel" id="panel-matching">' + tabMatchingHtml + '</div>'
   + '  </div>'
   + '</div>';
 
 /* ── 탭 전환 ── */
-var historyInitialized = false;
+
 document.getElementById('detail-tabs').addEventListener('click', function(e) {
   var btn = e.target.closest('.tabs__btn');
   if (!btn) return;
@@ -296,8 +258,25 @@ document.getElementById('detail-tabs').addEventListener('click', function(e) {
   document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
 });
 
-// 히스토리 이벤트 바인딩 (상단 카드이므로 즉시 초기화)
-initHistoryEvents(m.id);
+
+
+/* ── 리콜대기: 기간연장 신청서 발송 (모두싸인 API) ── */
+var recallEsignBtn = document.getElementById('btn-recall-esign');
+if (recallEsignBtn) {
+  recallEsignBtn.addEventListener('click', async function() {
+    if (!confirm(m.name + ' 회원에게 기간연장 신청서를 발송하시겠습니까?\n\n모두싸인을 통해 전자서명 요청이 발송됩니다.')) return;
+    recallEsignBtn.disabled = true;
+    recallEsignBtn.textContent = '발송 중...';
+    // Mock API 호출 (실서비스: 모두싸인 REST API)
+    await new Promise(function(r) { setTimeout(r, 1500); });
+    recallEsignBtn.textContent = '발송완료 (서명 대기중)';
+    recallEsignBtn.style.background = '#3b82f6';
+    recallEsignBtn.style.borderColor = '#3b82f6';
+    recallEsignBtn.insertAdjacentHTML('afterend', ' <span style="font-size:11px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-weight:600">서명 대기중</span>');
+    Toast.show('기간연장 신청서가 발송되었습니다.', 'success');
+    addHistory({ memberId: m.id, category: '상태변경', content: '기간연장 신청서 발송 (모두싸인)', detail: '', processor: '시스템', date: new Date().toISOString() });
+  });
+}
 
 /* ── 소개 프로필 등록/수정 모달 ── */
 var editIntroBtn = document.getElementById('btn-edit-intro');
@@ -678,8 +657,7 @@ document.addEventListener('click', function(ev) {
 var saveExtraBtn = document.getElementById('btn-save-extra');
 if (saveExtraBtn) saveExtraBtn.addEventListener('click', function() { Toast.show('추가정보가 저장되었습니다.', 'success'); });
 
-var addLogBtn = document.getElementById('btn-add-log');
-if (addLogBtn) addLogBtn.addEventListener('click', function() { Toast.show('컨텍 로그 추가 모달을 엽니다.', 'info'); });
+
 
 /* ── 히스토리 등록 모달 (이벤트 위임) ── */
 document.addEventListener('click', function(ev) {
@@ -725,15 +703,170 @@ document.addEventListener('click', function(ev) {
         });
         Modal.hide();
         Toast.show('히스토리가 등록되었습니다.', 'success');
-        // 히스토리 영역 전체 리렌더링
-        var histBody = document.getElementById('history-body');
-        if (histBody) {
-          renderHistoryTab(m).then(function(html) {
-            histBody.innerHTML = html;
-            initHistoryEvents(m.id);
-          });
-        }
+
       });
     }, 100);
   }
+});
+
+/* ── 변경이력 팝업 (data-history 셀 클릭) ── */
+document.addEventListener('click', async function(ev) {
+  var cell = ev.target.closest('[data-history]');
+  if (!cell) return;
+  var category = cell.getAttribute('data-history');
+  var allCats = {
+    '상태변경': { label: '상태변경', color: '#ef4444' },
+    '프로그램': { label: '프로그램', color: '#6366f1' },
+    '미팅횟수': { label: '미팅횟수', color: '#f59e0b' },
+    '만료일': { label: '만료일', color: '#10b981' },
+    '매칭매니저': { label: '매칭매니저', color: '#8b5cf6' },
+    '상담매니저': { label: '상담매니저', color: '#06b6d4' },
+    '지사': { label: '지사', color: '#64748b' },
+  };
+  var catInfo = allCats[category] || { label: category, color: '#64748b' };
+  var list = (m.statusHistory || []).filter(function(h) {
+    return !category || category === '상태변경' || h.content.indexOf(category) > -1;
+  });
+
+  function getAttachment(h) {
+    var c = (h.content || '').toLowerCase();
+    if ((c.indexOf('리콜') > -1 && c.indexOf('서명') > -1) || c.indexOf('기간연장') > -1) {
+      return { name: '특별기간연장 신청서', type: 'recall', docId: 'MS-RECALL-' + m.memberId };
+    }
+    if (c.indexOf('2가입') > -1 || c.indexOf('전환') > -1) {
+      return { name: '2가입 계약서', type: 'contract', docId: 'MS-CONTRACT-' + m.memberId };
+    }
+    return null;
+  }
+
+  // 상태변경 카테고리일 때만 수동 변경 폼
+  var isStatusChange = (category === '상태변경');
+  var statusOptions = [
+    '신규', '인증중', '활동대기', '활동',
+    '임시교제', '교제', '외부교제',
+    '약정보류', '임시보류', '장기보류', '강제보류',
+    '약정만료', '자동만료', '만료',
+    '리콜대기', '리콜',
+    '탈회진행', '탈회'
+  ];
+  var statusForm = '';
+  if (isStatusChange) {
+    statusForm = ''
+      + '<div style="margin-bottom:16px;padding:0">'
+      + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+      + '<tr>'
+      + '<td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:90px;border:1px solid var(--border-light)">회원상태</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="status-change-select" style="width:200px;font-size:12px;padding:3px 8px">' + statusOptions.map(function(s) { return '<option' + (s === m.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>'
+      + '</tr>'
+      + '<tr>'
+      + '<td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">예약날짜</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:6px;align-items:center"><input type="date" class="form-input" id="status-date-from" style="font-size:12px;padding:3px 8px"> <span>~</span> <input type="date" class="form-input" id="status-date-to" style="font-size:12px;padding:3px 8px"></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">※ 보류/교제로 변경시 입력 (연장기한 Or 다음 컨텍일)</div></td>'
+      + '</tr>'
+      + '<tr>'
+      + '<td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="status-change-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-status-change-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td>'
+      + '</tr>'
+      + '</tbody></table>'
+      + '</div>';
+  }
+
+  // 첨부서류 컬럼 포함 이력 테이블
+  var rows = list.length > 0
+    ? list.slice(0, 20).map(function(h) {
+        var att = getAttachment(h);
+        var attHtml = att
+          ? '<a href="#" class="att-view" data-doc-id="' + att.docId + '" data-doc-name="' + att.name + '" data-doc-type="' + att.type + '" style="color:#3b82f6;text-decoration:none;font-weight:600;font-size:11px">[첨부서류 다운로드]</a>'
+          : '<span style="color:var(--text-muted)">—</span>';
+        return '<tr>'
+          + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
+          + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.content || '-') + '</td>'
+          + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.reserveDate || '-') + '</td>' : '')
+          + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.detail || '-') + '</td>'
+          + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
+          + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + attHtml + '</td>'
+          + '</tr>';
+      }).join('')
+    : '<tr><td colspan="' + (isStatusChange ? '6' : '5') + '" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+
+  Modal.show({
+    title: '<span style="color:' + catInfo.color + ';font-weight:700">' + catInfo.label + '</span> 변경이력',
+    size: 'xl',
+    content: statusForm
+      + '<div style="max-height:' + (isStatusChange ? '380px' : '450px') + ';overflow-y:auto">'
+      + '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;border-collapse:collapse"><thead><tr>'
+      + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
+      + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">' + (isStatusChange ? '변경사유' : '내용') + '</th>'
+      + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">예약일</th>' : '')
+      + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경전→변경후</th>'
+      + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">매니저</th>'
+      + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px;width:24%">첨부</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
+  });
+
+  // 상태 변경 확인 이벤트
+  setTimeout(function() {
+    var confirmBtn = document.getElementById('btn-status-change-confirm');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function() {
+        var newStatus = document.getElementById('status-change-select').value;
+        var reason = document.getElementById('status-change-reason').value.trim();
+        if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+        if (newStatus === m.status) { Toast.show('현재 상태와 동일합니다.', 'warning'); return; }
+        var oldStatus = m.status;
+        m.status = newStatus;
+        addHistory({ memberId: m.id, category: '상태변경', content: reason, detail: oldStatus + '→' + newStatus, processor: m.consultantManager || '시스템', date: new Date().toISOString() });
+        var badgeArea = document.querySelector('.badge.badge--green, .badge.badge--amber, .badge.badge--blue, .badge.badge--red, .badge.badge--orange, .badge.badge--pink');
+        if (badgeArea) badgeArea.outerHTML = Formatters.statusBadge(newStatus, 'regular');
+        Modal.hide();
+        Toast.show('회원 상태가 ' + newStatus + '(으)로 변경되었습니다.', 'success');
+      });
+    }
+
+    // 첨부서류 다운로드 미리보기 모달
+    var modal = document.getElementById('modal-root');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        var attLink = e.target.closest('.att-view');
+        if (!attLink) return;
+        e.preventDefault();
+        var docName = attLink.dataset.docName;
+        var docId = attLink.dataset.docId;
+        var docType = attLink.dataset.docType;
+        var previewContent = '';
+        if (docType === 'recall') {
+          previewContent = '<div style="padding:24px;border:1px solid var(--border-light);border-radius:8px;background:#fefce8">'
+            + '<div style="text-align:center;margin-bottom:20px"><div style="font-size:18px;font-weight:800;color:#92400e">특별기간연장 신청서</div><div style="font-size:12px;color:#a16207;margin-top:4px">PURPLES 매칭 서비스</div></div>'
+            + '<table style="width:100%;font-size:12px;border-collapse:collapse"><tbody>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;width:30%">회원명</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.name + '</td></tr>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">회원번호</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.memberId + '</td></tr>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">프로그램</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.program + '</td></tr>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">브랜드</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.brand + '</td></tr>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">만료일</td><td style="padding:6px;border:1px solid #e5e7eb">' + (m.expiryDate ? Formatters.date(m.expiryDate) : '-') + '</td></tr>'
+            + '</tbody></table>'
+            + '<div style="margin-top:16px;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;line-height:1.8;color:#374151">본인은 상기 내용을 확인하였으며, 특별기간연장 서비스에 동의합니다.</div>'
+            + '<div style="margin-top:16px;text-align:right"><span style="background:#dcfce7;color:#166534;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700">✅ 서명 완료</span></div>'
+            + '</div>';
+        } else {
+          previewContent = '<div style="padding:24px;border:1px solid var(--border-light);border-radius:8px;background:#eff6ff">'
+            + '<div style="text-align:center;margin-bottom:20px"><div style="font-size:18px;font-weight:800;color:#1e40af">2가입 계약서</div><div style="font-size:12px;color:#3b82f6;margin-top:4px">PURPLES 매칭 서비스</div></div>'
+            + '<table style="width:100%;font-size:12px;border-collapse:collapse"><tbody>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;width:30%">회원명</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.name + '</td></tr>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">회원번호</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.memberId + '</td></tr>'
+            + '<tr><td style="padding:6px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">프로그램</td><td style="padding:6px;border:1px solid #e5e7eb">' + m.program + '</td></tr>'
+            + '</tbody></table>'
+            + '<div style="margin-top:16px;text-align:right"><span style="background:#dcfce7;color:#166534;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700">✅ 서명 완료</span></div>'
+            + '</div>';
+        }
+
+        Modal.show({
+          title: '📄 ' + docName + ' — 미리보기',
+          size: 'xl',
+          content: previewContent
+            + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">'
+            + '<button class="btn btn--ghost btn--sm" onclick="Toast.show(\'모두싸인 문서 뷰어로 이동합니다.\', \'info\')">모두싸인에서 보기</button>'
+            + '<button class="btn btn--primary btn--sm" onclick="Toast.show(\'PDF 다운로드를 시작합니다.\', \'success\')">다운로드 (PDF)</button></div>',
+        });
+      });
+    }
+  }, 100);
 });

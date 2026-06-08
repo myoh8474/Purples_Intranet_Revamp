@@ -1,7 +1,8 @@
 /* 결제정보 탭 렌더링 */
 import { Formatters } from '@utils/formatters.js';
 
-const SEC = (t) => `<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin:24px 0 12px">${t}</div>`;
+const SEC = (t) => `<div style="margin-bottom:12px;overflow:hidden"><div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">${t}</div><div style="padding:0">`;
+const SEC_END = '</div></div>';
 
 export function renderPayment(m) {
   const payments = m.payments || [];
@@ -23,6 +24,22 @@ export function renderPayment(m) {
   }
 
   return `
+    ${SEC('결제 요약')}
+    <div style="padding:14px">
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid ${m.noInterest?'#dc2626':'#e9e5f0'};background:${m.noInterest?'#fef2f2':'#fff'}">
+        <span style="font-size:12px;font-weight:600;color:${m.noInterest?'#dc2626':'var(--text-muted)'}">무이자</span>
+        <span style="font-weight:700;color:${m.noInterest?'#dc2626':'var(--text-muted)'}">${m.noInterest?'✕':'○'}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid ${m.discountRate?'#d97706':'#e9e5f0'};background:${m.discountRate?'#fffbeb':'#fff'}">
+        <span style="font-size:12px;font-weight:600;color:${m.discountRate?'#d97706':'var(--text-muted)'}">할인율</span>
+        <span style="font-weight:700;color:${m.discountRate?'#d97706':'var(--text-muted)'}">${m.discountRate?m.discountRate+'%':'-'}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid ${m.upgraded?'#2563eb':'#e9e5f0'};background:${m.upgraded?'#eff6ff':'#fff'}">
+        <span style="font-size:12px;font-weight:600;color:${m.upgraded?'#2563eb':'var(--text-muted)'}">업그레이드</span>
+        <span style="font-weight:700;color:${m.upgraded?'#2563eb':'var(--text-muted)'}">${m.upgraded?'✕':'○'}</span>
+      </div>
+    </div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
       <div style="flex:1;min-width:160px;background:var(--bg-secondary);padding:16px;border-radius:var(--radius-lg);text-align:center">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">총 계약금</div>
@@ -43,10 +60,14 @@ export function renderPayment(m) {
       </div>
     </div>
     ${m.unpaidReason ? `<div style="font-size:12px;color:#d97706;margin-bottom:12px">${m.unpaidReason}</div>` : ''}
-    <div style="text-align:right;margin-bottom:8px"><button class="btn btn--primary btn--sm" id="btn-add-payment">+ 잔금 입금 등록</button></div>
+    <div style="text-align:right"><button class="btn btn--primary btn--sm" id="btn-add-payment">+ 잔금 입금 등록</button></div>
+    </div>
+    ${SEC_END}
 
-    ${SEC('결제 내역')}
-    <table class="data-table data-table--bordered" style="font-size:12px">
+    <div style="margin-bottom:12px;overflow:hidden">
+    <div style="padding:10px 14px;border-bottom:1px solid #cbd5e1;font-weight:800;font-size:14px;color:#1e293b">결제 내역</div>
+    <div style="padding:0">
+    <table class="data-table data-table--bordered data-table--no-outer" style="font-size:12px">
       <thead><tr><th>No</th><th>결제일</th><th>분류</th><th>가입프로그램</th><th>결제수단</th><th>금액</th><th>수당옵션</th><th>쉐어매니저</th><th>쉐어비율</th><th>실매출액</th><th>상태</th><th>비고</th></tr></thead>
       <tbody>
         ${payments.length === 0 ? '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:20px">결제 내역이 없습니다.</td></tr>' :
@@ -69,5 +90,6 @@ export function renderPayment(m) {
           </tr>`}).join('')}
       </tbody>
     </table>
+    </div></div>
   `;
 }
