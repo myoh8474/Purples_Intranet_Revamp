@@ -1,4 +1,4 @@
-﻿/* ========================================
+/* ========================================
    매니저 상세 — 기간별 성과 추이
    ======================================== */
 import { Formatters } from '@utils/formatters.js';
@@ -119,9 +119,6 @@ function render() {
   document.title = `${managerName} 성과 상세 - 퍼플스 인트라넷`;
 
   content.innerHTML = `
-    <!-- 뒤로가기 -->
-    <a class="cd-back-btn" href="javascript:void(0)" id="btn-back">← 상담현황 목록</a>
-
     <!-- 매니저 기본정보 -->
     <div class="cd-info">
       <h2 class="cd-info__name">${managerName}</h2>
@@ -227,10 +224,7 @@ function render() {
   // 스타일 삽입
   const style = document.createElement('style');
   style.textContent = `
-    .cd-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px;
-      color:var(--text-secondary); text-decoration:none; padding:6px 12px;
-      border:1px solid var(--border-light); transition:all .15s; margin-bottom:16px; }
-    .cd-back-btn:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
+
     .cd-info { display:flex; align-items:center; gap:16px; padding:16px 0; margin-bottom:8px;
       border-bottom:1px solid var(--border-light); }
     .cd-info__name { font-size:18px; font-weight:800; margin:0; color:var(--text-primary); }
@@ -240,7 +234,7 @@ function render() {
   content.prepend(style);
 
   // 이벤트 바인딩
-  document.getElementById('btn-back').addEventListener('click', () => { window.close(); });
+
   document.getElementById('btn-search').addEventListener('click', updateTable);
   document.getElementById('btn-reset').addEventListener('click', () => {
     document.getElementById('f-from').value = todayStr;
