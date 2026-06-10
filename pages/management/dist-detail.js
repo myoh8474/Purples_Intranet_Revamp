@@ -189,7 +189,6 @@ function renderDetail(m, container) {
         ${typeBadgeHtml}
       </div>
       <div class="detail-header__actions">
-        <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="window.location.href='distribute.html'">← 회원분배 목록</button>
       </div>
     </div>
 

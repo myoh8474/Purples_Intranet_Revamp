@@ -84,9 +84,6 @@ content.innerHTML = `
       <h1 class="page-header__title">정회원 관리</h1>
       <p class="page-header__subtitle">정회원 리스트 조회 및 관리</p>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn--outline btn--sm" id="btn-reg-manager">담당자 일부변경</button>
-    </div>
   </div>
 
   <!-- 통합 필터 테이블 -->
@@ -165,9 +162,11 @@ content.innerHTML = `
     <button class="btn btn--reset btn--sm" id="btn-reset" style="display:none">초기화</button>
   </div>
 
-  <!-- 건수 + 컴러범례 + 테이블 -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;flex-wrap:wrap;gap:8px">
-    <div style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="reg-count"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="reg-count"></span>
+      <button class="btn btn--outline btn--sm" id="btn-reg-manager" style="font-size:11px;padding:3px 10px">담당자 일부변경</button>
+    </div>
     <div style="display:flex;gap:14px;align-items:center;font-size:11px;color:#555">
       <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#fde2e2;border:1px solid #f87171;display:inline-block"></span>최종미팅 30일 초과</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#fef3c7;border:1px solid #f59e0b;display:inline-block"></span>소개장 30일 초과</span>
@@ -407,7 +406,7 @@ function applyFilters(resetPage) {
     <td class="tc">${m.gender}</td>
     <td class="tc">${m.age}세</td>
     <td class="tc">${m.brand}</td>
-    <td class="tc">${m.status}</td>
+    <td class="tc">${['임시교제','교제','외부교제'].includes(m.status) ? `<a href="${detailUrl(m.id)}" target="_blank" style="color:#6366f1;text-decoration:underline;font-weight:600;cursor:pointer">${m.status}</a>` : m.status}</td>
     <td class="tc">${m.program}</td>
     <td class="tc">${m.rejoinCount || 1}</td>
     <td class="tc">${m.region || '-'}</td>
@@ -557,14 +556,55 @@ document.getElementById('btn-reg-manager').addEventListener('click', () => {
   const checks = document.querySelectorAll('.reg-check:checked');
   if (checks.length === 0) { Toast.show('변경할 회원을 선택하세요.', 'warning'); return; }
 
+  // 선택된 회원 이름 목록
+  const selectedNames = Array.from(checks).map(c => {
+    const row = c.closest('tr');
+    const nameCell = row?.querySelector('td:nth-child(4)');
+    return nameCell ? nameCell.textContent.trim().split('\n')[0] : '';
+  }).filter(Boolean);
+  const namePreview = selectedNames.length <= 3 
+    ? selectedNames.join(', ') 
+    : selectedNames.slice(0,3).join(', ') + ` 외 ${selectedNames.length - 3}명`;
+
   Modal.show({
-    title: `담당자 일부변경 (${checks.length}명)`,
+    title: `담당자 일부변경`,
     content: `
-      <p style="margin-bottom:16px;color:var(--text-secondary);font-size:var(--font-size-sm)">선택된 회원의 담당자를 변경합니다.</p>
-      <div class="form-group"><label class="form-label">매칭 매니저</label><select class="form-select" id="modal-match-mgr">${MATCH_MANAGERS.map(m=>`<option>${m}</option>`).join('')}</select></div>
-      <div class="form-group"><label class="form-label">변경사유</label><select class="form-select"><option>담당자 변경</option><option>지사 이동</option><option>매니저 퇴사</option><option>기타</option></select></div>
+      <div style="padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-light);margin-bottom:16px;font-size:12px">
+        <strong>선택 회원 (${checks.length}명):</strong> <span style="color:var(--text-secondary)">${namePreview}</span>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">변경할 매니저 <span style="color:#e53e3e">*</span></label>
+        <select class="form-select" id="modal-match-mgr" style="width:100%">
+          <option value="">매니저를 선택하세요</option>
+          ${MATCH_MANAGERS.map(m=>`<option>${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">변경사유 <span style="color:#e53e3e">*</span></label>
+        <select class="form-select" id="modal-change-reason" style="width:100%">
+          <option value="">매니저변경 사유</option>
+          <option>담당매니저 퇴사</option>
+          <option>지사로 이관</option>
+          <option>팀 변동으로 인한 인계</option>
+          <option>지사내 매칭업무 분할</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">비고</label>
+        <textarea class="form-input" id="modal-change-note" rows="2" placeholder="변경 사유 상세 입력 (선택)" style="width:100%;resize:vertical"></textarea>
+      </div>
     `,
-    footer: `<button class="btn btn--secondary" onclick="document.getElementById('modal-root').innerHTML=''">취소</button><button class="btn btn--primary" onclick="document.getElementById('modal-root').innerHTML='';alert('변경 완료')">변경</button>`,
+    footer: `
+      <button class="btn btn--secondary" onclick="document.getElementById('modal-root').innerHTML=''">취소</button>
+      <button class="btn btn--primary" id="btn-modal-change" onclick="
+        var mgr = document.getElementById('modal-match-mgr').value;
+        var reason = document.getElementById('modal-change-reason').value;
+        if(!mgr){ alert('변경할 매니저를 선택하세요.'); return; }
+        if(!reason){ alert('변경사유를 선택하세요.'); return; }
+        document.getElementById('modal-root').innerHTML='';
+        Toast.show(mgr + '으로 ' + ${checks.length} + '명 담당자 변경 완료','success');
+      ">변경</button>
+    `,
   });
 });
 

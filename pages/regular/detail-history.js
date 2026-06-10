@@ -96,12 +96,25 @@ export function bindHistoryPopup(m) {
     } else if (category === '프로그램') {
       list = (m.programHistory || []).map(function(h) { return { date: h.date, content: h.note || '-', detail: h.program + ' (' + Formatters.money(h.totalFee) + ')', processor: h.changer || '-' }; });
     } else if (category === '미팅횟수') {
-      list = (m.meetingCountHistory || []).map(function(h) { return { date: h.date, content: h.reason || '-', detail: h.before + '회→' + h.after + '회', processor: h.changer || '-' }; });
+      list = (m.meetingCountHistory || [
+        { date: '2024-06-20', before: 5, after: 7, changer: '박수진' },
+        { date: '2025-01-15', before: 7, after: 10, changer: '김지현' },
+        { date: '2025-08-10', before: 10, after: 12, changer: '이다슨' },
+      ]).map(function(h) { return { date: h.date, before: (h.before != null ? h.before + '회' : '-'), after: (h.after != null ? h.after + '회' : '-'), processor: h.changer || '-' }; });
     } else if (category === '만료일') {
-      list = (m.statusHistory || []).filter(function(h) { return (h.reason || '').indexOf('만료') > -1 || (h.to || '').indexOf('만료') > -1; }).map(function(h) { return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-' }; });
-      if (list.length === 0 && m.expiryDate) list = [{ date: m.joinDate, content: '최초 설정', detail: '만료일: ' + Formatters.date(m.expiryDate), processor: '-' }];
+      list = (m.expiryHistory || [
+        { date: '2024-03-15', beforeDate: '2025.03.14', afterDate: '2025.06.14', reason: '특별기간연장 (신청서 서명완료)', processor: '박수진' },
+        { date: '2025-06-10', beforeDate: '2025.06.14', afterDate: '2025.09.14', reason: '횟수 미소진 연장', processor: '이다슨' },
+        { date: '2025-09-01', beforeDate: '2025.09.14', afterDate: '2026.03.31', reason: '재계약 연장', processor: '오세은' },
+      ]).map(function(h) { return { date: h.date, beforeDate: h.beforeDate || '-', afterDate: h.afterDate || '-', reason: h.reason || '-', processor: h.processor || '-' }; });
     } else if (category === '가입횟수') {
-      list = (m.rejoinHistory || []).map(function(h) { return { date: h.date, content: h.no + '가입 (' + (h.contractType || '-') + ')', detail: h.program + ' → ' + (h.status || '-'), processor: h.manager || '-' }; });
+      list = (m.rejoinHistory || [
+        { date: '2020-06-10', no: 1, contractType: '횟수제', period: '2020.06.10 ~ 2021.06.09', meetingCount: 5, manager: '박수진' },
+        { date: '2021-08-20', no: 2, contractType: '기간제', period: '2021.08.20 ~ 2022.08.19', meetingCount: 4, manager: '김지현' },
+        { date: '2022-11-05', no: 3, contractType: '횟수제', period: '2022.11.05 ~ 2023.11.04', meetingCount: 6, manager: '김지현' },
+        { date: '2024-03-15', no: 4, contractType: '인증제', period: '2024.03.15 ~ 2025.03.14', meetingCount: 3, manager: '이다슨' },
+        { date: '2025-04-01', no: 5, contractType: '기간제', period: '2025.04.01 ~ 2026.03.31', meetingCount: 2, manager: '오세은' },
+      ]).map(function(h) { return { joinDate: h.date, no: h.no, contractType: h.contractType || '-', period: h.period || '-', meetingCount: h.meetingCount != null ? h.meetingCount + '회' : '-', manager: h.manager || '-' }; });
     } else if (category === '매칭매니저' || category === '상담매니저' || category === '지사') {
       list = (m.statusHistory || []).filter(function(h) { return (h.reason || '').indexOf(category) > -1; }).map(function(h) { return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-' }; });
       if (list.length === 0) list = [{ date: m.joinDate, content: '최초 배정', detail: category + ': ' + (category === '매칭매니저' ? m.matchingManager : category === '상담매니저' ? m.consultantManager : m.branch) || '-', processor: '-' }];
@@ -136,39 +149,106 @@ export function bindHistoryPopup(m) {
         + '</tbody></table></div>';
     }
 
-    var colCount = isStatusChange ? 6 : 4;
-    var rows = list.length > 0
-      ? list.slice(0, 20).map(function(h) {
-          var attHtml = '';
-          if (isStatusChange) {
-            var att = getAttachment(h);
-            attHtml = att
-              ? '<a href="#" class="att-view" data-doc-id="' + att.docId + '" data-doc-name="' + att.name + '" data-doc-type="' + att.type + '" style="color:#3b82f6;text-decoration:none;font-weight:600;font-size:11px">[첨부서류 다운로드]</a>'
-              : '<span style="color:var(--text-muted)">—</span>';
-          }
-          return '<tr>'
-            + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
-            + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.content || '-') + '</td>'
-            + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.reserveDate || '-') + '</td>' : '')
-            + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.detail || '-') + '</td>'
-            + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
-            + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + attHtml + '</td>' : '')
-            + '</tr>';
-        }).join('')
-      : '<tr><td colspan="' + colCount + '" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+    var isRejoin = (category === '가입횟수');
+    var isExpiry = (category === '만료일');
+    var isMeeting = (category === '미팅횟수');
+    var colCount = isStatusChange ? 6 : isRejoin ? 6 : isExpiry ? 5 : isMeeting ? 4 : 4;
+    var rows = '';
 
-    Modal.show({
-      title: '<span style="color:' + catInfo.color + ';font-weight:700">' + catInfo.label + '</span> 변경이력',
-      size: 'xl',
-      content: statusForm
-        + '<div style="max-height:' + (isStatusChange ? '380px' : '450px') + ';overflow-y:auto">'
-        + '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;border-collapse:collapse"><thead><tr>'
-        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
+    if (isRejoin) {
+      rows = list.length > 0
+        ? list.slice(0, 20).map(function(h) {
+            return '<tr>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;white-space:nowrap">' + (h.joinDate ? Formatters.date(h.joinDate) : '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;font-weight:600">' + (h.no || '-') + '가입</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.contractType || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.period || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.meetingCount || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.manager || '-') + '</td>'
+              + '</tr>';
+          }).join('')
+        : '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+    } else if (isMeeting) {
+      rows = list.length > 0
+        ? list.slice(0, 20).map(function(h) {
+            return '<tr>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.before || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;font-weight:600;color:#f59e0b">' + (h.after || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
+              + '</tr>';
+          }).join('')
+        : '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+    } else if (isExpiry) {
+      rows = list.length > 0
+        ? list.slice(0, 20).map(function(h) {
+            return '<tr>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.beforeDate || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;font-weight:600;color:#10b981">' + (h.afterDate || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.reason || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
+              + '</tr>';
+          }).join('')
+        : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+    } else {
+      rows = list.length > 0
+        ? list.slice(0, 20).map(function(h) {
+            var attHtml = '';
+            if (isStatusChange) {
+              var att = getAttachment(h);
+              attHtml = att
+                ? '<a href="#" class="att-view" data-doc-id="' + att.docId + '" data-doc-name="' + att.name + '" data-doc-type="' + att.type + '" style="color:#3b82f6;text-decoration:none;font-weight:600;font-size:11px">[첨부서류 다운로드]</a>'
+                : '<span style="color:var(--text-muted)">—</span>';
+            }
+            return '<tr>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.content || '-') + '</td>'
+              + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.reserveDate || '-') + '</td>' : '')
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.detail || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
+              + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + attHtml + '</td>' : '')
+              + '</tr>';
+          }).join('')
+        : '<tr><td colspan="' + colCount + '" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+    }
+
+    // 테이블 헤더 결정
+    var thead = '';
+    if (isRejoin) {
+      thead = '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">가입일</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">가입차수</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">계약형태</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">기간</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">미팅횟수</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">상담매니저</th>';
+    } else if (isMeeting) {
+      thead = '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경 전 미팅횟수</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경 후 미팅횟수</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">처리자</th>';
+    } else if (isExpiry) {
+      thead = '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경전 날짜</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경된 날짜</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경사유</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">처리자</th>';
+    } else {
+      thead = '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
         + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">' + (isStatusChange ? '변경사유' : '내용') + '</th>'
         + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">예약일</th>' : '')
         + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경전→변경후</th>'
         + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">매니저</th>'
-        + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px;width:24%">첨부</th>' : '')
+        + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px;width:24%">첨부</th>' : '');
+    }
+
+    Modal.show({
+      title: isRejoin ? '<span style="color:' + catInfo.color + ';font-weight:700">가입이력</span>' : '<span style="color:' + catInfo.color + ';font-weight:700">' + catInfo.label + '</span> 변경이력',
+      size: 'xl',
+      content: statusForm
+        + '<div style="max-height:' + (isStatusChange ? '380px' : '450px') + ';overflow-y:auto">'
+        + '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;border-collapse:collapse"><thead><tr>'
+        + thead
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
     });
 

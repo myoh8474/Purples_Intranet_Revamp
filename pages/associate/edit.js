@@ -19,7 +19,7 @@ const REGIONS = ['서울','부산','대구','광주','인천','대전','울산',
 const EDUCATIONS = ['고졸','전문대졸','대졸','석사','박사'];
 const JOBS = ['회사원','공무원','전문직','자영업','프리랜서','교육직','의료직','금융직','IT/개발','연구직','학생','무직','기타'];
 const CHANNELS = ['가입비견적','결혼테스트','네이버예약','네이버커플','무료상담','블라인드커플','실시간상담','이상형매칭','카카오커플','MBTI테스트','TV광고','구글커플','메타커플','당근커플','대표와상담','기타'];
-const BRANCHES = [{code:'1',name:'퍼플스본사'},{code:'2',name:'퍼플스부산'},{code:'3',name:'퍼플스대전'},{code:'4',name:'퍼플스대구'},{code:'5',name:'퍼플스광주'},{code:'8',name:'퍼플스경기'},{code:'6',name:'디노블본사'},{code:'7',name:'디노블부산'},{code:'9',name:'르매리'}];
+const BRANCHES = [{code:'1',name:'본사'},{code:'8',name:'경기'},{code:'3',name:'대전'},{code:'4',name:'대구'},{code:'2',name:'부산'},{code:'5',name:'광주'}];
 
 const sel = (arr, cur) => arr.map(v => `<option${v===cur?' selected':''}>${v}</option>`).join('');
 

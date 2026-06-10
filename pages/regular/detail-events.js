@@ -175,14 +175,39 @@ export function bindEvents(m) {
     }, 100);
   });
 
-  /* ── 특이사항 삭제 이벤트 위임 ── */
-  document.addEventListener('click', function(ev) {
-    var cautionDelBtn = ev.target.closest('.caution-del-btn');
-    if (cautionDelBtn) {
-      if (confirm('특이사항을 삭제하시겠습니까?')) {
-        cautionDelBtn.closest('div[style]').remove();
-        Toast.show('특이사항이 삭제되었습니다.', 'info');
-      }
-    }
+  /* ── 기본정보 특이사항 필터 ── */
+  var snBasicFilter = document.getElementById('sn-basic-filter');
+  if (snBasicFilter) snBasicFilter.addEventListener('change', function() {
+    var catVal = snBasicFilter.value;
+    document.querySelectorAll('.sn-basic-row').forEach(function(row) {
+      var type = row.getAttribute('data-sn-type') || '';
+      row.style.display = (catVal === '전체' || type === catVal) ? '' : 'none';
+    });
+  });
+
+  /* ── 기본정보 특이사항 등록 → 매칭정보 등록과 동일 모달 ── */
+  var snBasicAddBtn = document.getElementById('btn-add-special-note-basic');
+  if (snBasicAddBtn) snBasicAddBtn.addEventListener('click', function() {
+    Modal.show({
+      title: '특이사항 등록',
+      size: 'md',
+      content: '<div style="margin-bottom:12px">'
+        + '<div style="margin-bottom:10px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">구분</label>'
+        + '<select class="form-input" id="sn-basic-type" style="width:160px"><option value="관리">관리</option><option value="상담">상담</option><option value="매칭">매칭</option></select></div>'
+        + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">특이사항 메모</label>'
+        + '<textarea class="form-input" id="sn-basic-content" rows="4" style="width:100%;font-size:13px;resize:vertical" placeholder="특이사항을 입력하세요..."></textarea></div>'
+        + '<div style="text-align:right"><button class="btn btn--ghost btn--sm" id="sn-basic-cancel" style="margin-right:6px">취소</button><button class="btn btn--primary btn--sm" id="sn-basic-submit">등록</button></div>',
+    });
+    setTimeout(function() {
+      var cancelBtn = document.getElementById('sn-basic-cancel');
+      if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+      var submitBtn = document.getElementById('sn-basic-submit');
+      if (submitBtn) submitBtn.addEventListener('click', function() {
+        var content = document.getElementById('sn-basic-content').value.trim();
+        if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
+        Modal.hide();
+        Toast.show('특이사항이 등록되었습니다.', 'success');
+      });
+    }, 100);
   });
 }

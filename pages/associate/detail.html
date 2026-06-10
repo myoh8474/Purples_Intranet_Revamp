@@ -59,23 +59,27 @@
     }
 
     .section {
-      margin-bottom: 20px;
+      margin-bottom: 0;
     }
 
     .section__title {
-      font-size: var(--font-size-base);
-      font-weight: 700;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 0;
+      padding: 10px 14px;
+      border-bottom: 1px solid #cbd5e1;
+      background: #fff;
     }
 
     .detail-card {
       background: #fff;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-light);
       border-radius: 0;
-      padding: 14px 16px;
+      padding: 0;
       margin-bottom: 12px;
       box-shadow: none;
+      overflow: hidden;
     }
 
     .detail-card .section {
@@ -83,13 +87,30 @@
     }
 
     .detail-card .section__title {
-      margin-bottom: 10px;
-      padding-bottom: 0;
-      border: none !important;
-      font-size: 13px;
+      margin-bottom: 0;
+      padding: 10px 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0 !important;
+      font-size: 14px;
       font-weight: 800;
-      color: #333;
+      color: #1e293b;
     }
+
+    /* 카드 내 테이블 외곽 보더 제거 — 카드 보더와 겹침 방지 */
+    .detail-card .data-table,
+    .detail-card .info-table {
+      border: none;
+    }
+    .detail-card .data-table th:first-child,
+    .detail-card .data-table td:first-child,
+    .detail-card .info-table td:first-child { border-left: none; }
+    .detail-card .data-table th:last-child,
+    .detail-card .data-table td:last-child,
+    .detail-card .info-table td:last-child { border-right: none; }
+    .detail-card .data-table tbody tr:last-child td,
+    .detail-card .info-table tbody tr:last-child td { border-bottom: none; }
+    .detail-card .data-table thead tr:first-child th,
+    .detail-card .info-table tbody tr:first-child td { border-top: none; }
 
     .detail-card .action-bar {
       border-top: none;
@@ -512,9 +533,51 @@
         initPage(found || null);
       });
     } else {
-      // 기존 숫자 ID Mock 호환
+      // 기존 숫자 ID Mock 호환 — 인라인 Mock 생성
       var numId = parseInt(memberId);
-      var found = MockAssociates.find(function (x) { return x.id === numId; });
+      var found = null;
+
+      // 1) compat에서 로드된 MockAssociates 먼저 검색
+      if (typeof MockAssociates !== 'undefined' && MockAssociates.length > 0) {
+        found = MockAssociates.find(function (x) { return x.id === numId; });
+      }
+
+      // 2) 못 찾으면 인라인으로 Mock 데이터 직접 생성
+      if (!found) {
+        console.log('[detail] MockAssociates에서 ID ' + numId + ' 미발견, 인라인 Mock 생성...');
+        var _C = ['김지은','박서연','이하나','정민수','최유리','한소희','강다연','윤채영','임서진','조예린'];
+        var _NM = ['김민준','이서준','박도윤','최하준','정우진','강건우','조현우','윤태민','임지호','한성민','송재원','오승현','배준서','류민재','남동현'];
+        var _NF = ['김서연','이하은','박지유','최수아','정채원','강예린','조윤서','윤다인','임소율','한나윤','송하린','오서윤','배민지','류지안','남수빈'];
+        var _ED = ['고졸','전문대졸','대졸','석사','박사'];
+        var _JB = ['회사원','공무원','전문직','자영업','프리랜서','교육직','의료직','금융직','IT/개발','연구직'];
+        var _RG = ['서울','부산','대구','광주','인천','대전','울산','경기','강원','세종'];
+        var _CH = ['카카오커플','네이버커플','구글커플','블라인드커플','실시간상담','전화문의','지인소개','무료상담','커플테스타','이상형매칭'];
+        var _ST = ['부재중(미컨텍)','장기상담(컨텍)','낮음(컨텍)','보통(컨텍)','높음(컨텍)','가입보류(컨텍)','방문상담','가입중'];
+        var _p = function(a){return a[Math.floor(Math.random()*a.length)];};
+        var _ph = function(){return '010'+String(Math.floor(Math.random()*90000000)+10000000);};
+        var _all = [], _sq = 1;
+
+        // (a) 분배 완료 30명
+        for(var ci=0;ci<_C.length;ci++){for(var cj=0;cj<3;cj++){var _g=Math.random()>0.45?'여':'남';var _b=new Date(1985+Math.floor(Math.random()*15),Math.floor(Math.random()*12),1+Math.floor(Math.random()*28));_all.push({id:_sq++,name:_p(_g==='남'?_NM:_NF),phone:_ph(),gender:_g,birthDate:_b.toISOString(),age:Formatters.age(_b.toISOString()),education:_p(_ED),school:'-',job:_p(_JB),company:'-',region:_p(_RG),branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:_p(_ST),channel:_p(_CH),consultant:_C[ci],registeredAt:new Date().toISOString(),distributedAt:new Date().toISOString(),lastContactAt:new Date().toISOString(),height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});}}
+        // (b) 신규 15명
+        var _NW=[{n:'김하늘',p:'01033445566',g:'여',b:'1995-03-15'},{n:'이준호',p:'01044556677',g:'남',b:'1990-07-22'},{n:'박서현',p:'01055667788',g:'여',b:'1993-11-08'},{n:'정다윤',p:'01066778899',g:'여',b:'1997-01-30'},{n:'강현우',p:'01077889900',g:'남',b:'1988-09-12'},{n:'윤서영',p:'01033557799',g:'여',b:'1996-04-18'},{n:'임태현',p:'01044668800',g:'남',b:'1989-10-07'},{n:'송미래',p:'01055779911',g:'여',b:'1994-07-22'},{n:'배성호',p:'01066880022',g:'남',b:'1991-03-30'},{n:'문하영',p:'01077991133',g:'여',b:'1998-06-11'},{n:'양동규',p:'01088002244',g:'남',b:'1992-02-28'},{n:'홍수진',p:'01099113355',g:'여',b:'1995-09-03'},{n:'신재민',p:'01011224466',g:'남',b:'1993-12-20'},{n:'권예슬',p:'01022335577',g:'여',b:'1996-08-07'},{n:'류건호',p:'01033446688',g:'남',b:'1990-05-14'}];
+        for(var ni=0;ni<_NW.length;ni++){_all.push({id:_sq++,name:_NW[ni].n,phone:_NW[ni].p,gender:_NW[ni].g,birthDate:_NW[ni].b+'T00:00:00Z',age:Formatters.age(_NW[ni].b),education:'대졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'기타',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});}
+        // (c) 소스외 4명
+        _all.push({id:_sq++,name:'조민수',phone:'01088990011',gender:'남',birthDate:'1992-05-20T00:00:00Z',age:Formatters.age('1992-05-20'),education:'고졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'무료상담',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});
+        _all.push({id:_sq++,name:'한동진',phone:'01099001122',gender:'남',birthDate:'1994-12-03T00:00:00Z',age:Formatters.age('1994-12-03'),education:'고졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'커플테스타',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});
+        _all.push({id:_sq++,name:'김영수',phone:'01011223344',gender:'남',birthDate:'1958-04-10T00:00:00Z',age:Formatters.age('1958-04-10'),education:'대졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'자녀결혼',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});
+        _all.push({id:_sq++,name:'박진영',phone:'0201234',gender:'남',birthDate:'1991-06-15T00:00:00Z',age:Formatters.age('1991-06-15'),education:'대졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'기타',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});
+        // (d) 중복 2명
+        _all.push({id:_sq++,name:'김서연B',phone:'01012345678',gender:'여',birthDate:'1993-02-14T00:00:00Z',age:Formatters.age('1993-02-14'),education:'대졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'카카오톡',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});
+        _all.push({id:_sq++,name:'최수아B',phone:'01098765432',gender:'여',birthDate:'1995-07-19T00:00:00Z',age:Formatters.age('1995-07-19'),education:'대졸',school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'네이버커플',consultant:'',registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:0,weight:0,bloodType:'',children:'',religion:'',hobby:'',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});
+        // (e) 재컨텍 5명 (기간만료)
+        var _RC=[{n:'장윤정',p:'01077112233',g:'여',b:'1991-08-14',ed:'대졸',mg:'김지은'},{n:'오동현',p:'01088223344',g:'남',b:'1987-02-28',ed:'석사',mg:'정민수'},{n:'한지민',p:'01099334455',g:'여',b:'1993-12-05',ed:'대졸',mg:'최유리'},{n:'신동욱',p:'01011445566',g:'남',b:'1989-06-17',ed:'박사',mg:'한소희'},{n:'류하영',p:'01022556677',g:'여',b:'1995-10-22',ed:'전문대졸',mg:'강다연'}];
+        for(var rc=0;rc<_RC.length;rc++){var _r=_RC[rc];_all.push({id:_sq++,name:_r.n,phone:_r.p,gender:_r.g,birthDate:_r.b+'T00:00:00Z',age:Formatters.age(_r.b),education:_r.ed,school:'-',job:'-',company:'-',region:'서울',branch:'본사',brand:'퍼플스',maritalStatus:'초혼',status:'컨텍전',channel:'기간만료(재컨텍)',consultant:_r.mg,registeredAt:new Date().toISOString(),distributedAt:'',lastContactAt:'',height:_r.g==='남'?175:162,weight:_r.g==='남'?72:52,bloodType:'A',children:'없음',religion:'무교',hobby:'여행',hope:'',email:'',telHome:'',telOffice:'',phone2:'',memo:'',duplicateEntries:[],contactHistory:[],sales:[]});}
+
+        found = _all.find(function(x){return x.id===numId;});
+        console.log('[detail] 인라인 Mock '+_all.length+'명 생성완료, ID='+numId+' → '+(found?found.name:'NOT FOUND'));
+      }
+
       initPage(found || null);
     }
 
@@ -776,15 +839,12 @@
         '<td>' +
         '<select id="reg-branch" class="form-select" style="font-size:11px">' +
         '<option value="">지사 선택</option>' +
-        '<option value="1">1 - 퍼플스본사</option>' +
-        '<option value="2">2 - 퍼플스부산</option>' +
-        '<option value="3">3 - 퍼플스대전</option>' +
-        '<option value="4">4 - 퍼플스대구</option>' +
-        '<option value="5">5 - 퍼플스광주</option>' +
-        '<option value="8">8 - 퍼플스경기</option>' +
-        '<option value="6">6 - 디노블본사</option>' +
-        '<option value="7">7 - 디노블부산</option>' +
-        '<option value="9">9 - 르매리</option>' +
+        '<option value="1">1 - 본사</option>' +
+        '<option value="8">8 - 경기</option>' +
+        '<option value="3">3 - 대전</option>' +
+        '<option value="4">4 - 대구</option>' +
+        '<option value="2">2 - 부산</option>' +
+        '<option value="5">5 - 광주</option>' +
         '</select>' +
         '</td>' +
         '<td class="lb">성별 <span style="color:#e53e3e;font-size:10px">*</span></td>' +
@@ -823,22 +883,22 @@
         '<td colspan="3">' +
         '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
         '<div style="text-align:center">' +
-        '<div id="photo-preview-1" style="width:90px;height:120px;border:2px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f8fafc;cursor:pointer;overflow:hidden" onclick="document.getElementById(\'photo-input-1\').click()">' +
-        '<span style="font-size:11px;color:#94a3b8">📷 프로필</span>' +
+        '<div id="photo-preview-1" style="width:90px;height:120px;border:2px dashed #ccc;border-radius:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;cursor:pointer;overflow:hidden" onclick="document.getElementById(\'photo-input-1\').click()">' +
+        '<span style="font-size:11px;color:#94a3b8">프로필</span>' +
         '</div>' +
         '<input type="file" id="photo-input-1" accept="image/*" style="display:none" onchange="previewPhoto(this,\'photo-preview-1\')" />' +
         '<div style="font-size:10px;color:#64748b;margin-top:4px">프로필 사진</div>' +
         '</div>' +
         '<div style="text-align:center">' +
-        '<div id="photo-preview-2" style="width:90px;height:120px;border:2px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f8fafc;cursor:pointer;overflow:hidden" onclick="document.getElementById(\'photo-input-2\').click()">' +
-        '<span style="font-size:11px;color:#94a3b8">📷 전신</span>' +
+        '<div id="photo-preview-2" style="width:90px;height:120px;border:2px dashed #ccc;border-radius:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;cursor:pointer;overflow:hidden" onclick="document.getElementById(\'photo-input-2\').click()">' +
+        '<span style="font-size:11px;color:#94a3b8">전신</span>' +
         '</div>' +
         '<input type="file" id="photo-input-2" accept="image/*" style="display:none" onchange="previewPhoto(this,\'photo-preview-2\')" />' +
         '<div style="font-size:10px;color:#64748b;margin-top:4px">전신 사진</div>' +
         '</div>' +
         '<div style="text-align:center">' +
-        '<div id="photo-preview-3" style="width:90px;height:120px;border:2px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f8fafc;cursor:pointer;overflow:hidden" onclick="document.getElementById(\'photo-input-3\').click()">' +
-        '<span style="font-size:11px;color:#94a3b8">📷 추가</span>' +
+        '<div id="photo-preview-3" style="width:90px;height:120px;border:2px dashed #ccc;border-radius:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;cursor:pointer;overflow:hidden" onclick="document.getElementById(\'photo-input-3\').click()">' +
+        '<span style="font-size:11px;color:#94a3b8">추가</span>' +
         '</div>' +
         '<input type="file" id="photo-input-3" accept="image/*" style="display:none" onchange="previewPhoto(this,\'photo-preview-3\')" />' +
         '<div style="font-size:10px;color:#64748b;margin-top:4px">추가 사진</div>' +
@@ -941,7 +1001,7 @@
         '<td class="lb" style="color:#aaa">재가입비 <span style="color:#e53e3e;font-size:10px">*</span></td><td><input type="text" id="reg-rejoin-amount" class="money-input" placeholder="0" style="text-align:right" oninput="formatMoneyField(this)" /><div style="font-size:10px;color:#aaa;margin-top:2px">※ 1가입 만료 후 결제</div></td>' +
         '<td class="lb" style="color:#aaa">성혼비 <span style="color:#e53e3e;font-size:10px">*</span></td><td><input type="text" id="reg-marriage-amount" class="money-input" placeholder="0" style="text-align:right" oninput="formatMoneyField(this)" /><div style="font-size:10px;color:#aaa;margin-top:2px">※ 성혼 시 결제</div></td>' +
         '</tr>' +
-        '<tr style="border-top:2px solid var(--border-light)">' +
+        '<tr style="border-top:1px solid var(--border-light)">' +
         '<td class="lb">입금일 <span style="color:#e53e3e;font-size:10px">*</span></td><td><input type="date" id="sales-deposit-date" value="2026-04-17" /></td>' +
         '<td class="lb">결제수단 <span style="color:#e53e3e;font-size:10px">*</span></td><td><select id="reg-pay-method" onchange="onPayMethodChange()"><option>현금</option><option>카드</option><option>계좌이체</option></select></td>' +
         '</tr>' +
@@ -2815,7 +2875,7 @@
         </div>
 
         <!-- ═══ 회원기본정보 (통합) ═══ -->
-        <div class="detail-card" style="margin-top:4px">
+        <div class="detail-card" style="margin-top:0">
           <div class="section">
             <div class="section__title">회원기본정보</div>
             <table class="info-table">
@@ -2896,13 +2956,13 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="detail-card" style="margin-bottom:0">
             <div class="section">
-              <div class="action-bar" style="margin-bottom:8px">
-                <div class="section__title" style="border:none;margin:0;padding:0">DB중복 신청현황</div>
-                <div class="action-bar__right">
+              <div class="section__title" style="display:flex;align-items:center;justify-content:space-between">
+                <span>DB중복 신청현황</span>
+                <span>
                   ${(m.duplicateEntries && m.duplicateEntries.length > 0)
                           ? '<span class="badge" style="background:#fef3c7;color:#92400e;font-size:11px;padding:3px 10px">⚠ ' + m.duplicateEntries.length + '건</span>'
                           : ''}
-                </div>
+                </span>
               </div>
               <table class="data-table" style="font-size:12px">
                 <thead><tr><th style="width:40px">No</th><th>유입경로(채널)</th><th style="width:100px">유입일자</th></tr></thead>
@@ -2934,11 +2994,11 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="detail-card" style="margin-bottom:0">
             <div class="section">
-              <div class="action-bar" style="margin-bottom:8px">
-                <div class="section__title" style="border:none;margin:0;padding:0">미팅상담 내역</div>
-                <div class="action-bar__right">
+              <div class="section__title" style="display:flex;align-items:center;justify-content:space-between">
+                <span>미팅상담 내역</span>
+                <span>
                   <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="showMeetingModal()">미팅예약 등록</button>
-                </div>
+                </span>
               </div>
               <table class="data-table" style="font-size:12px">
                 <thead><tr><th style="width:40px">No</th><th>등록일</th><th>미팅예약일</th><th>결과</th><th>결과등록일</th><th>작성자</th></tr></thead>
@@ -2950,9 +3010,9 @@
           </div>
           <div class="detail-card" style="margin-bottom:0">
             <div class="section">
-              <div class="action-bar" style="margin-bottom:8px">
-                <div class="section__title" style="border:none;margin:0;padding:0">전화상담 내역</div>
-                <div class="action-bar__right">
+              <div class="section__title" style="display:flex;align-items:center;justify-content:space-between">
+                <span>전화상담 내역</span>
+                <div style="display:flex;gap:6px">
                   <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="showCallRecordModal()">내역등록</button>
                   <button class="btn btn--sm" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333" onclick="showCallReserveModal()">상담예약</button>
                 </div>
@@ -2970,11 +3030,11 @@
         <!-- 인증서류 관리 -->
         <div class="detail-card">
           <div class="section">
-            <div class="action-bar" style="margin-bottom:8px">
-              <div class="section__title" style="border:none;margin:0;padding:0">📋 인증서류 관리</div>
-              <div class="action-bar__right">
+            <div class="section__title" style="display:flex;align-items:center;justify-content:space-between">
+              <span>인증서류 관리</span>
+              <span>
                 <button class="btn btn--primary btn--sm" style="font-size:11px" onclick="showCertDocModal()">서류등록</button>
-              </div>
+              </span>
             </div>
             <table class="data-table" style="font-size:12px">
               <thead><tr><th style="width:40px">No</th><th>구분</th><th style="width:80px">상태</th><th style="width:110px">발급일자</th><th>발급처</th><th style="width:110px">PDF 다운로드</th></tr></thead>

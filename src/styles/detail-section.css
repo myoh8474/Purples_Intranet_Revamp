@@ -117,7 +117,7 @@ td.val {
 .detail-header-bar__left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .detail-header-bar__name {

@@ -345,7 +345,7 @@ function bindTabEvents() {
         const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
         return `<div class="mgr-ac-item" data-mgr="${c}">
           <span>${c}</span>
-          <span class="mgr-ac-item__tag">${branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || ''}</span>
+          <span class="mgr-ac-item__tag">${branch?.name || ''}</span>
         </div>`;
       }).join('');
       acEl.classList.add('visible');
@@ -450,7 +450,7 @@ function openMgrModal() {
         html += `<label class="mgr-modal__item${checked ? ' checked' : ''}">
           <input type="checkbox" class="mm-mgr-check" value="${mgr}" ${checked ? 'checked' : ''}>
           <span class="mgr-modal__item-name">${mgr}</span>
-          <span class="mgr-modal__item-tag">${branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || ''}</span>
+          <span class="mgr-modal__item-tag">${branch?.name || ''}</span>
         </label>`;
       });
     });
@@ -581,7 +581,7 @@ function renderActionButtons() {
   const btnArea = document.getElementById('action-buttons');
   if (!btnArea) return;
   const stats = getManagerStats();
-  btnArea.innerHTML = `<select class="form-input form-input--sm" id="dist-mgr-select" style="height:28px;width:140px">
+  btnArea.innerHTML = `<select class="form-select form-input--sm" id="dist-mgr-select" style="height:28px;width:160px">
     <option value="">매니저 선택</option>
     ${CONSULTANTS.map(c => {
       const cnt = stats[c] ? stats[c].total : 0;
@@ -590,7 +590,7 @@ function renderActionButtons() {
   </select>
   <button class="btn btn--primary btn--sm" id="btn-manual">상담매니저 등록</button>
   <button class="btn btn--outline btn--sm" id="btn-sourceout">소스외 처리</button>
-  ${currentTab === 'recontact' ? '<button class="btn btn--sm" id="btn-recall-reg" style="background:#7c3aed;color:#fff;border:none;font-weight:600">리콜대기 등록</button>' : ''}`;
+  ${currentTab === 'recontact' ? '<button class="btn btn--outline btn--sm" id="btn-recall-reg">리콜대기 등록</button>' : ''}`;
   document.getElementById('btn-manual').addEventListener('click', handleManualDist);
   document.getElementById('btn-sourceout').addEventListener('click', () => Toast.show('소스외 처리 기능은 추후 구현 예정입니다.', 'info'));
 
@@ -656,7 +656,7 @@ function renderTable(filtered) {
       return `<tr>
         <td class="tc"><input type="checkbox" class="dist-check" value="${m.id}"></td>
         <td class="tc">${no}</td>
-        <td class="tc"><a href="dist-detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none">${m.name}</a></td>
+        <td class="tc"><a href="../regular/detail.html?id=${m.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none">${m.name}</a></td>
         <td class="tc">${m.gender}</td><td class="tc">${m.age}세</td>
         <td class="tc">${Formatters.phone(m.phone)}</td><td class="tc">${Formatters.date(m.registeredAt)}</td>
         <td class="tc">${info.program || '-'}</td>

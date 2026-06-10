@@ -6,6 +6,7 @@ import { Toast } from '@components/Toast.js';
 import { AssociateService } from '@services/associate.service.js';
 import { MockAssociates } from '@mock/associates.js';
 import { CONSULTANTS, ASSOCIATE_STATUSES, BRANCHES, CONSULTANT_BRANCH } from '@config/constants.js';
+import { ManagerPicker, renderManagerPickerHTML, getManagerPickerStyles } from '@components/ManagerPicker.js';
 
 initLayout({ pageId: 'associate-list', breadcrumbs: ['준회원 관리', '준회원 목록'] });
 const content = document.getElementById('content');
@@ -40,6 +41,7 @@ function saveChangeHistory(data){
 }
 
 let table=null;
+let mgrPicker=null;
 
 async function render(){
   const role=getRole();
@@ -115,14 +117,7 @@ async function render(){
       </td>
       <th>매니저</th>
       <td colspan="5">
-        <div class="select-wrap" style="width:200px"><select class="form-select form-input--sm" id="f-consult" style="width:100%">
-          <option value="">매니저 전체</option>
-          ${CONSULTANTS.map(c => {
-            const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
-            const bName = branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || '';
-            return `<option value="${c}">${c} (${bName})</option>`;
-          }).join('')}
-        </select></div>
+        ${renderManagerPickerHTML('amgr')}
       </td>
     </tr>
   </tbody>
@@ -137,7 +132,8 @@ async function render(){
   <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">검색결과 <span id="member-count" style="color:var(--accent)">0</span>명</div>
   <div style="display:flex;gap:8px">${roleButtons(role)}</div>
 </div>
-<div id="tbl"></div>`;
+<div id="tbl"></div>
+<style>${getManagerPickerStyles()}</style>`;
 
   const initData=getStatusData();
 
@@ -169,7 +165,8 @@ async function render(){
     let d=getStatusData();
     const gv=id=>document.getElementById(id)?.value||'';
     if(gv('f-branch')) d=d.filter(x=>x.branch===gv('f-branch'));
-    if(gv('f-consult')) d=d.filter(x=>x.consultant===gv('f-consult'));
+    const selMgrs = mgrPicker ? mgrPicker.getSelected() : [];
+    if(selMgrs.length > 0) d=d.filter(x=>selMgrs.includes(x.consultant));
     if(gv('f-gender')) d=d.filter(x=>x.gender===gv('f-gender'));
     if(gv('f-marital')) d=d.filter(x=>x.maritalStatus===gv('f-marital'));
     if(gv('f-edu')) d=d.filter(x=>x.education===gv('f-edu'));
@@ -182,7 +179,16 @@ async function render(){
     updateCount(d.length);
   }
 
-  document.getElementById('btn-search').onclick=applyFilters;
+  document.getElementById('btn-search').onclick=()=>{
+    applyFilters();
+  };
+  // 매니저 Picker 초기화
+  mgrPicker = new ManagerPicker({
+    inputId: 'amgr-search-input',
+    modalBtnId: 'amgr-open-modal',
+    tagsId: 'amgr-tags',
+    onChange: () => applyFilters()
+  });
   document.getElementById('f-keyword').onkeydown=e=>{if(e.key==='Enter')applyFilters();};
   document.getElementById('btn-new').onclick=()=>{ window.location.href='register.html'; };
   document.getElementById('role-sw').onchange=e=>{localStorage.setItem('purples_role',e.target.value);render();Toast.show(`권한: ${roleName(e.target.value)}`,'info');};
@@ -190,12 +196,13 @@ async function render(){
   // 초기화 버튼
   document.getElementById('btn-reset')?.addEventListener('click',()=>{
     ['f-keyword'].forEach(id=>document.getElementById(id).value='');
-    ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch','f-consult'].forEach(id=>document.getElementById(id).value='');
+    ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch'].forEach(id=>document.getElementById(id).value='');
+    if(mgrPicker) mgrPicker.reset();
     applyFilters();
   });
 
   // 드롭다운 변경 시 자동 검색
-  ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch','f-consult'].forEach(id=>{
+  ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch'].forEach(id=>{
     document.getElementById(id)?.addEventListener('change', applyFilters);
   });
 

@@ -12,14 +12,14 @@ const REG_STATUSES = ['신규','인증중','활동대기','활동','활동','활
 const MATCH_MANAGERS = ['김태희','이수현','박지영','최은별','한서진','정유리','서다현','강보라'];
 
 const MANAGER_DATA = [
-  { name: '김태희', branch: '퍼플스본사', brand: '퍼플스' },
-  { name: '이수현', branch: '퍼플스본사', brand: '퍼플스' },
-  { name: '박지영', branch: '디노블본사', brand: '디노블' },
-  { name: '최은별', branch: '퍼플스부산', brand: '퍼플스' },
-  { name: '한서진', branch: '디노블부산', brand: '디노블' },
-  { name: '정유리', branch: '르매리',     brand: '르매리' },
-  { name: '서다현', branch: '퍼플스경기', brand: '퍼플스' },
-  { name: '강보라', branch: '퍼플스대전', brand: '퍼플스' },
+  { name: '김태희', branch: '본사', brand: '퍼플스' },
+  { name: '이수현', branch: '본사', brand: '퍼플스' },
+  { name: '박지영', branch: '본사', brand: '디노블' },
+  { name: '최은별', branch: '부산', brand: '퍼플스' },
+  { name: '한서진', branch: '부산', brand: '디노블' },
+  { name: '정유리', branch: '본사', brand: '르매리' },
+  { name: '서다현', branch: '경기', brand: '퍼플스' },
+  { name: '강보라', branch: '대전', brand: '퍼플스' },
 ];
 
 function getManagerBrand(name) {
@@ -31,15 +31,15 @@ const CONSULTANTS = ['이지연','김민희','박수정','최영미','한소영'
 const EDUCATIONS = ['고졸','전문대졸','대졸','석사','박사'];
 const JOBS = ['회사원','공무원','전문직','자영업','프리랜서','교육직','의료직','금융직','IT/개발','연구직'];
 const REGIONS = ['서울','부산','대구','광주','인천','대전','울산','경기','강원','세종','충북','충남','경북','경남','전북','전남','제주'];
-const BRANCHES = ['퍼플스본사','퍼플스부산','퍼플스대전','퍼플스대구','퍼플스광주','퍼플스경기','디노블본사','디노블부산','르매리'];
+const BRANCHES = ['본사','경기','대전','대구','부산','광주'];
 
 const BRANCH_CODE_MAP = {
-  '퍼플스본사': '1', '퍼플스부산': '2', '퍼플스대전': '3', '퍼플스대구': '4',
-  '퍼플스광주': '5', '퍼플스경기': '6', '디노블본사': '7', '디노블부산': '8', '르매리': '9',
+  '본사': '1', '경기': '8', '대전': '3', '대구': '4',
+  '부산': '2', '광주': '5',
 };
 const BRANCH_BRAND_MAP = {
-  '퍼플스본사': '퍼플스', '퍼플스부산': '퍼플스', '퍼플스대전': '퍼플스', '퍼플스대구': '퍼플스',
-  '퍼플스광주': '퍼플스', '퍼플스경기': '퍼플스', '디노블본사': '디노블', '디노블부산': '디노블', '르매리': '르매리',
+  '본사': '퍼플스', '경기': '퍼플스', '대전': '퍼플스', '대구': '퍼플스',
+  '부산': '퍼플스', '광주': '퍼플스',
 };
 
 const NAMES_M = ['박서준','이정훈','정민호','한성민','김도현','강준혁','오시환','윤태민','조현우','송재원','배준서','류민재','남동현','임지호','권세진','김하늘','한유진'];
@@ -514,7 +514,10 @@ if (useMock()) {
         var hist = [];
         for (var ri = 0; ri < cnt; ri++) {
           var rDate = new Date(joinDate.getTime() - (cnt - 1 - ri) * 365 * 86400000);
-          hist.push({ no: ri + 1, date: rDate.toISOString(), program: randomPick(PROGRAMS), fee: randomPick([3000000,5000000,7000000,10000000]), contractType: randomPick(['횟수제','기간제']), manager: randomPick(CONSULTANTS), status: ri < cnt - 1 ? randomPick(['만료','약정만료','탈회']) : status });
+          var rEnd = new Date(rDate.getTime() + 365 * 86400000);
+          var rPeriod = rDate.toISOString().substring(0,10).replace(/-/g,'.') + ' ~ ' + rEnd.toISOString().substring(0,10).replace(/-/g,'.');
+          var rMeetCount = Math.floor(Math.random() * 8) + 2;
+          hist.push({ no: ri + 1, date: rDate.toISOString(), program: randomPick(PROGRAMS), fee: randomPick([3000000,5000000,7000000,10000000]), contractType: randomPick(['횟수제','기간제','인증제']), period: rPeriod, meetingCount: rMeetCount, manager: randomPick(CONSULTANTS), status: ri < cnt - 1 ? randomPick(['만료','약정만료','탈회']) : status });
         }
         return hist;
       })(),
@@ -533,11 +536,11 @@ if (useMock()) {
 
   // ── 성혼/소송 관련 회원 (명시적 데이터) ──
   const marriageMembers = [
-    { id: 901, name: '이상훈', gender: '남', age: 38, brand: '퍼플스', branch: '퍼플스본사', program: '다이아몬드 A', status: '성혼', marriageConfirm: '소송중', memberId: '1m00901', matchingManager: '김태희', consultantManager: '이지연', meetingCount: 8, contractType: '횟수제', contractCount: 12, joinDate: '2025-03-15', region: '서울', maritalHistory: '미혼', phone: '01099990001', rejoinCount: 1 },
-    { id: 902, name: '박지영', gender: '여', age: 34, brand: '퍼플스', branch: '퍼플스본사', program: '플래티늄(루비) A', status: '활동', marriageConfirm: '소송중', memberId: '1f00902', matchingManager: '이수현', consultantManager: '김민희', meetingCount: 5, contractType: '횟수제', contractCount: 8, joinDate: '2025-06-20', region: '경기', maritalHistory: '미혼', phone: '01099990002', rejoinCount: 1 },
-    { id: 903, name: '김민수', gender: '남', age: 41, brand: '디노블', branch: '디노블본사', program: '시크릿 A', status: '성혼', marriageConfirm: '성혼', memberId: '7m00903', matchingManager: '박지영', consultantManager: '박수정', meetingCount: 10, contractType: '횟수제', contractCount: 10, joinDate: '2024-11-05', region: '서울', maritalHistory: '미혼', phone: '01099990003', rejoinCount: 1 },
-    { id: 904, name: '최서연', gender: '여', age: 32, brand: '퍼플스', branch: '퍼플스부산', program: '골드(사파이어) A', status: '결혼예정', marriageConfirm: '확인중', memberId: '2f00904', matchingManager: '최은별', consultantManager: '최영미', meetingCount: 6, contractType: '횟수제', contractCount: 8, joinDate: '2025-01-10', region: '부산', maritalHistory: '미혼', phone: '01099990004', rejoinCount: 1 },
-    { id: 905, name: '정태호', gender: '남', age: 36, brand: '퍼플스', branch: '퍼플스경기', program: '플래티늄(루비) B', status: '교제', marriageConfirm: '성혼비 없음', memberId: '6m00905', matchingManager: '서다현', consultantManager: '한소영', meetingCount: 7, contractType: '기간제', contractCount: 12, joinDate: '2025-04-22', region: '경기', maritalHistory: '미혼', phone: '01099990005', rejoinCount: 2 },
+    { id: 901, name: '이상훈', gender: '남', age: 38, brand: '퍼플스', branch: '본사', program: '다이아몬드 A', status: '성혼', marriageConfirm: '소송중', memberId: '1m00901', matchingManager: '김태희', consultantManager: '이지연', meetingCount: 8, contractType: '횟수제', contractCount: 12, joinDate: '2025-03-15', region: '서울', maritalHistory: '미혼', phone: '01099990001', rejoinCount: 1 },
+    { id: 902, name: '박지영', gender: '여', age: 34, brand: '퍼플스', branch: '본사', program: '플래티늄(루비) A', status: '활동', marriageConfirm: '소송중', memberId: '1f00902', matchingManager: '이수현', consultantManager: '김민희', meetingCount: 5, contractType: '횟수제', contractCount: 8, joinDate: '2025-06-20', region: '경기', maritalHistory: '미혼', phone: '01099990002', rejoinCount: 1 },
+    { id: 903, name: '김민수', gender: '남', age: 41, brand: '디노블', branch: '본사', program: '시크릿 A', status: '성혼', marriageConfirm: '성혼', memberId: '7m00903', matchingManager: '박지영', consultantManager: '박수정', meetingCount: 10, contractType: '횟수제', contractCount: 10, joinDate: '2024-11-05', region: '서울', maritalHistory: '미혼', phone: '01099990003', rejoinCount: 1 },
+    { id: 904, name: '최서연', gender: '여', age: 32, brand: '퍼플스', branch: '부산', program: '골드(사파이어) A', status: '결혼예정', marriageConfirm: '확인중', memberId: '2f00904', matchingManager: '최은별', consultantManager: '최영미', meetingCount: 6, contractType: '횟수제', contractCount: 8, joinDate: '2025-01-10', region: '부산', maritalHistory: '미혼', phone: '01099990004', rejoinCount: 1 },
+    { id: 905, name: '정태호', gender: '남', age: 36, brand: '퍼플스', branch: '경기', program: '플래티늄(루비) B', status: '교제', marriageConfirm: '성혼비 없음', memberId: '6m00905', matchingManager: '서다현', consultantManager: '한소영', meetingCount: 7, contractType: '기간제', contractCount: 12, joinDate: '2025-04-22', region: '경기', maritalHistory: '미혼', phone: '01099990005', rejoinCount: 2 },
   ];
 
   marriageMembers.forEach(mm => {
@@ -609,7 +612,7 @@ if (useMock()) {
       phone: '01055551234',
       email: 'kimjw801@gmail.com',
       brand: '퍼플스',
-      branch: '퍼플스본사',
+      branch: '본사',
       program: '플래티늄(루비) A',
       status: '활동대기',
       matchingManager: '김태희',
@@ -651,7 +654,7 @@ if (useMock()) {
       phone: '01066665678',
       email: 'parksoyeon802@naver.com',
       brand: '디노블',
-      branch: '디노블본사',
+      branch: '본사',
       program: '골드(사파이어) B',
       status: '활동대기',
       matchingManager: '박지영',
@@ -760,7 +763,7 @@ if (useMock()) {
     // ① 미발송 (발송 버튼 표시)
     { id: 701, memberId: '1m00701', name: '장현우', gender: '남', age: 37,
       phone: '01088810001', email: 'janghw701@gmail.com',
-      brand: '퍼플스', branch: '퍼플스본사',
+      brand: '퍼플스', branch: '본사',
       program: '다이아몬드 A', status: '리콜대기',
       matchingManager: '김태희', consultantManager: '이지연',
       meetingCount: 4, contractType: '횟수제', contractCount: 12,
@@ -771,7 +774,7 @@ if (useMock()) {
     // ② 서명진행중 (발송완료 상태)
     { id: 702, memberId: '2f00702', name: '윤서영', gender: '여', age: 33,
       phone: '01088820002', email: 'yoonsy702@naver.com',
-      brand: '디노블', branch: '디노블본사',
+      brand: '디노블', branch: '본사',
       program: '플래티늄(루비) A', status: '리콜대기',
       matchingManager: '박지영', consultantManager: '김민희',
       meetingCount: 3, contractType: '기간제', contractCount: null,
@@ -784,7 +787,7 @@ if (useMock()) {
     // ③ 서명완료
     { id: 703, memberId: '1f00703', name: '이수빈', gender: '여', age: 30,
       phone: '01088830003', email: 'leesb703@kakao.com',
-      brand: '퍼플스', branch: '퍼플스부산',
+      brand: '퍼플스', branch: '부산',
       program: '골드(사파이어) A', status: '리콜대기',
       matchingManager: '최은별', consultantManager: '최영미',
       meetingCount: 5, contractType: '횟수제', contractCount: 12,
@@ -797,7 +800,7 @@ if (useMock()) {
     // ④ 리콜 완료
     { id: 705, memberId: '2f00705', name: '박하은', gender: '여', age: 35,
       phone: '01088850005', email: 'parkhe705@naver.com',
-      brand: '르매리', branch: '르매리',
+      brand: '르매리', branch: '본사',
       program: '플래티늄(루비) B', status: '리콜',
       matchingManager: '정유리', consultantManager: '정다은',
       meetingCount: 6, contractType: '기간제', contractCount: null,
@@ -810,7 +813,7 @@ if (useMock()) {
     // ⑤ 리콜불가
     { id: 706, memberId: '1m00706', name: '최준혁', gender: '남', age: 41,
       phone: '01088860006', email: 'choijh706@gmail.com',
-      brand: '퍼플스', branch: '퍼플스본사',
+      brand: '퍼플스', branch: '본사',
       program: '다이아몬드 A', status: '리콜불가',
       matchingManager: '김태희', consultantManager: '이지연',
       meetingCount: 1, contractType: '횟수제', contractCount: 12,

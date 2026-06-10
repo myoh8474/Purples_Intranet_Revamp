@@ -19,6 +19,13 @@ export function bindModals(m) {
     Modal.show({
       title: '유의사항 등록',
       content: '<div style="margin-bottom:12px">'
+        + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">태그 설정</label>'
+        + '<div style="display:flex;gap:14px;padding:8px 0">'
+        + '  <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" id="note-tag-difficult" style="accent-color:#f59e0b"> 난매칭</label>'
+        + '  <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" id="note-tag-no-event" style="accent-color:#dc2626"> 이벤트불가</label>'
+        + '  <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" id="note-tag-no-rejoin" style="accent-color:#dc2626"> 재가입불가</label>'
+        + '</div></div>'
+        + '<div style="margin-bottom:12px">'
         + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">구분</label>'
         + '<select class="form-input" id="note-type" style="width:100%;font-size:13px">'
         + '  <option value="상담">상담메모</option>'
@@ -37,6 +44,39 @@ export function bindModals(m) {
         var content = document.getElementById('note-content').value.trim();
         if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
         var type = document.getElementById('note-type').value;
+
+        // 태그 설정 반영
+        var tagDifficult = document.getElementById('note-tag-difficult')?.checked;
+        var tagNoEvent = document.getElementById('note-tag-no-event')?.checked;
+        var tagNoRejoin = document.getElementById('note-tag-no-rejoin')?.checked;
+
+        var headerLeft = document.querySelector('.detail-header-bar__left');
+        if (headerLeft) {
+          // 기존 태그 제거
+          headerLeft.querySelectorAll('.badge-tag-dynamic').forEach(function(el) { el.remove(); });
+          // 선택된 태그 추가
+          var idSpan = headerLeft.querySelector('.detail-header-bar__id');
+          var ref = idSpan?.nextSibling;
+          if (tagNoEvent) {
+            var b1 = document.createElement('span');
+            b1.className = 'badge badge--red badge-tag-dynamic';
+            b1.textContent = '이벤트불가';
+            headerLeft.insertBefore(b1, headerLeft.querySelector('.badge:not(.badge-tag-dynamic)') || null);
+          }
+          if (tagNoRejoin) {
+            var b2 = document.createElement('span');
+            b2.className = 'badge badge--red badge-tag-dynamic';
+            b2.textContent = '재가입불가';
+            headerLeft.appendChild(b2);
+          }
+          if (tagDifficult) {
+            var b3 = document.createElement('span');
+            b3.className = 'badge badge--orange badge-tag-dynamic';
+            b3.textContent = '난매칭';
+            headerLeft.appendChild(b3);
+          }
+        }
+
         var notesList = document.getElementById('notes-list');
         if (notesList) {
           var emptyMsg = notesList.querySelector('div[style*="text-align:center"]');
@@ -44,11 +84,16 @@ export function bindModals(m) {
           var colors = { '상담': { bg: '#fffbeb', border: '#fcd34d', icon: '📌', color: '#92400e' }, '매칭': { bg: '#f0f9ff', border: '#93c5fd', icon: '📋', color: '#1e40af' }, '주의': { bg: '#fef2f2', border: '#fca5a5', icon: '⚠️', color: '#991b1b' }, '기타': { bg: '#f5f3ff', border: '#c4b5fd', icon: '📝', color: '#5b21b6' } };
           var c = colors[type] || colors['기타'];
           var today = new Date().toISOString().split('T')[0];
+          var tagLabels = [];
+          if (tagDifficult) tagLabels.push('<span class="badge badge--orange" style="font-size:10px">난매칭</span>');
+          if (tagNoEvent) tagLabels.push('<span class="badge badge--red" style="font-size:10px">이벤트불가</span>');
+          if (tagNoRejoin) tagLabels.push('<span class="badge badge--red" style="font-size:10px">재가입불가</span>');
+          var tagHtml = tagLabels.length > 0 ? '<div style="margin-bottom:4px;display:flex;gap:4px">' + tagLabels.join('') + '</div>' : '';
           notesList.insertAdjacentHTML('afterbegin', '<div style="padding:8px 10px;background:' + c.bg + ';border:1px solid ' + c.border + ';margin-bottom:6px;border-radius:4px;font-size:12px;line-height:1.6">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
             + '  <span style="font-weight:700;color:' + c.color + '">' + c.icon + ' ' + type + '메모</span>'
             + '  <span style="font-size:10px;color:' + c.color + '">' + today + '</span>'
-            + '</div>' + content + '</div>');
+            + '</div>' + tagHtml + content + '</div>');
         }
         Modal.hide();
         Toast.show('유의사항이 등록되었습니다.', 'success');
@@ -280,5 +325,301 @@ export function bindModals(m) {
         }
       }
     });
+  });
+
+
+  /* ── 서류등록 모달 (준회원과 동일) ── */
+  var CERT_DOC_TYPES = {
+    'common': [
+      { name: '신분증 사본', required: true },
+      { name: '졸업증명서', required: false },
+      { name: '사진(3x4)', required: true }
+    ],
+    '전문직': [
+      { name: '자격증 사본', required: true },
+      { name: '재직증명서', required: true },
+      { name: '사업자등록증', required: false },
+      { name: '소득증명원', required: false }
+    ],
+    '준전문직': [
+      { name: '자격증 사본', required: true },
+      { name: '재직증명서', required: true }
+    ],
+    '브론즈': [
+      { name: '재직증명서', required: false }
+    ],
+    '실버(에메랄드)': [
+      { name: '재직증명서', required: false },
+      { name: '소득증명원', required: false }
+    ],
+    '골드(사파이어)': [
+      { name: '재직증명서', required: true },
+      { name: '소득증명원', required: true }
+    ]
+  };
+
+  var certDocFiles = {};
+  var selectedAuth = '';
+  var selectedAutoDocs = [];
+
+  function getCertDocsForProgram(pgm) {
+    var docs = [];
+    var common = CERT_DOC_TYPES['common'] || [];
+    for (var i = 0; i < common.length; i++) docs.push({ name: common[i].name, required: common[i].required });
+    var pgmDocs = CERT_DOC_TYPES[pgm] || [];
+    for (var j = 0; j < pgmDocs.length; j++) {
+      var exists = false;
+      for (var k = 0; k < docs.length; k++) { if (docs[k].name === pgmDocs[j].name) { exists = true; if (pgmDocs[j].required) docs[k].required = true; break; } }
+      if (!exists) docs.push({ name: pgmDocs[j].name, required: pgmDocs[j].required });
+    }
+    return docs;
+  }
+
+  var addDocBtn = document.getElementById('btn-add-doc');
+  if (addDocBtn) addDocBtn.addEventListener('click', function() {
+    var pgm = m.program || '기타';
+    var docs = getCertDocsForProgram(pgm);
+    var certKey = 'purples_cert_docs_reg_' + (m.id || m.memberId);
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem(certKey) || '[]'); } catch (e) { }
+
+    var h = '';
+    h += '<div style="margin-bottom:12px;padding:10px 12px;background:var(--bg-secondary);border:1px solid var(--border-light);font-size:12px">';
+    h += '<strong>' + m.name + '</strong> (' + Formatters.phone(m.phone) + ') · 프로그램: <strong>' + pgm + '</strong>';
+    h += '</div>';
+    h += '<div style="margin-bottom:12px">';
+    h += '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">인증방법 선택</label>';
+    h += '<div style="display:flex;gap:16px;flex-wrap:wrap">';
+    h += '<label style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="r-cert-method-reg" value="manager" checked /> 매니저 직접등록</label>';
+    h += '<label style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="r-cert-method-reg" value="auto" /> 회원 자동인증</label>';
+    h += '</div></div>';
+    h += '<div id="cert-method-area-reg">';
+
+    // 매니저 직접등록
+    h += '<div id="cert-area-manager-reg">';
+    h += '<table class="data-table" style="font-size:12px"><thead><tr>';
+    h += '<th style="width:30px">No</th><th style="width:120px">구분</th><th style="width:100px">발급일자</th><th>발급처</th><th>파일</th>';
+    h += '</tr></thead><tbody id="cert-doc-list-reg"></tbody></table>';
+    h += '<div style="margin-top:8px;text-align:right"><button class="btn btn--sm" id="btn-add-cert-row" style="font-size:11px;background:#fff;border:1px solid #ccc;color:#333">+ 서류 추가</button></div>';
+    h += '</div>';
+
+    // 자동인증
+    h += '<div id="cert-area-auto-reg" style="display:none">';
+    h += '<div style="padding:20px;background:#f0f9ff;border:1px solid #bae6fd">';
+    h += '<div style="font-size:14px;font-weight:600;color:#0369a1;margin-bottom:14px">간편인증 자동발급 (스크래핑 API)</div>';
+    h += '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">인증수단 선택</label>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    h += '<button class="btn btn--sm cert-auth-btn-reg" data-auth="pass" style="font-size:11px;background:#fff;border:2px solid #6366f1;color:#6366f1;padding:6px 14px;font-weight:600">PASS 인증</button>';
+    h += '<button class="btn btn--sm cert-auth-btn-reg" data-auth="kakao" style="font-size:11px;background:#fff;border:2px solid #fbbf24;color:#92400e;padding:6px 14px;font-weight:600">카카오 인증</button>';
+    h += '<button class="btn btn--sm cert-auth-btn-reg" data-auth="naver" style="font-size:11px;background:#fff;border:2px solid #16a34a;color:#16a34a;padding:6px 14px;font-weight:600">네이버 인증</button>';
+    h += '<button class="btn btn--sm cert-auth-btn-reg" data-auth="toss" style="font-size:11px;background:#fff;border:2px solid #3b82f6;color:#3b82f6;padding:6px 14px;font-weight:600">토스 인증</button>';
+    h += '</div></div>';
+    h += '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">발급 서류 선택</label>';
+    h += '<div id="cert-auto-docs-reg" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>';
+    h += '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">발송수단 선택</label>';
+    h += '<div style="display:flex;gap:8px">';
+    h += '<label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="r-send-method-reg" value="kakao" checked /> 카카오톡 알림톡</label>';
+    h += '<label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="r-send-method-reg" value="sms" /> SMS 문자</label>';
+    h += '</div></div>';
+    h += '<div style="border-top:1px solid #bae6fd;padding-top:14px;margin-top:14px">';
+    h += '<button class="btn btn--primary" id="auto-scraping-btn-reg" style="width:100%;font-size:13px;padding:10px" disabled>인증안내 발송</button>';
+    h += '<p style="font-size:10px;color:#64748b;margin-top:6px;text-align:center">회원에게 인증안내가 발송되며, 회원이 인증 완료 시 서류가 자동 발급됩니다.</p>';
+    h += '</div>';
+    h += '<div id="auto-scraping-progress-reg" style="display:none;margin-top:14px">';
+    h += '<div style="margin-bottom:8px;font-size:12px;font-weight:600;color:#0369a1" id="auto-progress-title-reg">인증 진행 중...</div>';
+    h += '<div style="width:100%;height:8px;background:#e0f2fe;border-radius:4px;overflow:hidden;margin-bottom:8px"><div id="auto-progress-bar-reg" style="width:0%;height:100%;background:#0369a1;border-radius:4px;transition:width 0.5s"></div></div>';
+    h += '<div id="auto-progress-log-reg" style="font-size:11px;color:#475569;max-height:120px;overflow-y:auto"></div>';
+    h += '</div>';
+    h += '<div id="auto-scraping-result-reg" style="display:none;margin-top:14px"></div>';
+    h += '</div></div>';
+    h += '</div>';
+
+    Modal.show({
+      title: '인증서류 등록',
+      size: 'lg',
+      content: h
+        + '<div style="text-align:right;margin-top:16px"><button class="btn btn--ghost btn--sm" id="cert-cancel-btn" style="margin-right:8px">취소</button>'
+        + '<button class="btn btn--primary btn--sm" id="cert-save-btn">저장</button></div>',
+    });
+
+    setTimeout(function() {
+      // 서류 테이블 렌더링
+      var tbody = document.getElementById('cert-doc-list-reg');
+      if (tbody) {
+        var html = '';
+        for (var i = 0; i < docs.length; i++) {
+          var d = docs[i];
+          html += '<tr data-doc-name="' + d.name + '">'
+            + '<td style="text-align:center">' + (i + 1) + '</td>'
+            + '<td>' + d.name + '</td>'
+            + '<td><input type="date" class="cert-issue-date" style="font-size:11px;width:100%" /></td>'
+            + '<td><input type="text" class="cert-issuer" placeholder="예: 대법원" style="font-size:11px;width:100%" /></td>'
+            + '<td><input type="file" accept="image/*,.pdf" style="font-size:11px;width:100%" /></td>'
+            + '</tr>';
+        }
+        tbody.innerHTML = html;
+        // 기존 저장 상태 표시
+        for (var s = 0; s < saved.length; s++) {
+          var rows = tbody.querySelectorAll('tr');
+          for (var r = 0; r < rows.length; r++) {
+            if (rows[r].getAttribute('data-doc-name') === saved[s].name && saved[s].status === 'done') {
+              var lastCell = rows[r].cells[rows[r].cells.length - 1];
+              if (lastCell) lastCell.innerHTML = '<span class="badge" style="background:#dcfce7;color:#16a34a;font-size:10px;padding:2px 8px">등록완료</span>';
+            }
+          }
+        }
+      }
+
+      // 자동인증 서류 목록
+      var autoContainer = document.getElementById('cert-auto-docs-reg');
+      if (autoContainer) {
+        var autoScrapable = ['졸업증명서', '재직증명서', '자격증 사본', '소득증명원', '가족관계증명서', '신분증 사본', '사업자등록증'];
+        var autoHtml = '';
+        for (var a = 0; a < docs.length; a++) {
+          var canAuto = autoScrapable.indexOf(docs[a].name) !== -1;
+          autoHtml += '<label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:' + (canAuto ? 'pointer' : 'not-allowed') + ';opacity:' + (canAuto ? '1' : '0.5') + '">';
+          autoHtml += '<input type="checkbox" class="auto-doc-chk-reg" value="' + docs[a].name + '"' + (canAuto ? ' checked' : ' disabled') + ' /> ' + docs[a].name;
+          autoHtml += '</label>';
+        }
+        autoContainer.innerHTML = autoHtml;
+      }
+
+      // 인증방법 전환
+      document.querySelectorAll('input[name="r-cert-method-reg"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+          var mgrArea = document.getElementById('cert-area-manager-reg');
+          var autoArea = document.getElementById('cert-area-auto-reg');
+          if (this.value === 'manager') {
+            if (mgrArea) mgrArea.style.display = 'block';
+            if (autoArea) autoArea.style.display = 'none';
+          } else {
+            if (mgrArea) mgrArea.style.display = 'none';
+            if (autoArea) autoArea.style.display = 'block';
+          }
+        });
+      });
+
+      // 인증수단 선택
+      document.querySelectorAll('.cert-auth-btn-reg').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          selectedAuth = this.dataset.auth;
+          document.querySelectorAll('.cert-auth-btn-reg').forEach(function(b) { b.style.background = '#fff'; b.style.fontWeight = '600'; });
+          var colors = { pass: '#6366f1', kakao: '#fbbf24', naver: '#16a34a', toss: '#3b82f6' };
+          this.style.background = colors[selectedAuth] || '#6366f1';
+          this.style.color = '#fff';
+          var scrapBtn = document.getElementById('auto-scraping-btn-reg');
+          if (scrapBtn) scrapBtn.disabled = false;
+        });
+      });
+
+      // 자동발급 실행
+      var scrapBtn = document.getElementById('auto-scraping-btn-reg');
+      if (scrapBtn) scrapBtn.addEventListener('click', function() {
+        selectedAutoDocs = [];
+        document.querySelectorAll('.auto-doc-chk-reg:checked').forEach(function(chk) { selectedAutoDocs.push(chk.value); });
+        if (selectedAutoDocs.length === 0) { Toast.show('발급할 서류를 선택해주세요.', 'warning'); return; }
+
+        scrapBtn.disabled = true;
+        scrapBtn.textContent = '발급 진행 중...';
+        var progress = document.getElementById('auto-scraping-progress-reg');
+        if (progress) progress.style.display = 'block';
+
+        var bar = document.getElementById('auto-progress-bar-reg');
+        var title = document.getElementById('auto-progress-title-reg');
+        var log = document.getElementById('auto-progress-log-reg');
+        var result = document.getElementById('auto-scraping-result-reg');
+        var issuers = { '졸업증명서': '학교알리미', '재직증명서': '국민건강보험공단', '자격증 사본': '한국산업인력공단', '소득증명원': '국세청 홈택스', '가족관계증명서': '대법원 전산정보센터', '신분증 사본': '행정안전부', '사업자등록증': '국세청 홈택스' };
+
+        var steps = [
+          { pct: 10, title: '인증안내 발송 중...', log: '→ 회원 ' + Formatters.phone(m.phone) + '에 인증안내 발송' },
+          { pct: 30, title: '회원 인증 대기 중...', log: '→ 회원 핸드폰에 인증 요청 도착' },
+          { pct: 50, title: '본인인증 완료!', log: '→ 인증 토큰 수신 완료' },
+          { pct: 60, title: '스크래핑 API 호출 중...', log: '→ 공공기관 시스템 접속 중...' }
+        ];
+        var docSteps = [];
+        for (var di = 0; di < selectedAutoDocs.length; di++) {
+          var pct = 60 + Math.round(35 * (di + 1) / selectedAutoDocs.length);
+          var issuer = issuers[selectedAutoDocs[di]] || '공공기관';
+          docSteps.push({ pct: pct, title: selectedAutoDocs[di] + ' 발급 중...', log: '→ [' + issuer + '] ' + selectedAutoDocs[di] + ' PDF 수신 완료' });
+        }
+        var allSteps = steps.concat(docSteps);
+        allSteps.push({ pct: 100, title: '자동발급 완료!', log: '→ 총 ' + selectedAutoDocs.length + '건 서류 자동 등록 완료' });
+
+        function runStep(idx) {
+          if (idx >= allSteps.length) {
+            scrapBtn.textContent = '자동발급 완료';
+            scrapBtn.style.background = '#16a34a';
+            if (result) {
+              var rhtml = '<div style="padding:12px;background:#dcfce7;border:1px solid #86efac;border-radius:4px">';
+              rhtml += '<div style="font-size:13px;font-weight:700;color:#16a34a;margin-bottom:8px">자동발급 완료</div>';
+              var today = new Date().toISOString().substring(0, 10);
+              for (var ri = 0; ri < selectedAutoDocs.length; ri++) {
+                rhtml += '<div style="font-size:11px;padding:2px 0">- ' + selectedAutoDocs[ri] + ' (' + (issuers[selectedAutoDocs[ri]] || '-') + ') ' + today + '</div>';
+              }
+              rhtml += '</div>';
+              result.style.display = 'block';
+              result.innerHTML = rhtml;
+            }
+            // localStorage 저장
+            var existing = [];
+            try { existing = JSON.parse(localStorage.getItem(certKey) || '[]'); } catch (e) {}
+            var today2 = new Date().toISOString().substring(0, 10);
+            for (var sj = 0; sj < selectedAutoDocs.length; sj++) {
+              var dn = selectedAutoDocs[sj];
+              var found = false;
+              for (var sk = 0; sk < existing.length; sk++) {
+                if (existing[sk].name === dn) { existing[sk].status = 'done'; existing[sk].date = today2; found = true; break; }
+              }
+              if (!found) existing.push({ name: dn, status: 'done', method: 'auto', date: today2 });
+            }
+            try { localStorage.setItem(certKey, JSON.stringify(existing)); } catch (e) {}
+            Toast.show(selectedAutoDocs.length + '건 서류가 자동 발급되었습니다!', 'success');
+            return;
+          }
+          var s = allSteps[idx];
+          if (bar) bar.style.width = s.pct + '%';
+          if (title) title.textContent = s.title;
+          if (log) log.innerHTML += '<div style="padding:2px 0">' + s.log + '</div>';
+          if (log) log.scrollTop = log.scrollHeight;
+          setTimeout(function() { runStep(idx + 1); }, 800 + Math.random() * 600);
+        }
+        runStep(0);
+      });
+
+      // 서류 추가 행
+      var addRowBtn = document.getElementById('btn-add-cert-row');
+      if (addRowBtn) addRowBtn.addEventListener('click', function() {
+        var tbody2 = document.getElementById('cert-doc-list-reg');
+        if (!tbody2) return;
+        var idx = tbody2.rows.length;
+        var row = tbody2.insertRow();
+        row.innerHTML = '<td style="text-align:center">' + (idx + 1) + '</td>'
+          + '<td><input type="text" placeholder="서류명 입력" style="font-size:11px;width:100%" /></td>'
+          + '<td><input type="date" class="cert-issue-date" style="font-size:11px;width:100%" /></td>'
+          + '<td><input type="text" class="cert-issuer" placeholder="발급처 입력" style="font-size:11px;width:100%" /></td>'
+          + '<td><input type="file" accept="image/*,.pdf" style="font-size:11px;width:100%" /></td>';
+      });
+
+      // 취소/저장
+      var cancelBtn = document.getElementById('cert-cancel-btn');
+      if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+
+      var saveBtn = document.getElementById('cert-save-btn');
+      if (saveBtn) saveBtn.addEventListener('click', function() {
+        var tbody3 = document.getElementById('cert-doc-list-reg');
+        if (!tbody3) { Modal.hide(); return; }
+        var docArr = [];
+        var rows = tbody3.querySelectorAll('tr');
+        for (var ri = 0; ri < rows.length; ri++) {
+          var docName = rows[ri].getAttribute('data-doc-name') || '';
+          var fileInput = rows[ri].querySelector('input[type=file]');
+          var hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+          docArr.push({ name: docName, status: hasFile ? 'done' : 'pending', method: 'manager', date: hasFile ? new Date().toISOString().substring(0, 10) : null });
+        }
+        try { localStorage.setItem(certKey, JSON.stringify(docArr)); } catch (e) {}
+        Modal.hide();
+        Toast.show('서류 인증 정보가 저장되었습니다.', 'success');
+      });
+    }, 100);
   });
 }

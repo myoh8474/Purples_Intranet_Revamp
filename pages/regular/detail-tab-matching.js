@@ -11,9 +11,9 @@ var LBL = 'background:var(--bg-secondary);font-weight:600;color:#888;text-align:
 
 /* ── 소개장 뱃지 ── */
 function resultBadge(r) {
-  if (!r || r === '대기중') return '<span class="badge badge--gray">대기중</span>';
-  var m = { '수락': 'green', '거절': 'red', '보류': 'amber' };
-  return '<span class="badge badge--' + (m[r] || 'gray') + '">' + r + '</span>';
+  if (!r || r === '대기중') return '<span style="color:#94a3b8;font-weight:600">대기중</span>';
+  var colors = { '수락': '#10b981', '거절': '#ef4444', '보류': '#f59e0b' };
+  return '<span style="color:' + (colors[r] || '#94a3b8') + ';font-weight:600">' + r + '</span>';
 }
 function profileBadge(status, date, resend, result) {
   if (!status || status === '프로필발송') return '<button class="btn btn--primary btn--xs btn-profile-send" style="padding:2px 8px;font-size:12px">✉ 프로필발송</button>';
@@ -316,16 +316,29 @@ export function renderMatchingInfo(m) {
   html += '<div class="' + CARD_HDR + '">';
   html += '<span class="mcard__title">미팅 리스트</span>';
   html += '</div>';
+  // 필터 행
+  html += '<div class="mcard__filter" style="display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border-light);flex-wrap:wrap">';
+  html += '<select class="form-input" id="meeting-seq-filter" style="padding:3px 6px;width:100px;font-size:12px">';
+  html += '<option value="전체">차수: 전체</option>';
+  for (var sq = 1; sq <= 5; sq++) html += '<option value="' + sq + '">' + sq + '가입</option>';
+  html += '</select>';
+  html += '<input type="date" class="form-input" id="meeting-date-from" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<span style="color:var(--text-muted);font-size:11px">~</span>';
+  html += '<input type="date" class="form-input" id="meeting-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<button class="btn btn--primary btn--sm" id="btn-meeting-search" style="padding:2px 8px;font-size:11px">검색</button>';
+  html += '</div>';
   html += '<div class="' + CARD_BODY + '" style="overflow-x:auto">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-meeting" style="table-layout:fixed;width:100%;min-width:700px">';
-  html += '<colgroup><col style="width:36px"><col style="width:36px"><col style="width:70px"><col style="width:160px"><col style="width:56px"><col style="width:56px"><col style="width:150px"><col style="width:100px"><col style="width:50px"></colgroup>';
+  html += '<colgroup><col style="width:34px"><col style="width:50px"><col style="width:80px"><col style="width:145px"><col style="width:54px"><col style="width:54px"><col style="width:135px"><col style="width:78px"><col style="width:46px"></colgroup>';
   html += '<thead><tr>';
   html += sortableHeader('번호', 'tbl-meeting', 0, 'num');
   html += '<th style="' + LBL + '">차수</th>';
   html += sortableHeader('등록자', 'tbl-meeting', 2, 'date');
-  ['미팅일시 및 장소','회원명','만남결과','만남 후기','후기등록일','관리'].forEach(function(t) {
+  ['미팅일시 및 장소','회원명','만남결과','만남 후기'].forEach(function(t) {
     html += '<th style="' + LBL + '">' + t + '</th>';
   });
+  html += sortableHeader('후기등록일', 'tbl-meeting', 7, 'date');
+  html += '<th style="' + LBL + '">관리</th>';
   html += '</tr></thead><tbody>';
 
   if (meetings.length === 0) {
@@ -368,13 +381,20 @@ export function renderMatchingInfo(m) {
   html += '<div class="' + CARD_HDR + '">';
   html += '<span class="mcard__title">소개장</span>';
   html += '<div style="display:flex;gap:4px;align-items:center">';
-  html += '<button class="btn btn--sm" id="btn-intro-delete" style="font-size:11px;padding:2px 10px;background:#ef4444;color:#fff;border:none" disabled>삭제</button>';
+  html += '<button class="btn btn--outline btn--sm" id="btn-intro-delete" style="font-size:11px;padding:2px 10px" disabled>삭제</button>';
   html += '<button class="btn btn--outline btn--sm" id="btn-add-intro" style="font-size:11px;padding:2px 10px">소개등록</button>';
   html += '</div>';
   html += '</div>';
+  // 소개장 필터 행
+  html += '<div class="mcard__filter" style="display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border-light)">';
+  html += '<input type="date" class="form-input" id="intro-date-from" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<span style="color:var(--text-muted);font-size:11px">~</span>';
+  html += '<input type="date" class="form-input" id="intro-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<button class="btn btn--primary btn--sm" id="btn-intro-search" style="padding:2px 8px;font-size:11px">검색</button>';
+  html += '</div>';
   html += '<div class="' + CARD_BODY + '">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-intro" style="table-layout:fixed;width:100%">';
-  html += '<colgroup><col style="width:5%"><col style="width:6%"><col style="width:14%"><col style="width:12%"><col style="width:24%"><col style="width:23%"><col style="width:16%"></colgroup>';
+  html += '<colgroup><col style="width:5%"><col style="width:8%"><col style="width:14%"><col style="width:12%"><col style="width:22%"><col style="width:23%"><col style="width:16%"></colgroup>';
   html += '<thead><tr>';
   html += '<th style="' + LBL + '"><input type="checkbox" id="intro-chk-all"></th>';
   html += sortableHeader('번호', 'tbl-intro', 1, 'num');
@@ -529,6 +549,69 @@ function bindEvents(m) {
       if (mt) showMeetingManageModal(mt, m);
     });
   });
+
+  // ── 미팅리스트 필터 (가입차수 + 기간 검색) ──
+  function applyMeetingFilter() {
+    var seqVal = (document.getElementById('meeting-seq-filter') || {}).value || '전체';
+    var fromVal = (document.getElementById('meeting-date-from') || {}).value || '';
+    var toVal = (document.getElementById('meeting-date-to') || {}).value || '';
+    var tbody = document.querySelector('#tbl-meeting tbody');
+    if (!tbody) return;
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    // rowspan 그룹화
+    var i = 0;
+    while (i < rows.length) {
+      var firstTd = rows[i].querySelector('td');
+      var span = firstTd ? parseInt(firstTd.getAttribute('rowspan')) || 1 : 1;
+      // 차수: 2번째 td
+      var seqTd = rows[i].querySelectorAll('td')[1];
+      var seqText = seqTd ? seqTd.textContent.trim() : '';
+      var seqNum = parseInt(seqText) || 0;
+      // 등록일: 3번째 td의 data-sort-val
+      var regTd = rows[i].querySelectorAll('td')[2];
+      var regDate = regTd ? (regTd.getAttribute('data-sort-val') || '') : '';
+      var show = true;
+      if (seqVal !== '전체' && seqNum !== parseInt(seqVal)) show = false;
+      if (show && fromVal && regDate && regDate < fromVal) show = false;
+      if (show && toVal && regDate && regDate > toVal) show = false;
+      for (var j = 0; j < span && (i + j) < rows.length; j++) {
+        rows[i + j].style.display = show ? '' : 'none';
+      }
+      i += span;
+    }
+  }
+  var meetingSeqFilter = document.getElementById('meeting-seq-filter');
+  if (meetingSeqFilter) meetingSeqFilter.addEventListener('change', applyMeetingFilter);
+  var meetingSearchBtn = document.getElementById('btn-meeting-search');
+  if (meetingSearchBtn) meetingSearchBtn.addEventListener('click', applyMeetingFilter);
+
+  // ── 소개장 기간 검색 필터 ──
+  function applyIntroFilter() {
+    var fromVal = (document.getElementById('intro-date-from') || {}).value || '';
+    var toVal = (document.getElementById('intro-date-to') || {}).value || '';
+    var tbody = document.querySelector('#tbl-intro tbody');
+    if (!tbody) return;
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    var i = 0;
+    while (i < rows.length) {
+      var firstTd = rows[i].querySelector('td');
+      var span = firstTd ? parseInt(firstTd.getAttribute('rowspan')) || 1 : 1;
+      // 등록일: 3번째 td (체크, 번호, 등록일)
+      var regTd = rows[i].querySelectorAll('td')[2];
+      var regText = regTd ? regTd.textContent.trim() : '';
+      // 날짜 변환: 2026.01.16 → 2026-01-16
+      var regDate = regText.replace(/\./g, '-');
+      var show = true;
+      if (fromVal && regDate && regDate < fromVal) show = false;
+      if (toVal && regDate && regDate > toVal) show = false;
+      for (var j = 0; j < span && (i + j) < rows.length; j++) {
+        rows[i + j].style.display = show ? '' : 'none';
+      }
+      i += span;
+    }
+  }
+  var introSearchBtn = document.getElementById('btn-intro-search');
+  if (introSearchBtn) introSearchBtn.addEventListener('click', applyIntroFilter);
 
   // ── 공통 정렬 바인딩 ──
   bindSortableHeaders();

@@ -8,6 +8,7 @@ import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { MockAssociates } from '@mock/associates.js';
 import { CONSULTANTS, BRANCHES, CONSULTANT_BRANCH, ASSOCIATE_STATUSES } from '@config/constants.js';
+import { ManagerPicker, renderManagerPickerHTML, getManagerPickerStyles } from '@components/ManagerPicker.js';
 
 initLayout({ pageId: 'member-distribute-history', breadcrumbs: ['회원분배', '회원분배내역조회'] });
 
@@ -15,6 +16,7 @@ const PAGE_SIZE = 20;
 let currentPage = 1;
 let sortKey = 'distributedAt';  // 기본 정렬 기준: 분배일
 let sortDir = 'desc';           // 기본 정렬 방향: 최신순
+let mgrPicker = null;
 
 // 컬럼 정의 (key: 데이터 필드, label: 표시명, sortable: 정렬 가능 여부)
 const COLUMNS = [
@@ -115,14 +117,7 @@ function render() {
           </td>
           <th>매니저</th>
           <td>
-            <div class="select-wrap"><select class="form-select form-input--sm" id="h-manager" style="width:100%">
-              <option value="">매니저 전체</option>
-              ${CONSULTANTS.map(c => {
-                const branch = BRANCHES.find(b => b.code === CONSULTANT_BRANCH[c]);
-                const bName = branch?.name.replace('퍼플스','P.').replace('디노블','D.').replace('르매리','LM') || '';
-                return `<option value="${c}">${c} (${bName})</option>`;
-              }).join('')}
-            </select></div>
+            ${renderManagerPickerHTML('hmgr')}
           </td>
         </tr>
       </tbody>
@@ -164,6 +159,7 @@ function render() {
         color: #94a3b8; vertical-align: middle;
       }
       .sort-icon--active { color: #0369a1; font-weight: 700; }
+      ${getManagerPickerStyles()}
     </style>
   `;
 
@@ -208,12 +204,12 @@ function renderThead() {
 
 function applyFilter() {
   const search = (document.getElementById('h-search')?.value || '').trim().toLowerCase();
+  const manager = mgrPicker ? mgrPicker.getSelected() : [];
   const distmethod = document.getElementById('h-distmethod')?.value || '';
   const dtype = document.getElementById('h-dtype')?.value || '';
   const channel = document.getElementById('h-channel')?.value || '';
   const gender = document.getElementById('h-gender')?.value || '';
   const status = document.getElementById('h-status')?.value || '';
-  const manager = document.getElementById('h-manager')?.value || '';
   const regFrom = document.getElementById('h-reg-from')?.value || '';
   const regTo = document.getElementById('h-reg-to')?.value || '';
   const distFrom = document.getElementById('h-dist-from')?.value || '';
@@ -230,7 +226,7 @@ function applyFilter() {
     if (channel && m.channel !== channel) return false;
     if (gender && m.gender !== gender) return false;
     if (status && m.status !== status) return false;
-    if (manager && m.consultant !== manager) return false;
+    if (manager.length > 0 && !manager.includes(m.consultant)) return false;
     if (regFrom && m.registeredAt < regFrom) return false;
     if (regTo && m.registeredAt > regTo + 'T23:59:59') return false;
     if (distFrom && (m.distributedAt || '') < distFrom) return false;
@@ -332,6 +328,14 @@ function renderTable(filtered) {
 }
 
 function bindEvents() {
+  // 매니저 검색 Picker 초기화
+  mgrPicker = new ManagerPicker({
+    inputId: 'hmgr-search-input',
+    modalBtnId: 'hmgr-open-modal',
+    tagsId: 'hmgr-tags',
+    onChange: () => { currentPage = 1; applyFilter(); }
+  });
+
   // 검색 버튼
   document.getElementById('btn-search')?.addEventListener('click', () => { currentPage = 1; applyFilter(); });
 
@@ -347,7 +351,7 @@ function bindEvents() {
     document.getElementById('h-reg-to').value = '';
     document.getElementById('h-dist-from').value = '';
     document.getElementById('h-dist-to').value = '';
-    document.getElementById('h-manager').value = '';
+    if (mgrPicker) mgrPicker.reset();
     sortKey = 'distributedAt';
     sortDir = 'desc';
     currentPage = 1;
@@ -356,7 +360,7 @@ function bindEvents() {
   });
 
   // 필터 변경 시 자동 검색
-  ['h-distmethod', 'h-dtype', 'h-channel', 'h-gender', 'h-status', 'h-manager', 'h-reg-from', 'h-reg-to', 'h-dist-from', 'h-dist-to'].forEach(id => {
+  ['h-distmethod', 'h-dtype', 'h-channel', 'h-gender', 'h-status', 'h-reg-from', 'h-reg-to', 'h-dist-from', 'h-dist-to'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', () => { currentPage = 1; applyFilter(); });
   });
 }

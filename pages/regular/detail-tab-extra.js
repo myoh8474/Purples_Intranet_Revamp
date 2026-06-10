@@ -74,6 +74,6 @@ export function renderExtraInfo(m) {
     </div>
     ${SEC_END}
 
-    <div style="text-align:right;margin-top:16px"><button class="btn btn--primary btn--sm" id="btn-save-extra">추가정보 저장</button></div>
+
   `;
 }

@@ -7,6 +7,7 @@ import { Toast } from '@components/Toast.js';
 import { Modal } from '@components/Modal.js';
 import { MockAssociates } from '@mock/associates.js';
 import { CONSULTANTS, CONSULTANT_BRANCH, BRANCHES } from '@config/constants.js';
+import { ManagerPicker, renderManagerPickerHTML, getManagerPickerStyles } from '@components/ManagerPicker.js';
 
 const branchMap = {};
 BRANCHES.forEach(b => { branchMap[b.code] = b.name; });
@@ -118,6 +119,7 @@ function resultBadge(r) {
 /* ── 페이지네이션 ── */
 let currentPage = 1;
 const PAGE_SIZE = 20;
+let consultMgrPicker = null;
 
 /* ── 필터 적용 ── */
 function applyFilters(logs) {
@@ -130,8 +132,8 @@ function applyFilters(logs) {
   if (to) filtered = filtered.filter(l => l.date && l.date.slice(0, 10) <= to);
 
   // 컨설턴트
-  const consultant = gv('f-consultant');
-  if (consultant) filtered = filtered.filter(l => l.consultant === consultant);
+  const selMgrs = consultMgrPicker ? consultMgrPicker.getSelected() : [];
+  if (selMgrs.length > 0) filtered = filtered.filter(l => selMgrs.includes(l.consultant));
 
   // 지사
   const branch = gv('f-branch');
@@ -175,7 +177,7 @@ function renderTable(logs) {
     tbody.innerHTML = pageData.map((l, i) => `<tr style="cursor:pointer" data-mid="${l.memberId}">
       <td class="tc col-no">${filtered.length - start - i}</td>
       <td class="tc" style="white-space:nowrap">${branchName(l.branch)}</td>
-      <td class="tc">${formatDT(l.date)}</td>
+      <td class="tc" style="white-space:nowrap">${formatDT(l.date)}</td>
       <td class="tc"><a href="detail.html?id=${l.memberId}" target="_blank" class="col-link">${l.memberName}</a></td>
       <td class="tc">${l.consultant}</td>
       <td class="tc">${Formatters.phone(l.phone)}</td>
@@ -234,40 +236,50 @@ function render() {
     <!-- 요약 카드 (공통 kpi-stat) -->
 
 
-    <!-- 검색 필터 (공통 search-table) -->
-    <table class="search-table">
+    <!-- 검색 필터 (std-table 스타일) -->
+    <table class="std-table" id="filter-table" style="margin-bottom:0;table-layout:fixed">
+      <colgroup>
+        <col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col>
+      </colgroup>
       <tbody>
         <tr>
-          <th class="search-table__th">기간</th>
-          <td class="search-table__td">
-            <input type="date" id="f-date-from" class="form-input form-input--sm fi" style="width:140px">
-            <span class="text-muted">~</span>
-            <input type="date" id="f-date-to" class="form-input form-input--sm fi" style="width:140px">
+          <th>기간</th>
+          <td colspan="3">
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="date" id="f-date-from" class="form-input form-input--sm" style="width:140px">
+              <span class="text-muted">~</span>
+              <input type="date" id="f-date-to" class="form-input form-input--sm" style="width:140px">
+            </div>
           </td>
-        </tr>
-        <tr>
-          <th class="search-table__th">상세검색</th>
-          <td class="search-table__td">
-            <select class="form-input form-input--sm fi" id="f-consultant" style="width:120px">
-              <option value="">컨설턴트 전체</option>
-              ${consultants.map(c => `<option>${c}</option>`).join('')}
-            </select>
-            <select class="form-input form-input--sm fi" id="f-branch" style="width:130px">
-              <option value="">지사 전체</option>
-              ${branches.map(b => `<option value="${b}">${branchMap[b] || b}</option>`).join('')}
-            </select>
-
-            <select class="form-input form-input--sm fi" id="f-result" style="width:120px">
+          <th>회원상태</th>
+          <td>
+            <select class="form-select form-input--sm" id="f-result" style="width:100%;font-size:12px">
               <option value="">결과 전체</option>
               ${CONSULT_RESULTS.map(r => `<option>${r}</option>`).join('')}
             </select>
-            <input type="text" id="f-keyword" class="form-input form-input--sm fi" placeholder="이름/전화/내용" style="width:160px">
+          </td>
+          <th>회원검색</th>
+          <td>
+            <input type="text" id="f-keyword" class="form-input form-input--sm" placeholder="이름/전화/내용" style="width:100%">
+          </td>
+        </tr>
+        <tr>
+          <th>지사</th>
+          <td>
+            <select class="form-select form-input--sm" id="f-branch" style="width:100%;font-size:12px">
+              <option value="">지사 전체</option>
+              ${branches.map(b => `<option value="${b}">${branchMap[b] || b}</option>`).join('')}
+            </select>
+          </td>
+          <th>매니저</th>
+          <td colspan="5">
+            ${renderManagerPickerHTML('cmgr')}
           </td>
         </tr>
       </tbody>
     </table>
-    <div class="search-actions">
-      <button class="btn btn--sm search-btn" id="btn-search">검색</button>
+    <div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px">
+      <button class="btn btn--secondary btn--sm" id="btn-search">검색</button>
       <button class="btn btn--reset btn--sm" id="btn-reset">초기화</button>
     </div>
 
@@ -296,6 +308,7 @@ function render() {
         <div class="pagination" id="pagination"></div>
       </div>
     </div>
+    <style>${getManagerPickerStyles()}</style>
   `;
 
 
@@ -304,8 +317,18 @@ function render() {
   // 이벤트
   document.getElementById('btn-search').addEventListener('click', () => { currentPage = 1; renderTable(allLogs); });
   document.getElementById('btn-reset').addEventListener('click', () => {
-    ['f-date-from','f-date-to','f-consultant','f-branch','f-result','f-keyword'].forEach(id => { document.getElementById(id).value = ''; });
+    ['f-date-from','f-date-to','f-branch','f-result','f-keyword'].forEach(id => { document.getElementById(id).value = ''; });
+    if (consultMgrPicker) consultMgrPicker.reset();
     currentPage = 1; renderTable(allLogs);
+  });
+
+  // 매니저 Picker 초기화
+  consultMgrPicker = new ManagerPicker({
+    inputId: 'cmgr-search-input',
+    modalBtnId: 'cmgr-open-modal',
+    tagsId: 'cmgr-tags',
+    consultants: consultants,
+    onChange: () => { currentPage = 1; renderTable(allLogs); }
   });
 }
 

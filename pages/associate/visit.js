@@ -8,9 +8,13 @@ import { Formatters } from '@utils/formatters.js';
 import { Toast } from '@components/Toast.js';
 import { MockAssociates } from '@mock/associates.js';
 import { CONSULTANTS, BRANCHES } from '@config/constants.js';
+import { ManagerPicker, renderManagerPickerHTML, getManagerPickerStyles } from '@components/ManagerPicker.js';
 
 initLayout({ pageId: 'associate-visit', breadcrumbs: ['준회원 관리', '방문상담 관리'] });
 const content = document.getElementById('content');
+
+const branchMap = {};
+BRANCHES.forEach(b => { branchMap[b.code] = b.name; });
 
 const VISIT_RESULTS = ['기타','취소','변경','보류','가입'];
 
@@ -55,7 +59,7 @@ function generateVisitData() {
         const mins = [0,0,0,30,30][Math.floor(Math.random()*5)];
         const date = new Date(y, mm, day, hours, mins);
         const isPast = date <= now;
-        const result = isPast ? VISIT_RESULTS[Math.floor(Math.random()*5)] : '';
+        const result = VISIT_RESULTS[Math.floor(Math.random()*5)];
         const visitStatus = isPast
           ? (result === '취소' ? '방문취소' : (Math.random() > 0.1 ? '방문완료' : 'No-show'))
           : (Math.random() > 0.2 ? '방문예정' : '방문미정');
@@ -69,7 +73,7 @@ function generateVisitData() {
           time: `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}`,
           place, visitStatus,
           content: memos[Math.floor(Math.random() * memos.length)],
-          result, resultNote: isPast ? rNotes[Math.floor(Math.random() * rNotes.length)] : '',
+          result, resultNote: rNotes[Math.floor(Math.random() * rNotes.length)],
           amount
         });
       }
@@ -83,6 +87,9 @@ function generateVisitData() {
 
 let currentYear, currentMonth, selectedDate;
 let allVisits = [];
+let visitMgrPicker = null;
+let visitPage = 1;
+const VISIT_PAGE_SIZE = 20;
 
 function init() {
   const now = new Date();
@@ -96,9 +103,7 @@ function init() {
 /* ── 배지 ── */
 function resultBadge(r) {
   if (!r) return '';
-  const map = {'기타':'#6b7280','취소':'#ef4444','변경':'#f59e0b','보류':'#8b5cf6','가입':'#059669'};
-  const c = map[r] || '#6b7280';
-  return `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${c}18;color:${c};font-weight:600">${r}</span>`;
+  return r;
 }
 
 /* ── 캘린더 ── */
@@ -112,6 +117,10 @@ function renderCalendar() {
   const dayMap = {};
   allVisits.forEach(v => {
     const d = new Date(v.date);
+    const calBranch = document.getElementById('f-cal-branch')?.value || '';
+    const calResult = document.getElementById('f-cal-result')?.value || '';
+    if (calBranch && v.branch !== calBranch) return;
+    if (calResult && v.result !== calResult) return;
     if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
       const key = d.getDate();
       if (!dayMap[key]) dayMap[key] = [];
@@ -181,17 +190,23 @@ function renderListTable() {
   if (gv('f-date-to')) data = data.filter(v => v.date.slice(0,10) <= gv('f-date-to'));
   if (gv('f-result')) data = data.filter(v => v.result === gv('f-result'));
   if (gv('f-branch')) data = data.filter(v => v.branch === gv('f-branch'));
-  if (gv('f-consultant')) data = data.filter(v => v.consultant === gv('f-consultant'));
+  const selMgrs = visitMgrPicker ? visitMgrPicker.getSelected() : [];
+  if (selMgrs.length > 0) data = data.filter(v => selMgrs.includes(v.consultant));
   data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   document.getElementById('list-count').textContent = `${data.length}건`;
+  const totalPages = Math.max(1, Math.ceil(data.length / VISIT_PAGE_SIZE));
+  if (visitPage > totalPages) visitPage = totalPages;
+  const start = (visitPage - 1) * VISIT_PAGE_SIZE;
+  const pageData = data.slice(start, start + VISIT_PAGE_SIZE);
+
   const statusBadge = (s) => {
     const m = {'방문완료':'green','방문예정':'blue','방문미정':'amber','방문취소':'red','No-show':'red'};
     return `<span class="badge badge--${m[s]||'gray'}" style="font-size:10px">${s}</span>`;
   };
-  document.getElementById('list-tbody').innerHTML = data.map((v, i) => `<tr>
-    <td class="tc col-no">${data.length - i}</td>
-    <td class="tc" style="white-space:nowrap">${v.branch}</td>
+  document.getElementById('list-tbody').innerHTML = pageData.map((v, i) => `<tr>
+    <td class="tc col-no">${data.length - start - i}</td>
+    <td class="tc" style="white-space:nowrap">${branchMap[v.branch] || v.branch}</td>
     <td class="tc col-name"><a href="consult-detail.html?manager=${encodeURIComponent(v.consultant)}&date=${v.date.slice(0,10)}" target="_blank" class="col-link" style="text-decoration:none">${v.consultant}</a></td>
     <td class="tc"><a href="detail.html?id=${v.memberId}" target="_blank" class="col-link" style="text-decoration:none">${v.memberName}</a></td>
     <td class="tc">${v.date.slice(0,10)}</td>
@@ -202,6 +217,24 @@ function renderListTable() {
     <td class="tc">${resultBadge(v.result)||'<span class="text-muted">-</span>'}</td>
     <td class="tl ellipsis">${v.resultNote||'-'}</td>
   </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;padding:30px" class="text-muted">해당 기간 방문상담 내역이 없습니다.</td></tr>';
+
+  // 페이지네이션
+  const pagArea = document.getElementById('visit-pagination');
+  if (!pagArea) return;
+  if (totalPages <= 1) { pagArea.innerHTML = ''; return; }
+  let btns = `<button class="pagination__btn" ${visitPage <= 1 ? 'disabled' : ''} data-p="${visitPage - 1}">‹</button>`;
+  const maxBtns = 5;
+  let s = Math.max(1, visitPage - Math.floor(maxBtns / 2));
+  let e = Math.min(totalPages, s + maxBtns - 1);
+  if (e - s < maxBtns - 1) s = Math.max(1, e - maxBtns + 1);
+  for (let p = s; p <= e; p++) {
+    btns += `<button class="pagination__btn ${p === visitPage ? 'active' : ''}" data-p="${p}">${p}</button>`;
+  }
+  btns += `<button class="pagination__btn" ${visitPage >= totalPages ? 'disabled' : ''} data-p="${visitPage + 1}">›</button>`;
+  pagArea.innerHTML = btns;
+  pagArea.querySelectorAll('.pagination__btn').forEach(b => {
+    b.addEventListener('click', () => { visitPage = parseInt(b.dataset.p); renderListTable(); });
+  });
 }
 
 /* ── 이벤트 ── */
@@ -275,33 +308,59 @@ function render() {
 
     <!-- 탭1: 대형 캘린더 -->
     <div class="std-tab-panel active" id="tab-calendar">
+      <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary)">지사</label>
+        <select class="form-select form-input--sm" id="f-cal-branch" style="width:120px;font-size:12px">
+          <option value="">전체</option>
+          ${BRANCHES.map(b => `<option value="${b.code}">${b.name}</option>`).join('')}
+        </select>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-left:12px">방문결과</label>
+        <select class="form-select form-input--sm" id="f-cal-result" style="width:120px;font-size:12px">
+          <option value="">전체</option>
+          <option>변경</option>
+          <option>취소</option>
+          <option>가입</option>
+          <option>보류</option>
+        </select>
+      </div>
       <div id="cal-area">${renderCalendar()}</div>
     </div>
 
     <!-- 탭2: 방문상담 현황 -->
     <div class="std-tab-panel" id="tab-list">
-      <table class="search-table">
+      <table class="std-table" style="margin-bottom:0;table-layout:fixed">
+        <colgroup>
+          <col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col><col style="width:80px"><col>
+        </colgroup>
         <tbody>
           <tr>
-            <th class="search-table__th">기간</th>
-            <td class="search-table__td">
-              <input type="date" id="f-date-from" value="${today}" class="form-input form-input--sm fi" style="width:140px">
-              <span class="text-muted">~</span>
-              <input type="date" id="f-date-to" value="${today}" class="form-input form-input--sm fi" style="width:140px">
+            <th>기간</th>
+            <td colspan="3">
+              <div style="display:flex;align-items:center;gap:6px">
+                <input type="date" id="f-date-from" class="form-input form-input--sm" style="width:140px">
+                <span class="text-muted">~</span>
+                <input type="date" id="f-date-to" class="form-input form-input--sm" style="width:140px">
+              </div>
+            </td>
+            <th>지사</th>
+            <td>
+              <select class="form-select form-input--sm" id="f-branch" style="width:100%;font-size:12px"><option value="">지사 전체</option>${branches.map(b=>`<option>${b}</option>`).join('')}</select>
+            </td>
+            <th>방문결과</th>
+            <td>
+              <select class="form-select form-input--sm" id="f-result" style="width:100%;font-size:12px"><option value="">결과 전체</option>${VISIT_RESULTS.map(r=>`<option>${r}</option>`).join('')}</select>
             </td>
           </tr>
           <tr>
-            <th class="search-table__th">상세검색</th>
-            <td class="search-table__td">
-              <select class="form-input form-input--sm fi" id="f-branch" style="width:100px"><option value="">지사 전체</option>${branches.map(b=>`<option>${b}</option>`).join('')}</select>
-              <select class="form-input form-input--sm fi" id="f-consultant" style="width:120px"><option value="">매니저 전체</option>${consultants.map(c=>`<option>${c}</option>`).join('')}</select>
-              <select class="form-input form-input--sm fi" id="f-result" style="width:100px"><option value="">결과 전체</option>${VISIT_RESULTS.map(r=>`<option>${r}</option>`).join('')}</select>
+            <th>매니저</th>
+            <td colspan="7">
+              ${renderManagerPickerHTML('vmgr')}
             </td>
           </tr>
         </tbody>
       </table>
-      <div class="search-actions">
-        <button class="btn btn--sm search-btn" id="btn-list-search">검색</button>
+      <div style="background:#fff;border:1px solid var(--border-light);border-top:none;padding:4px 12px;display:flex;justify-content:center;align-items:center;gap:12px">
+        <button class="btn btn--secondary btn--sm" id="btn-list-search">검색</button>
         <button class="btn btn--reset btn--sm" id="btn-list-reset">초기화</button>
       </div>
 
@@ -320,12 +379,26 @@ function render() {
             <tbody id="list-tbody"></tbody>
           </table>
         </div>
+        <div style="display:flex;justify-content:center;margin-top:12px">
+          <div class="pagination" id="visit-pagination"></div>
+        </div>
       </div>
     </div>
+    <style>${getManagerPickerStyles()}</style>
   `;
 
   // 초기 렌더
   bindCalendarEvents();
+
+  // 캘린더 지사 필터
+  document.getElementById('f-cal-branch')?.addEventListener('change', () => {
+    document.getElementById('cal-area').innerHTML = renderCalendar();
+    bindCalendarEvents();
+  });
+  document.getElementById('f-cal-result')?.addEventListener('change', () => {
+    document.getElementById('cal-area').innerHTML = renderCalendar();
+    bindCalendarEvents();
+  });
 
   // 탭 이벤트
   document.querySelectorAll('.std-tab').forEach(t => {
@@ -333,10 +406,20 @@ function render() {
   });
 
   // 리스트 필터 이벤트
-  document.getElementById('btn-list-search').addEventListener('click', renderListTable);
+  document.getElementById('btn-list-search').addEventListener('click', () => { visitPage = 1; renderListTable(); });
   document.getElementById('btn-list-reset').addEventListener('click', () => {
-    ['f-date-from','f-date-to','f-branch','f-consultant','f-result'].forEach(id => { document.getElementById(id).value = ''; });
-    renderListTable();
+    ['f-date-from','f-date-to','f-branch','f-result'].forEach(id => { document.getElementById(id).value = ''; });
+    if (visitMgrPicker) visitMgrPicker.reset();
+    visitPage = 1; renderListTable();
+  });
+
+  // 매니저 Picker 초기화
+  visitMgrPicker = new ManagerPicker({
+    inputId: 'vmgr-search-input',
+    modalBtnId: 'vmgr-open-modal',
+    tagsId: 'vmgr-tags',
+    consultants: consultants,
+    onChange: () => renderListTable()
   });
 }
 

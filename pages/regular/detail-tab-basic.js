@@ -29,6 +29,7 @@ export function renderBasicInfo(m) {
         <tr><td class="${LBL}">호적주소</td><td class="${VAL}" colspan="3">${m.registerAddress || m.hometown || '-'}</td></tr>
         <tr><td class="${LBL}">본인핸드폰</td><td class="${VAL}">${fmtPhone(m.phone)}</td><td class="${LBL}">자택전화</td><td class="${VAL}">${m.homePhone ? fmtPhone(m.homePhone) : '-'}</td></tr>
         <tr><td class="${LBL}">기타연락처</td><td class="${VAL}">${m.subPhone ? fmtPhone(m.subPhone) : '-'}</td><td class="${LBL}">직장전화</td><td class="${VAL}">${m.workPhone ? fmtPhone(m.workPhone) : '-'}</td></tr>
+        <tr><td class="${LBL}">통화희망자</td><td class="${VAL}">${m.callTarget || '본인'}</td><td class="${LBL}">소통방법</td><td class="${VAL}">${m.contactMethod || '문자+통화'}</td></tr>
       </tbody>
     </table>` + SEC_END
     // 계약관리
@@ -84,16 +85,16 @@ export function renderBasicInfo(m) {
     // 학력
     + SEC('학력')
     + `<table ${TBL}>
-      <colgroup><col style="width:10%"><col style="width:20%"><col style="width:15%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:10%"><col style="width:9%"></colgroup>
+      <colgroup><col style="width:10%"><col style="width:22%"><col style="width:18%"><col style="width:13%"><col style="width:13%"><col style="width:12%"><col style="width:12%"></colgroup>
       <thead><tr>
-        <th class="${LBL}">학력</th><th class="${LBL}">학교명</th><th class="${LBL}">전공</th><th class="${LBL}">입학년도</th><th class="${LBL}">졸업년도</th><th class="${LBL}">졸업여부</th><th class="${LBL}">소재지</th><th class="${LBL}">관리</th>
+        <th class="${LBL}">학력</th><th class="${LBL}">학교명</th><th class="${LBL}">전공</th><th class="${LBL}">입학년도</th><th class="${LBL}">졸업년도</th><th class="${LBL}">졸업여부</th><th class="${LBL}">소재지</th>
       </tr></thead>
       <tbody>
         ${(m.educationList || [
           { level: '고등학교', school: m.school || '-', major: '-', enterYear: '-', gradYear: '-', graduated: '졸업', location: '-' },
           { level: '대학교', school: m.university || '-', major: m.major || '-', enterYear: '-', gradYear: '-', graduated: '졸업', location: '-' }
         ]).map(function(e, i) {
-          return '<tr><td class="' + VAL + '" style="text-align:center">' + (e.level || '-') + '</td><td class="' + VAL + '">' + (e.school || '-') + '</td><td class="' + VAL + '">' + (e.major || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.enterYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.gradYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.graduated || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.location || '-') + '</td><td style="text-align:center;padding:4px"><button class="btn btn--ghost btn--sm edu-del-btn" style="font-size:10px;padding:1px 4px;color:var(--status-red)">삭제</button></td></tr>';
+          return '<tr><td class="' + VAL + '" style="text-align:center">' + (e.level || '-') + '</td><td class="' + VAL + '">' + (e.school || '-') + '</td><td class="' + VAL + '">' + (e.major || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.enterYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.gradYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.graduated || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (e.location || '-') + '</td></tr>';
         }).join('')}
     </table>` + SEC_END
 
@@ -111,35 +112,70 @@ export function renderBasicInfo(m) {
           return '<tr><td class="' + VAL + '" style="text-align:center">' + (mr.type || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.marriedYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.divorceYear || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.duration || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.childCare || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (mr.children || '-') + '</td><td class="' + VAL + '">' + (mr.reason || '-') + '</td></tr>';
         }).join('')}
       </tbody>
+    </table>` + SEC_END
+
+    // 서류인증
+    + `<div class="sec"><div class="sec__header sec__header--flex">서류인증<button class="btn btn--primary btn--sm" id="btn-add-doc" style="font-size:11px;padding:2px 10px">서류등록</button></div><div class="sec__body">`
+    + `<table ${TBL}>
+      <colgroup><col style="width:15%"><col style="width:20%"><col style="width:15%"><col style="width:15%"><col style="width:15%"><col style="width:20%"></colgroup>
+      <thead><tr>
+        <th class="${LBL}">서류명</th><th class="${LBL}">인증상태</th><th class="${LBL}">제출일</th><th class="${LBL}">만료일</th><th class="${LBL}">재인증</th><th class="${LBL}">비고</th>
+      </tr></thead>
+      <tbody>
+        ${(m.docList || [
+          { name: '신분증', status: '인증완료', submitDate: '2025-04-17', expiryDate: '-', reauth: '-', note: '-' },
+          { name: '졸업증명서', status: '인증완료', submitDate: '2025-04-17', expiryDate: '-', reauth: '-', note: '-' },
+          { name: '재직증명서', status: '인증완료', submitDate: '2025-04-20', expiryDate: '2026-04-20', reauth: '필요', note: '1년 갱신' },
+          { name: '혼인관계증명서', status: '미제출', submitDate: '-', expiryDate: '-', reauth: '-', note: '-' },
+        ]).map(function(d) {
+          var stColor = d.status === '인증완료' ? '#10b981' : d.status === '미제출' ? '#ef4444' : '#f59e0b';
+          var reauthColor = d.reauth === '필요' ? '#ef4444' : 'inherit';
+          return '<tr><td class="' + VAL + '" style="text-align:center">' + d.name + '</td><td class="' + VAL + '" style="text-align:center;color:' + stColor + ';font-weight:600">' + d.status + '</td><td class="' + VAL + '" style="text-align:center">' + (d.submitDate || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (d.expiryDate || '-') + '</td><td class="' + VAL + '" style="text-align:center;color:' + reauthColor + ';font-weight:600">' + (d.reauth || '-') + '</td><td class="' + VAL + '">' + (d.note || '-') + '</td></tr>';
+        }).join('')}
+      </tbody>
     </table>` + SEC_END;
 
 
   // ── 우측: 특이사항 + 소개프로필 ──
   var specialNotes = m.specialNotes || [
-    { no: 1, date: '26.05.06', writer: '이다슨', type: '관리', content: '강서구 한잉디블렌1101호 본인소유' },
-    { no: 2, date: '26.05.06', writer: '이다슨', type: '상담', content: '상담 진행 완료' },
+    { no: 1, date: '26.05.06', rawDate: '2026-05-06', writer: '이다슨', type: '관리', content: '강서구 한잉디블렌1101호 본인소유' },
+    { no: 2, date: '26.05.06', rawDate: '2026-05-06', writer: '이다슨', type: '상담', content: '상담 진행 완료' },
+    { no: 3, date: '26.04.20', rawDate: '2026-04-20', writer: '오영수', type: '매칭', content: '정씨 성을 가진분 기피 (전배우자)' },
+    { no: 4, date: '26.04.15', rawDate: '2026-04-15', writer: '김지현', type: '관리', content: '어머니 통화 - 아들 진행상황 문의' },
   ];
 
   var rightHtml = ''
     // 특이사항 카드
-    + `<div class="sec" style="margin-bottom:12px">`
-    + `<div class="sec__header sec__header--flex">`
-    + `<span class="mcard__title">특이사항</span>`
-    + `<button class="btn btn--outline btn--sm" id="btn-add-special-note" style="font-size:11px;padding:2px 10px">등록</button>`
-    + `</div><div>`
-    + `<table class="data-table data-table--bordered data-table--no-outer dtbl">
-        <colgroup><col style="width:10%"><col style="width:18%"><col style="width:14%"><col style="width:58%"></colgroup>
-        <thead><tr>
-            <th style="padding:6px 4px;text-align:center;vertical-align:middle">번호</th>
-            <th style="padding:6px 4px;text-align:center;vertical-align:middle">작성자</th>
-            <th style="padding:6px 4px;text-align:center;vertical-align:middle">구분</th>
-            <th style="padding:6px 4px;text-align:center;vertical-align:middle">내용</th>
-        </tr></thead><tbody>`
+    + '<div class="sec" style="margin-bottom:12px">'
+    + '<div class="sec__header sec__header--flex">'
+    + '<span class="mcard__title">특이사항</span>'
+    + '<button class="btn btn--outline btn--sm" id="btn-add-special-note-basic" style="font-size:11px;padding:2px 10px">등록</button>'
+    + '</div>'
+    + '<div class="mcard__filter" style="display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border-light)">'
+    + '<select class="form-input" id="sn-basic-filter" style="padding:3px 6px;width:100px;font-size:12px">'
+    + '<option value="전체">구분: 전체</option><option value="관리">관리</option><option value="상담">상담</option><option value="매칭">매칭</option>'
+    + '</select></div>'
+    + '<div>'
+    + '<table class="data-table data-table--bordered data-table--no-outer dtbl" id="tbl-sn-basic">'
+    + '<colgroup><col style="width:8%"><col style="width:14%"><col style="width:10%"><col style="width:16%"><col style="width:52%"></colgroup>'
+    + '<thead><tr>'
+    + '<th style="padding:6px 4px;text-align:center;vertical-align:middle">번호</th>'
+    + '<th style="padding:6px 4px;text-align:center;vertical-align:middle">작성자</th>'
+    + '<th style="padding:6px 4px;text-align:center;vertical-align:middle">구분</th>'
+    + '<th style="padding:6px 4px;text-align:center;vertical-align:middle">일시</th>'
+    + '<th style="padding:6px 4px;text-align:center;vertical-align:middle">내용</th>'
+    + '</tr></thead><tbody>'
     + specialNotes.map(function(n, i) {
-      var isImp = n.important;
-      return '<tr style="' + (isImp ? 'background:#fef2f2;' : '') + '"><td style="text-align:center;vertical-align:middle">' + (i+1) + '</td><td style="text-align:center;vertical-align:middle">' + (n.writer||'-') + '</td><td style="text-align:center;vertical-align:middle;font-weight:600;color:' + (n.type==='관리'?'#3b82f6':n.type==='상담'?'#10b981':n.type==='매칭'?'#f59e0b':'inherit') + '">' + (n.type||'-') + '</td><td style="line-height:1.5;vertical-align:middle">' + (n.content||'-') + (n.date ? ' <span style="color:#aaa;font-size:11px">' + n.date + '</span>' : '') + '</td></tr>';
+      var typeColor = n.type === '관리' ? '#3b82f6' : n.type === '상담' ? '#10b981' : n.type === '매칭' ? '#f59e0b' : 'inherit';
+      return '<tr class="sn-basic-row" data-sn-type="' + (n.type || '') + '">'
+        + '<td style="text-align:center;vertical-align:middle">' + (i+1) + '</td>'
+        + '<td style="text-align:center;vertical-align:middle">' + (n.writer||'-') + '</td>'
+        + '<td style="text-align:center;vertical-align:middle;font-weight:600;color:' + typeColor + '">' + (n.type||'-') + '</td>'
+        + '<td style="text-align:center;vertical-align:middle;white-space:nowrap;font-size:12px;color:#666">' + (n.date||'-') + '</td>'
+        + '<td style="line-height:1.5;vertical-align:middle">' + (n.content||'-') + '</td>'
+        + '</tr>';
     }).join('')
-    + `</tbody></table></div></div>`
+    + '</tbody></table></div></div>'
     // 소개프로필 카드
     + `<div class="sec">`
     + `<div class="sec__header sec__header--flex">`
