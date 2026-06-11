@@ -31,7 +31,7 @@ var isUUID = rawId && rawId.length > 10 && rawId.indexOf('-') > -1;
 // ── 데이터 로드 ──
 async function loadMember() {
   try {
-    if (isUUID) {
+    if (isUUID && supabase) {
       const { data, error } = await supabase
         .from('regulars')
         .select('*')
