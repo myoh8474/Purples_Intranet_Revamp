@@ -35,28 +35,28 @@ export function renderManagerPickerHTML(prefix = 'mgr') {
 export function getManagerPickerStyles() {
   return `
     .mgr-modal-btn {
-      border: 1px solid #bae6fd; background: #f0f9ff; color: #0369a1;
+      border: 1px solid var(--border-light); background: #fff; color: var(--text-primary);
       font-size: 11px; padding: 0 10px; height: 28px;
-      cursor: pointer; border-radius: 6px; font-weight: 600;
-      font-family: inherit; transition: all 0.15s ease;
+      cursor: pointer; border-radius: 2px; font-weight: 600;
+      font-family: inherit; transition: background 0.1s;
     }
-    .mgr-modal-btn:hover { background: #e0f2fe; border-color: #7dd3fc; }
+    .mgr-modal-btn:hover { background: #f1f3f5; border-color: var(--border-dark); }
     .mgr-autocomplete {
       position: absolute; top: 100%; left: 0; width: 180px;
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1); z-index: 100;
+      background: #fff; border: 1px solid var(--border-medium);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100;
       max-height: 180px; overflow-y: auto; display: none;
     }
     .mgr-autocomplete.visible { display: block; }
     .mgr-ac-item {
       padding: 6px 10px; font-size: 11px; cursor: pointer;
       display: flex; align-items: center; gap: 6px;
-      border-bottom: 1px solid #f8fafc;
+      border-bottom: 1px solid #f1f3f5;
     }
-    .mgr-ac-item:hover { background: #e0f2fe; }
+    .mgr-ac-item:hover { background: #f0f4f8; }
     .mgr-ac-item__tag {
-      font-size: 9px; color: #64748b; background: #f1f5f9;
-      padding: 1px 4px; border-radius: 3px;
+      font-size: 9px; color: #666; background: #f1f3f5;
+      padding: 1px 4px;
     }
     .mgr-tags {
       display: flex; flex-wrap: wrap; gap: 3px; align-items: center;
@@ -64,79 +64,75 @@ export function getManagerPickerStyles() {
     .mgr-tag {
       display: inline-flex; align-items: center; gap: 3px;
       font-size: 10px; font-weight: 500; padding: 2px 8px;
-      border-radius: 10px; background: #e0f2fe; color: #0369a1;
-      border: 1px solid #bae6fd; animation: tagIn 0.15s ease;
+      background: #e9ecef; color: var(--text-primary);
+      border: 1px solid var(--border-light);
     }
-    @keyframes tagIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .mgr-tag__x {
-      cursor: pointer; font-size: 11px; color: #64748b;
+      cursor: pointer; font-size: 11px; color: #888;
       margin-left: 2px; font-weight: 700; line-height: 1;
     }
-    .mgr-tag__x:hover { color: #dc2626; }
+    .mgr-tag__x:hover { color: #c53030; }
 
     /* ── 매니저 모달 ── */
     .mgr-modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
       z-index: 9999; display: flex; align-items: center; justify-content: center;
-      animation: mgrFadeIn 0.15s ease;
     }
-    @keyframes mgrFadeIn { from { opacity: 0; } to { opacity: 1; } }
     .mgr-modal {
-      background: #fff; border-radius: 12px; width: 520px; max-height: 80vh;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column;
-      animation: mgrSlideUp 0.2s ease;
+      background: #fff; border: 1px solid #999; width: 520px; max-height: 80vh;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15); display: flex; flex-direction: column;
     }
-    @keyframes mgrSlideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .mgr-modal__head {
-      padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+      padding: 10px 16px; border-bottom: 1px solid var(--border-light);
       display: flex; align-items: center; justify-content: space-between;
+      background: #f8f9fa;
     }
-    .mgr-modal__title { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .mgr-modal__title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
     .mgr-modal__close {
-      width: 28px; height: 28px; border: none; background: #f1f5f9;
-      border-radius: 6px; cursor: pointer; font-size: 14px; color: #64748b;
+      width: 28px; height: 28px; border: none; background: none;
+      cursor: pointer; font-size: 14px; color: var(--text-muted);
       display: flex; align-items: center; justify-content: center;
     }
-    .mgr-modal__close:hover { background: #e2e8f0; }
+    .mgr-modal__close:hover { color: var(--text-primary); }
     .mgr-modal__body { display: flex; flex: 1; min-height: 0; }
     .mgr-modal__col { display: flex; flex-direction: column; flex: 1; }
-    .mgr-modal__col--left { border-right: 1px solid #e2e8f0; background: #f8fafc; }
+    .mgr-modal__col--left { border-right: 1px solid var(--border-light); background: #f8f9fa; }
     .mgr-modal__col-head {
-      padding: 8px 14px; font-size: 11px; font-weight: 700; color: #475569;
-      border-bottom: 1px solid #e2e8f0; background: #f1f5f9;
+      padding: 6px 14px; font-size: 11px; font-weight: 700; color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-light); background: #f1f3f5;
     }
     .mgr-modal__scroll { overflow-y: auto; max-height: 320px; }
     .mgr-modal__item {
       display: flex; align-items: center; gap: 8px;
-      padding: 7px 14px; font-size: 12px; cursor: pointer;
-      border-bottom: 1px solid #f1f5f9; transition: background 0.1s;
-      user-select: none; color: #334155;
+      padding: 6px 14px; font-size: 12px; cursor: pointer;
+      border-bottom: 1px solid #f1f3f5; transition: background 0.1s;
+      user-select: none; color: var(--text-primary);
     }
-    .mgr-modal__item:hover { background: #e0f2fe; }
+    .mgr-modal__item:hover { background: #f0f4f8; }
     .mgr-modal__item input[type="checkbox"] {
-      width: 15px; height: 15px; accent-color: #0369a1; cursor: pointer;
+      width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
     }
     .mgr-modal__item-name { flex: 1; font-weight: 500; }
     .mgr-modal__item-count {
-      font-size: 10px; color: #94a3b8; background: #f1f5f9;
-      padding: 1px 6px; border-radius: 6px;
+      font-size: 10px; color: #888; background: #f1f3f5;
+      padding: 1px 6px;
     }
     .mgr-modal__item-tag {
-      font-size: 10px; color: #0369a1; background: #e0f2fe;
-      padding: 1px 6px; border-radius: 4px;
+      font-size: 10px; color: var(--accent); background: #e9ecef;
+      padding: 1px 6px;
     }
-    .mgr-modal__item.checked { background: #eff6ff; }
+    .mgr-modal__item.checked { background: #f0f4f8; }
     .mgr-modal__empty {
       padding: 30px; text-align: center; font-size: 12px;
-      color: #94a3b8; font-style: italic;
+      color: #888;
     }
     .mgr-modal__foot {
-      padding: 12px 20px; border-top: 1px solid #e2e8f0;
+      padding: 10px 16px; border-top: 1px solid var(--border-light);
       display: flex; align-items: center; justify-content: space-between;
-      background: #f8fafc; border-radius: 0 0 12px 12px;
+      background: #f8f9fa;
     }
-    .mgr-modal__foot-info { font-size: 11px; color: #64748b; }
-    .mgr-modal__foot-info strong { color: #0369a1; }
+    .mgr-modal__foot-info { font-size: 11px; color: #666; }
+    .mgr-modal__foot-info strong { color: var(--accent); }
   `;
 }
 

@@ -1,125 +1,120 @@
 /* ========================================
    퍼플스 인트라넷 — 디자인 토큰
-   Purple + Gold Luxury Theme (Modern Tone)
+   System ERP Style (50대 사용자 최적화)
    ======================================== */
 
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 
 :root {
-  /* ── 브랜드 컬러 (퍼플 계열) ── */
-  --purple-50: #f5f3ff;
-  --purple-100: #ede9fe;
-  --purple-200: #ddd6fe;
-  --purple-300: #c4b5fd;
-  --purple-400: #a78bfa;
-  --purple-500: #8b5cf6;
-  --purple-600: #7c3aed;
-  --purple-700: #6d28d9;
-  --purple-800: #5b21b6;
-  --purple-900: #4c1d95;
-  --purple-950: #2e1065;
+  /* ── 시스템 컬러 (무채색 기반) ── */
+  --purple-50: #f8f9fa;
+  --purple-100: #f1f3f5;
+  --purple-200: #e9ecef;
+  --purple-300: #dee2e6;
+  --purple-400: #adb5bd;
+  --purple-500: #6c757d;
+  --purple-600: #495057;
+  --purple-700: #343a40;
+  --purple-800: #212529;
+  --purple-900: #191d21;
+  --purple-950: #0d0f11;
 
-  /* ── 골드 액센트 ── */
-  --gold-50: #fffbeb;
-  --gold-100: #fef3c7;
-  --gold-200: #fde68a;
-  --gold-300: #fcd34d;
-  --gold-400: #fbbf24;
-  --gold-500: #f59e0b;
-  --gold-600: #d97706;
-  --gold-700: #b45309;
+  /* ── 골드 → 무채색 대체 ── */
+  --gold-50: #f8f9fa;
+  --gold-100: #e9ecef;
+  --gold-200: #dee2e6;
+  --gold-300: #ced4da;
+  --gold-400: #adb5bd;
+  --gold-500: #6c757d;
+  --gold-600: #495057;
+  --gold-700: #343a40;
 
   /* ── 배경 ── */
   --bg-primary: #ffffff;
-  --bg-secondary: #faf9fc;
-  --bg-tertiary: #f3f1f6;
-  --bg-sidebar: #1e1145;
-  --bg-sidebar-solid: #1e1145;
-  --bg-sidebar-hover: rgba(139, 92, 246, 0.15);
-  --bg-sidebar-active: rgba(139, 92, 246, 0.25);
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --bg-sidebar: #535a68;
+  --bg-sidebar-solid: #535a68;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.14);
 
-  /* ── 포인트 컬러 ── */
-  --accent: #7c3aed;
-  --accent-dark: #6d28d9;
-  --accent-darker: #5b21b6;
-  --accent-light: #a78bfa;
-  --accent-lighter: #c4b5fd;
-  --accent-bg: #f5f3ff;
-  --accent-bg-light: #faf9fc;
+  /* ── 포인트 컬러 (최소한의 파랑) ── */
+  --accent: #2c5282;
+  --accent-dark: #1a365d;
+  --accent-darker: #153e75;
+  --accent-light: #4a7ab5;
+  --accent-lighter: #90b4d6;
+  --accent-bg: #f0f4f8;
+  --accent-bg-light: #f7f9fc;
 
   /* ── 텍스트 ── */
-  --text-primary: #1a1235;
-  --text-secondary: #5b5675;
-  --text-muted: #8e8aa0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #888888;
   --text-white: #ffffff;
-  --text-inverse: #f5f3ff;
+  --text-inverse: #f1f3f5;
 
   /* ── 보더 ── */
-  --border-light: #cbd5e1;
-  --border-medium: #d4d0e0;
-  --border-dark: #a09bb5;
+  --border-light: #d1d5db;
+  --border-medium: #c0c4ca;
+  --border-dark: #9ca3af;
 
-  /* ── 상태 색상 ── */
-  --status-blue: #3b82f6;
-  --status-blue-light: #60a5fa;
-  --status-blue-bg: #eff6ff;
-  --status-green: #10b981;
-  --status-green-dark: #059669;
-  --status-green-bg: #ecfdf5;
-  --status-amber: #f59e0b;
-  --status-amber-bg: #fffbeb;
-  --status-orange: #f97316;
-  --status-orange-light: #fb923c;
-  --status-orange-bg: #fff7ed;
-  --status-red: #ef4444;
-  --status-red-light: #f87171;
-  --status-red-bg: #fef2f2;
-  --status-pink: #ec4899;
-  --status-pink-light: #f472b6;
-  --status-pink-muted: #f9a8d4;
+  /* ── 상태 색상 (최소한, 저채도) ── */
+  --status-blue: #2c5282;
+  --status-blue-light: #4a7ab5;
+  --status-blue-bg: #f0f4f8;
+  --status-green: #276749;
+  --status-green-dark: #1e5339;
+  --status-green-bg: #f0f7f4;
+  --status-amber: #975a16;
+  --status-amber-bg: #fdf8f0;
+  --status-orange: #9c4221;
+  --status-orange-light: #c05621;
+  --status-orange-bg: #fdf4ef;
+  --status-red: #c53030;
+  --status-red-light: #e53e3e;
+  --status-red-bg: #fdf2f2;
+  --status-pink: #97266d;
+  --status-pink-light: #b83280;
+  --status-pink-muted: #d6a3c5;
   --status-pink-bg: #fdf2f8;
-  --status-purple: #8b5cf6;
-  --status-purple-dark: #7c3aed;
+  --status-purple: #553c9a;
+  --status-purple-dark: #44337a;
   --status-purple-bg: #f5f3ff;
-  --status-gray: #6b7280;
-  --status-gray-light: #9ca3af;
-  --status-gray-dark: #4b5563;
-  --status-gray-bg: #f3f4f6;
-  --status-gold: #d97706;
-  --status-gold-bg: #fef3c7;
+  --status-gray: #4a5568;
+  --status-gray-light: #718096;
+  --status-gray-dark: #2d3748;
+  --status-gray-bg: #f7fafc;
+  --status-gold: #975a16;
+  --status-gold-bg: #fdf8f0;
 
-  /* ── 그림자 (Modern Tone: 활성화) ── */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 2px 6px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-  --shadow-xl: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
-  --shadow-glow: 0 0 12px rgba(139,92,246,0.25);
-  --shadow-gold: 0 0 12px rgba(251,191,36,0.2);
+  /* ── 그림자 (최소화) ── */
+  --shadow-sm: none;
+  --shadow-md: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-lg: 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-xl: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-glow: none;
+  --shadow-gold: none;
 
   /* ── 폰트 ── */
   --font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* ── 폰트 사이즈 (4단계 체계) ──
-     - title (18~20px): 페이지 메인 타이틀
-     - heading (16px): 탭 메뉴, 팝업 제목, 1Depth 메뉴
-     - base (14px): 기본 텍스트, 테이블 데이터, 버튼
-     - sub (12~13px): 보조 텍스트, 날짜, 작은 뱃지, 안내문구
-  */
-  --font-size-sub: 0.75rem;      /* 12px — 보조 텍스트 (날짜, 시간, 안내문구) */
-  --font-size-sub-md: 0.8125rem; /* 13px — 보조 텍스트 (작은 뱃지, 부가정보) */
-  --font-size-base: 0.875rem;    /* 14px — 기본 사이즈 (테이블, 버튼, 일반 텍스트) */
-  --font-size-heading: 1rem;     /* 16px — 탭 메뉴, 팝업 제목, 섹션 제목 */
-  --font-size-title: 1.125rem;   /* 18px — 페이지 메인 타이틀 */
-  --font-size-title-lg: 1.25rem; /* 20px — 대형 페이지 타이틀 */
-  --font-size-2xl: 1.5rem;       /* 24px — KPI 값 등 */
-  --font-size-3xl: 1.875rem;     /* 30px — 대시보드 큰 숫자 */
+  /* ── 폰트 사이즈 (4단계 체계) ── */
+  --font-size-sub: 0.75rem;      /* 12px */
+  --font-size-sub-md: 0.8125rem; /* 13px */
+  --font-size-base: 0.875rem;    /* 14px */
+  --font-size-heading: 1rem;     /* 16px */
+  --font-size-title: 1.125rem;   /* 18px */
+  --font-size-title-lg: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem;       /* 24px */
+  --font-size-3xl: 1.875rem;     /* 30px */
 
   /* 하위 호환 별칭 */
-  --font-size-xs: 0.75rem;       /* = sub (12px) */
-  --font-size-sm: 0.8125rem;     /* = sub-md (13px) */
-  --font-size-md: 0.875rem;      /* = base (14px) */
-  --font-size-lg: 1rem;          /* = heading (16px) */
-  --font-size-xl: 1.125rem;      /* = title (18px) */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-md: 0.875rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.125rem;
 
   /* ── 간격 ── */
   --spacing-xs: 0.25rem;
@@ -130,26 +125,26 @@
   --spacing-2xl: 2rem;
   --spacing-3xl: 3rem;
 
-  /* ── 둥근 모서리 (Modern Tone: 활성화) ── */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --radius-full: 9999px;
+  /* ── 둥근 모서리 (최소화 — ERP 직각 스타일) ── */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+  --radius-full: 2px;
 
   /* ── 레이아웃 ── */
-  --topnav-height: 56px;
-  --header-height: 56px;
+  --topnav-height: 40px;
+  --header-height: 40px;
 
-  /* ── 트랜지션 (Modern Tone: 부드럽게) ── */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* ── 트랜지션 (빠르게, 단순하게) ── */
+  --transition-fast: 100ms ease;
+  --transition-base: 150ms ease;
+  --transition-slow: 200ms ease;
+  --transition-spring: 200ms ease;
 
-  /* ── 글래스모피즘 (Modern Tone: 활성화) ── */
-  --glass-bg: rgba(255,255,255,0.85);
-  --glass-border: rgba(232,229,240,0.6);
-  --glass-blur: blur(12px);
+  /* ── 글래스모피즘 (비활성) ── */
+  --glass-bg: #ffffff;
+  --glass-border: #d1d5db;
+  --glass-blur: none;
 }

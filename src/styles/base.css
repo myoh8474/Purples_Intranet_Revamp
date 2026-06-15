@@ -96,7 +96,7 @@ h4 { font-size: 14px !important; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-dark); }
 
 /* ── 선택 영역 ── */
-::selection { background: var(--purple-200); color: var(--purple-900); }
+::selection { background: #d1dce8; color: #1a1a1a; }
 
 /* ── 유틸리티 ── */
 .text-muted { color: var(--text-muted); }

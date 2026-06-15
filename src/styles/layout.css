@@ -1,6 +1,6 @@
 /* ========================================
    퍼플스 인트라넷 — 레이아웃
-   좌측 사이드바 + 헤더 (Modern Tone)
+   System ERP Style (직각, 최소 컬러)
    ======================================== */
 
 /* ── 앱 레이아웃 (가로 배치) ── */
@@ -10,11 +10,11 @@
 }
 
 /* ========================================
-   좌측 사이드바
+   좌측 사이드바 — 진한 다크그레이
    ======================================== */
 .sidebar {
-  width: 230px;
-  background: linear-gradient(180deg, var(--bg-sidebar) 0%, #2a1660 100%);
+  width: 210px;
+  background: var(--bg-sidebar);
   color: var(--text-inverse);
   display: flex;
   flex-direction: column;
@@ -23,40 +23,39 @@
   left: 0;
   bottom: 0;
   z-index: 200;
-  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.2s ease;
   overflow: hidden;
-  box-shadow: 2px 0 8px rgba(30,17,69,0.2);
+  border-right: 1px solid #1f2533;
 }
 
 /* ── 로고 ── */
 .sidebar__header {
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
   flex-shrink: 0;
 }
 
 .sidebar__logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
   color: inherit;
 }
 
 .sidebar__logo-icon {
-  width: 34px; height: 34px;
-  background: linear-gradient(135deg, var(--accent), var(--purple-400));
-  border-radius: var(--radius-md);
+  width: 28px; height: 28px;
+  background: #3d5a80;
+  border-radius: 2px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 0.95rem; color: #fff;
-  box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+  font-weight: 800; font-size: 0.8rem; color: #fff;
   flex-shrink: 0;
 }
 
 .sidebar__logo-text {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
@@ -64,23 +63,23 @@
 .sidebar__user {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
   flex-shrink: 0;
 }
 
 .sidebar__user-avatar {
-  width: 32px; height: 32px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--purple-400), var(--purple-600));
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  background: #4a5568;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600;
+  font-size: 11px; font-weight: 600;
   flex-shrink: 0;
 }
 
 .sidebar__user-info { min-width: 0; }
-.sidebar__user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar__user-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar__user-role { font-size: 11px; opacity: 0.5; white-space: nowrap; }
 
 /* ── 네비게이션 ── */
@@ -88,32 +87,31 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
-/* 스크롤바 (사이드바 내) */
 .sidebar__nav::-webkit-scrollbar { width: 3px; }
 .sidebar__nav::-webkit-scrollbar-track { background: transparent; }
-.sidebar__nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.sidebar__nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
 
 /* ── 구분선 ── */
 .sidebar__divider {
   height: 1px;
   background: rgba(255,255,255,0.08);
-  margin: 6px 14px;
+  margin: 4px 10px;
 }
 
 /* ── 메뉴 아이템 ── */
 .sidebar__item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 18px;
-  color: rgba(255,255,255,0.65);
+  gap: 8px;
+  padding: 7px 14px;
+  color: rgba(255,255,255,0.6);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.1s;
   text-decoration: none;
   border: none;
   background: none;
@@ -124,8 +122,8 @@
 }
 
 .sidebar__item:hover {
-  background: rgba(139, 92, 246, 0.12);
-  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
 }
 
 .sidebar__item.active {
@@ -139,8 +137,8 @@
 }
 
 .sidebar__icon {
-  width: 20px;
-  height: 18px;
+  width: 18px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,9 +157,9 @@
 }
 
 .sidebar__arrow {
-  font-size: 11px;
+  font-size: 10px;
   opacity: 0.4;
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -174,7 +172,7 @@
 .sidebar__children {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 0.2s ease;
 }
 
 .sidebar__group.open > .sidebar__children {
@@ -182,42 +180,42 @@
 }
 
 .sidebar__group-label {
-  padding: 8px 18px 4px 48px;
+  padding: 6px 14px 3px 42px;
   font-size: 10px;
-  font-weight: 700;
-  color: var(--purple-300);
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
 .sidebar__child {
   display: block;
-  padding: 7px 18px 7px 48px;
+  padding: 5px 14px 5px 42px;
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.5);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background 0.1s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .sidebar__child:hover {
-  background: rgba(139, 92, 246, 0.1);
-  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.85);
 }
 
 .sidebar__child.active {
   color: #fff;
   font-weight: 600;
   background: none;
-  border-right: 3px solid #fff;
+  border-right: 2px solid #fff;
 }
 
 /* ── 하단 (접기 버튼) ── */
 .sidebar__footer {
-  padding: 8px;
+  padding: 6px;
   border-top: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
 }
@@ -225,36 +223,36 @@
 .sidebar__collapse-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: none;
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.5);
-  font-size: 12px;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.45);
+  font-size: 11px;
   cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: all 0.15s ease;
+  border-radius: 2px;
+  transition: background 0.1s;
   font-family: inherit;
   white-space: nowrap;
 }
 
 .sidebar__collapse-btn:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   color: #fff;
 }
 
 .sidebar__collapse-icon {
-  font-size: 11px;
+  font-size: 10px;
   flex-shrink: 0;
-  transition: transform 0.25s ease;
+  transition: transform 0.2s ease;
 }
 
 /* ========================================
    사이드바 접힌 상태
    ======================================== */
 .sidebar-collapsed .sidebar {
-  width: 56px;
+  width: 48px;
 }
 
 .sidebar-collapsed .sidebar__logo-text,
@@ -269,12 +267,12 @@
 
 .sidebar-collapsed .sidebar__item {
   justify-content: center;
-  padding: 10px 0;
+  padding: 8px 0;
   gap: 0;
 }
 
 .sidebar-collapsed .sidebar__icon {
-  width: 56px;
+  width: 48px;
   justify-content: center;
 }
 
@@ -290,11 +288,11 @@
 
 .sidebar-collapsed .sidebar__user {
   justify-content: center;
-  padding: 10px 0;
+  padding: 8px 0;
 }
 
 .sidebar-collapsed .sidebar__header {
-  padding: 16px 11px;
+  padding: 10px 10px;
 }
 
 .sidebar-collapsed .sidebar__logo {
@@ -310,7 +308,7 @@
 }
 
 .sidebar-collapsed .main {
-  margin-left: 56px;
+  margin-left: 48px;
 }
 
 /* ========================================
@@ -321,89 +319,88 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  margin-left: 230px;
-  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 210px;
+  transition: margin-left 0.2s ease;
 }
 
-/* ── 헤더 (브레드크럼) ── */
+/* ── 헤더 (브레드크럼) — 얇고 단순한 바 ── */
 .header {
   height: var(--header-height);
-  background: var(--bg-primary);
+  background: #fff;
   border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--spacing-2xl);
+  padding: 0 20px;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
 }
 
 .header__left { display: flex; align-items: center; }
 .header__right { display: flex; align-items: center; gap: var(--spacing-sm); }
 
 .header__breadcrumb { display: flex; align-items: center; gap: var(--spacing-sm); }
-.header__breadcrumb-item { font-size: var(--font-size-sm); color: var(--text-muted); }
+.header__breadcrumb-item { font-size: 12px; color: var(--text-muted); }
 .header__breadcrumb-item:last-child { color: var(--text-primary); font-weight: 600; }
 .header__breadcrumb-sep { color: var(--text-muted); opacity: 0.5; }
 
 .header__action {
   background: none;
   border: none;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
-  padding: 6px;
-  border-radius: var(--radius-md);
+  padding: 4px;
+  border-radius: 2px;
   position: relative;
-  transition: all var(--transition-fast);
+  transition: background 0.1s;
 }
 .header__action:hover { background: var(--bg-tertiary); }
 .header__action-badge {
   position: absolute;
   top: 2px; right: 2px;
-  width: 8px; height: 8px;
+  width: 6px; height: 6px;
   background: var(--status-red);
-  border-radius: var(--radius-full);
-  box-shadow: 0 0 0 2px var(--bg-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff;
 }
 
 /* ── 콘텐츠 ── */
 .content {
   flex: 1;
-  padding: 24px 32px;
+  padding: 16px 20px;
   max-width: 1400px;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* ── 페이지 헤더 ── */
+/* ── 페이지 헤더 — 간결한 타이틀 ── */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .page-header__title {
-  font-size: var(--font-size-2xl);
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .page-header__subtitle {
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   color: var(--text-muted);
-  margin-top: var(--spacing-xs);
+  margin-top: 2px;
 }
 
 .page-header__date {
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   color: var(--text-secondary);
   background: var(--bg-tertiary);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  border: 1px solid var(--border-light);
 }
 
 .page-header__actions {
@@ -417,9 +414,9 @@
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-xl); }
 
 /* ── 커밍순 ── */
-.coming-soon { text-align: center; padding: 120px 40px; }
-.coming-soon__icon { font-size: 4rem; margin-bottom: var(--spacing-lg); }
-.coming-soon__title { font-size: var(--font-size-xl); font-weight: 700; margin-bottom: var(--spacing-md); }
+.coming-soon { text-align: center; padding: 80px 40px; }
+.coming-soon__icon { font-size: 2rem; margin-bottom: var(--spacing-lg); color: var(--text-muted); }
+.coming-soon__title { font-size: 16px; font-weight: 600; margin-bottom: var(--spacing-md); }
 
 /* ── 토스트 ── */
-.toast-container { position: fixed; top: 70px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+.toast-container { position: fixed; top: 50px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; }

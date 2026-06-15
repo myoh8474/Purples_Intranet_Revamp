@@ -147,7 +147,7 @@ async function render(){
       {key:'name',label:'이름',render:(v,r)=>`<a href="detail.html?id=${r.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none" onclick="event.stopPropagation()">${v}</a>`},
       {key:'phone',label:'연락처',render:v=>Formatters.phone(v),sortable:false},
       {key:'gender',label:'성별',width:'50px'},
-      {key:'age',label:'나이',width:'50px',render:v=>v+'세'},
+      {key:'age',label:'생년',width:'50px',render:v=>{ const y=new Date().getFullYear()-parseInt(v)+1; return y+'년'; }},
       {key:'status',label:'상태',render:v=>Formatters.statusBadge(v,'associate')},
       {key:'channel',label:'가입경로'},
       {key:'region',label:'지역',width:'60px'},
@@ -286,12 +286,12 @@ async function render(){
     if(ids.length===0){Toast.show('변경할 회원을 먼저 선택해 주세요.','warning');return;}
     const sel=MockAssociates.filter(m=>ids.includes(m.id));
     const males=sel.filter(m=>m.gender==='남').length, females=sel.filter(m=>m.gender==='여').length;
-    const rows=sel.map(m=>`<tr><td>${m.name}</td><td>${m.gender}</td><td>${m.age}세</td><td>${m.region}</td><td>${Formatters.statusBadge(m.status,'associate')}</td><td>${m.consultant}</td></tr>`).join('');
+    const rows=sel.map(m=>{ const by=new Date().getFullYear()-parseInt(m.age)+1; return `<tr><td>${m.name}</td><td>${m.gender}</td><td>${by}년</td><td>${m.region}</td><td>${Formatters.statusBadge(m.status,'associate')}</td><td>${m.consultant}</td></tr>`; }).join('');
 
     Modal.show({title:'✏️ 담당자 일부 변경',size:'lg',
       content:`<div style="padding:8px 0">
         <div style="margin-bottom:12px;padding:10px 12px;background:#d1ecf1;border:1px solid #bee5eb;font-size:12px;color:#0c5460">선택된 <strong>${ids.length}</strong>명 (남성 ${males}명, 여성 ${females}명)의 담당자를 변경합니다.</div>
-        <div style="max-height:200px;overflow-y:auto;margin-bottom:16px"><table class="data-table" style="font-size:12px"><thead><tr><th>이름</th><th>성별</th><th>나이</th><th>지역</th><th>상태</th><th>현재 담당자</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div style="max-height:200px;overflow-y:auto;margin-bottom:16px"><table class="data-table" style="font-size:12px"><thead><tr><th>이름</th><th>성별</th><th>생년</th><th>지역</th><th>상태</th><th>현재 담당자</th></tr></thead><tbody>${rows}</tbody></table></div>
         <div style="border-top:1px solid var(--border-light);padding-top:16px">
           <div class="form-group"><label class="form-label">새로운 담당자 *</label><select class="form-select" id="pt-to"><option value="">선택</option>${CONSULTANTS.map(c=>`<option>${c}</option>`).join('')}</select></div>
           <div class="form-group" style="margin-top:12px"><label class="form-label">변경사유 *</label><textarea class="form-input" id="pt-reason" rows="3" placeholder="담당자 변경 사유를 입력하세요..."></textarea></div>
@@ -318,12 +318,12 @@ async function render(){
     const ids=table.getCheckedIds();
     if(ids.length===0){Toast.show('변경할 회원을 먼저 선택해 주세요.','warning');return;}
     const sel=MockAssociates.filter(m=>ids.includes(m.id));
-    const rows=sel.map(m=>`<tr><td>${m.name}</td><td>${m.gender}</td><td>${m.age}세</td><td>${m.region}</td><td>${Formatters.statusBadge(m.status,'associate')}</td><td>${m.consultant}</td></tr>`).join('');
+    const rows=sel.map(m=>{ const by=new Date().getFullYear()-parseInt(m.age)+1; return `<tr><td>${m.name}</td><td>${m.gender}</td><td>${by}년</td><td>${m.region}</td><td>${Formatters.statusBadge(m.status,'associate')}</td><td>${m.consultant}</td></tr>`; }).join('');
 
     Modal.show({title:'상태 + 담당자 변경',size:'lg',
       content:`<div style="padding:8px 0">
         <div style="margin-bottom:12px;padding:10px 12px;background:#e2e3f1;border:1px solid #c3c4e5;font-size:12px;color:#383d8a">선택된 <strong>${ids.length}</strong>명의 상태와 담당자를 동시에 변경합니다.</div>
-        <div style="max-height:200px;overflow-y:auto;margin-bottom:16px"><table class="data-table" style="font-size:12px"><thead><tr><th>이름</th><th>성별</th><th>나이</th><th>지역</th><th>현재 상태</th><th>현재 담당자</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div style="max-height:200px;overflow-y:auto;margin-bottom:16px"><table class="data-table" style="font-size:12px"><thead><tr><th>이름</th><th>성별</th><th>생년</th><th>지역</th><th>현재 상태</th><th>현재 담당자</th></tr></thead><tbody>${rows}</tbody></table></div>
         <div style="border-top:1px solid var(--border-light);padding-top:16px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div class="form-group"><label class="form-label">변경할 상태 *</label><select class="form-select" id="sc-status"><option value="">선택</option>${ASSOCIATE_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div>

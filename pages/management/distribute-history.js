@@ -3,6 +3,7 @@
    - 분배 완료된 회원 이력 조회
    - 기간별/매니저별 필터링
    - 컬럼 정렬 (오름/내림차순)
+   - 다중선택(멀티셀렉트) 검색
    ======================================== */
 import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
@@ -56,20 +57,24 @@ function render() {
           <td colspan="3"><input type="text" class="form-input form-input--sm" id="h-search" placeholder="이름 또는 연락처 입력" style="width:100%"></td>
           <th>분배방식</th>
           <td>
-            <div class="select-wrap"><select class="form-select form-input--sm" id="h-distmethod" style="width:100%">
-              <option value="">분배방식 전체</option>
-              <option value="자동분배">자동분배</option>
-              <option value="수동분배">수동분배</option>
-            </select></div>
+            <div class="ms-wrap" id="ms-distmethod" data-placeholder="분배방식 전체">
+              <div class="ms-trigger"><span class="ms-text ms-text--placeholder">분배방식 전체</span><span class="ms-arrow">▾</span></div>
+              <div class="ms-dropdown">
+                <label class="ms-item"><input type="checkbox" value="자동분배"> 자동분배</label>
+                <label class="ms-item"><input type="checkbox" value="수동분배"> 수동분배</label>
+              </div>
+            </div>
           </td>
           <th>유입구분</th>
           <td>
-            <div class="select-wrap"><select class="form-select form-input--sm" id="h-dtype" style="width:100%">
-              <option value="">유입구분 전체</option>
-              <option value="신규">신규</option>
-              <option value="기간만료">기간만료</option>
-              <option value="중복">중복</option>
-            </select></div>
+            <div class="ms-wrap" id="ms-dtype" data-placeholder="유입구분 전체">
+              <div class="ms-trigger"><span class="ms-text ms-text--placeholder">유입구분 전체</span><span class="ms-arrow">▾</span></div>
+              <div class="ms-dropdown">
+                <label class="ms-item"><input type="checkbox" value="신규"> 신규</label>
+                <label class="ms-item"><input type="checkbox" value="기간만료"> 기간만료</label>
+                <label class="ms-item"><input type="checkbox" value="중복"> 중복</label>
+              </div>
+            </div>
           </td>
         </tr>
         <tr>
@@ -93,27 +98,34 @@ function render() {
         <tr>
           <th>성별</th>
           <td>
-            <div class="select-wrap"><select class="form-select form-input--sm" id="h-gender" style="width:100%">
-              <option value="">성별 전체</option>
-              <option value="남">남</option><option value="여">여</option>
-            </select></div>
+            <div class="ms-wrap" id="ms-gender" data-placeholder="성별 전체">
+              <div class="ms-trigger"><span class="ms-text ms-text--placeholder">성별 전체</span><span class="ms-arrow">▾</span></div>
+              <div class="ms-dropdown">
+                <label class="ms-item"><input type="checkbox" value="남"> 남</label>
+                <label class="ms-item"><input type="checkbox" value="여"> 여</label>
+              </div>
+            </div>
           </td>
           <th>유입경로</th>
           <td>
-            <div class="select-wrap"><select class="form-select form-input--sm" id="h-channel" style="width:100%">
-              <option value="">경로 전체</option>
-              <option value="카카오커플">카카오커플</option><option value="네이버커플">네이버커플</option>
-              <option value="구글커플">구글커플</option><option value="블라인드커플">블라인드커플</option>
-              <option value="실시간상담">실시간상담</option><option value="전화문의">전화문의</option>
-              <option value="지인소개">지인소개</option><option value="기간만료(재컨텍)">기간만료(재컨텍)</option>
-            </select></div>
+            <div class="ms-wrap" id="ms-channel" data-placeholder="경로 전체">
+              <div class="ms-trigger"><span class="ms-text ms-text--placeholder">경로 전체</span><span class="ms-arrow">▾</span></div>
+              <div class="ms-dropdown">
+                <label class="ms-item"><input type="checkbox" value="카카오커플"> 카카오커플</label><label class="ms-item"><input type="checkbox" value="네이버커플"> 네이버커플</label>
+                <label class="ms-item"><input type="checkbox" value="구글커플"> 구글커플</label><label class="ms-item"><input type="checkbox" value="블라인드커플"> 블라인드커플</label>
+                <label class="ms-item"><input type="checkbox" value="실시간상담"> 실시간상담</label><label class="ms-item"><input type="checkbox" value="전화문의"> 전화문의</label>
+                <label class="ms-item"><input type="checkbox" value="지인소개"> 지인소개</label><label class="ms-item"><input type="checkbox" value="기간만료(재컨텍)"> 기간만료(재컨텍)</label>
+              </div>
+            </div>
           </td>
           <th>상태</th>
           <td>
-            <div class="select-wrap"><select class="form-select form-input--sm" id="h-status" style="width:100%">
-              <option value="">상태 전체</option>
-              ${ASSOCIATE_STATUSES.filter(s => s !== '컨텍전').map(s => `<option value="${s}">${s}</option>`).join('')}
-            </select></div>
+            <div class="ms-wrap" id="ms-status" data-placeholder="상태 전체">
+              <div class="ms-trigger"><span class="ms-text ms-text--placeholder">상태 전체</span><span class="ms-arrow">▾</span></div>
+              <div class="ms-dropdown">
+                ${ASSOCIATE_STATUSES.filter(s => s !== '컨텍전').map(s => `<label class="ms-item"><input type="checkbox" value="${s}"> ${s}</label>`).join('')}
+              </div>
+            </div>
           </td>
           <th>매니저</th>
           <td>
@@ -158,14 +170,92 @@ function render() {
         display: inline-block; margin-left: 3px; font-size: 9px;
         color: #94a3b8; vertical-align: middle;
       }
-      .sort-icon--active { color: #0369a1; font-weight: 700; }
+      .sort-icon--active { color: var(--accent); font-weight: 700; }
+
+      /* ── 멀티셀렉트 드롭다운 ── */
+      .ms-wrap { position: relative; width: 100%; }
+      .ms-trigger {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 4px 8px; border: 1px solid var(--border-medium);
+        border-radius: 2px; font-size: 13px; cursor: pointer;
+        background: #fff; min-height: 26px; gap: 4px;
+        user-select: none;
+      }
+      .ms-trigger:hover { border-color: var(--border-dark); }
+      .ms-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+      .ms-text--placeholder { color: var(--text-muted); }
+      .ms-arrow { font-size: 10px; color: #888; flex-shrink: 0; }
+      .ms-dropdown {
+        display: none; position: absolute; top: 100%; left: 0; right: 0;
+        background: #fff; border: 1px solid var(--border-medium);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 200;
+        max-height: 220px; overflow-y: auto;
+      }
+      .ms-wrap.open .ms-dropdown { display: block; }
+      .ms-item {
+        display: flex; align-items: center; gap: 6px;
+        padding: 4px 10px; font-size: 12px; cursor: pointer;
+        border-bottom: 1px solid #f5f5f5; user-select: none;
+      }
+      .ms-item:hover { background: #f0f4f8; }
+      .ms-item input[type="checkbox"] {
+        width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; margin: 0;
+      }
       ${getManagerPickerStyles()}
     </style>
   `;
 
+  initMultiSelects();
   renderThead();
   applyFilter();
   bindEvents();
+}
+
+/** 멀티셀렉트 드롭다운 초기화 */
+function initMultiSelects() {
+  document.querySelectorAll('.ms-wrap').forEach(wrap => {
+    const trigger = wrap.querySelector('.ms-trigger');
+    const textEl = wrap.querySelector('.ms-text');
+    const placeholder = wrap.dataset.placeholder;
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.ms-wrap.open').forEach(w => {
+        if (w !== wrap) w.classList.remove('open');
+      });
+      wrap.classList.toggle('open');
+    });
+
+    wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const checked = Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+        if (checked.length === 0) {
+          textEl.textContent = placeholder;
+          textEl.classList.add('ms-text--placeholder');
+        } else {
+          textEl.textContent = checked.length <= 3 ? checked.join(', ') : `${checked.slice(0,2).join(', ')} 외 ${checked.length - 2}개`;
+          textEl.classList.remove('ms-text--placeholder');
+        }
+        currentPage = 1;
+        applyFilter();
+      });
+    });
+
+    wrap.querySelector('.ms-dropdown').addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.ms-wrap.open').forEach(w => w.classList.remove('open'));
+  });
+}
+
+/** 멀티셀렉트에서 선택된 값 배열 반환 */
+function getMultiSelectValues(wrapperId) {
+  const wrap = document.getElementById(wrapperId);
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
 }
 
 function renderThead() {
@@ -205,11 +295,11 @@ function renderThead() {
 function applyFilter() {
   const search = (document.getElementById('h-search')?.value || '').trim().toLowerCase();
   const manager = mgrPicker ? mgrPicker.getSelected() : [];
-  const distmethod = document.getElementById('h-distmethod')?.value || '';
-  const dtype = document.getElementById('h-dtype')?.value || '';
-  const channel = document.getElementById('h-channel')?.value || '';
-  const gender = document.getElementById('h-gender')?.value || '';
-  const status = document.getElementById('h-status')?.value || '';
+  const distmethods = getMultiSelectValues('ms-distmethod');
+  const dtypes = getMultiSelectValues('ms-dtype');
+  const channels = getMultiSelectValues('ms-channel');
+  const genders = getMultiSelectValues('ms-gender');
+  const statuses = getMultiSelectValues('ms-status');
   const regFrom = document.getElementById('h-reg-from')?.value || '';
   const regTo = document.getElementById('h-reg-to')?.value || '';
   const distFrom = document.getElementById('h-dist-from')?.value || '';
@@ -218,14 +308,14 @@ function applyFilter() {
   let filtered = MockAssociates.filter(m => {
     if (!(m.consultant && m.consultant !== '-' && m.status !== '컨텍전')) return false;
     if (search && !m.name.toLowerCase().includes(search) && !m.phone.includes(search)) return false;
-    if (distmethod && (m.distMethod || '수동분배') !== distmethod) return false;
-    if (dtype) {
+    if (distmethods.length > 0 && !distmethods.includes(m.distMethod || '수동분배')) return false;
+    if (dtypes.length > 0) {
       const mType = m.isDuplicate ? '중복' : (m.channel === '기간만료(재컨텍)' ? '기간만료' : '신규');
-      if (mType !== dtype) return false;
+      if (!dtypes.includes(mType)) return false;
     }
-    if (channel && m.channel !== channel) return false;
-    if (gender && m.gender !== gender) return false;
-    if (status && m.status !== status) return false;
+    if (channels.length > 0 && !channels.includes(m.channel)) return false;
+    if (genders.length > 0 && !genders.includes(m.gender)) return false;
+    if (statuses.length > 0 && !statuses.includes(m.status)) return false;
     if (manager.length > 0 && !manager.includes(m.consultant)) return false;
     if (regFrom && m.registeredAt < regFrom) return false;
     if (regTo && m.registeredAt > regTo + 'T23:59:59') return false;
@@ -300,7 +390,7 @@ function renderTable(filtered) {
       <td class="tc">${m.channel || '-'}</td>
       <td class="tc">${Formatters.date(m.registeredAt)}</td>
       <td class="tc">${Formatters.date(m.distributedAt)}</td>
-      <td class="tc"><span style="font-weight:600;color:#0369a1">${m.consultant}</span></td>
+      <td class="tc"><span style="font-weight:600;color:var(--accent)">${m.consultant}</span></td>
       <td class="tc">${m.status}</td>
     </tr>`;
   }).join('');
@@ -342,15 +432,19 @@ function bindEvents() {
   // 초기화
   document.getElementById('btn-reset')?.addEventListener('click', () => {
     document.getElementById('h-search').value = '';
-    document.getElementById('h-distmethod').value = '';
-    document.getElementById('h-dtype').value = '';
-    document.getElementById('h-channel').value = '';
-    document.getElementById('h-gender').value = '';
-    document.getElementById('h-status').value = '';
     document.getElementById('h-reg-from').value = '';
     document.getElementById('h-reg-to').value = '';
     document.getElementById('h-dist-from').value = '';
     document.getElementById('h-dist-to').value = '';
+    // 멀티셀렉트 초기화
+    document.querySelectorAll('.ms-wrap').forEach(wrap => {
+      wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      const textEl = wrap.querySelector('.ms-text');
+      if (textEl) {
+        textEl.textContent = wrap.dataset.placeholder;
+        textEl.classList.add('ms-text--placeholder');
+      }
+    });
     if (mgrPicker) mgrPicker.reset();
     sortKey = 'distributedAt';
     sortDir = 'desc';
@@ -359,8 +453,8 @@ function bindEvents() {
     applyFilter();
   });
 
-  // 필터 변경 시 자동 검색
-  ['h-distmethod', 'h-dtype', 'h-channel', 'h-gender', 'h-status', 'h-reg-from', 'h-reg-to', 'h-dist-from', 'h-dist-to'].forEach(id => {
+  // 날짜 필터 변경 시 자동 검색
+  ['h-reg-from', 'h-reg-to', 'h-dist-from', 'h-dist-to'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', () => { currentPage = 1; applyFilter(); });
   });
 }
