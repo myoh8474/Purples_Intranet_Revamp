@@ -7,6 +7,7 @@ import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { Formatters } from '@utils/formatters.js';
 import { AssociateService } from '@services/associate.service.js';
+import { DocService, DOC_TYPES } from '@services/doc.service.js';
 import { CONSULTANTS, PROGRAMS, PROGRAM_GRADES } from '@config/constants.js';
 
 const params = new URLSearchParams(window.location.search);
@@ -21,6 +22,7 @@ function getCallHist(id){ try{ return JSON.parse(localStorage.getItem('purples_c
 function saveCallHist(id,r){ const h=getCallHist(id); h.unshift(r); localStorage.setItem('purples_call_history_'+id, JSON.stringify(h)); }
 function getMeetHist(id){ try{ return JSON.parse(localStorage.getItem('purples_meeting_history_'+id)||'[]'); }catch(e){ return []; } }
 function saveMeetHist(id,r){ const h=getMeetHist(id); h.unshift(r); localStorage.setItem('purples_meeting_history_'+id, JSON.stringify(h)); }
+// 서류인증은 DocService API를 사용 (Mock/Supabase 자동 전환)
 
 function renderCallTable(m){
   const all=[...getCallHist(m.id),...(m.contactHistory||[]).filter(h=>!getCallHist(m.id).find(s=>s.id===h.id))].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -36,6 +38,17 @@ function renderMeetTable(m){
     return `<tr><td style="text-align:center">${mt.length-i}</td><td>${h.date?h.date.slice(0,10):'-'}</td><td>${h.date?h.date.slice(0,10):'-'}</td><td>${badge(h.status)}</td><td>${h.date?h.date.slice(0,10):'-'}</td><td>${h.consultant||m.consultant}</td></tr>`;
   }).join('');
 }
+
+async function renderDocTable(m){
+  const docs = await DocService.getList(m.id);
+  if(!docs.length) return '<tr><td colspan="7" style="text-align:center;padding:12px;color:#888">등록된 서류인증 내역이 없습니다.</td></tr>';
+  return docs.map((d,i)=>{
+    const stMap = {'대기':'background:#fef3c7;color:#92400e','완료':'background:#dcfce7;color:#166534','반려':'background:#fee2e2;color:#991b1b','미제출':'background:#f3f4f6;color:#6b7280'};
+    const stStyle = stMap[d.status] || 'background:#f3f4f6;color:#374151';
+    return `<tr><td style="text-align:center">${i+1}</td><td>${d.docType||'-'}</td><td style="text-align:center"><span style="padding:1px 6px;font-size:10px;font-weight:600;${stStyle}">${d.status}</span></td><td>${d.submitDate?d.submitDate.slice(2,10).replace(/-/g,'-'):'-'}</td><td>${d.confirmDate?d.confirmDate.slice(2,10).replace(/-/g,'-'):'-'}</td><td>${d.confirmer||'-'}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${d.memo||'-'}</td></tr>`;
+  }).join('');
+}
+
 async function render(){
   const m = await AssociateService.getDetail(memberId);
   if(!m){ content.innerHTML='<div style="padding:40px;text-align:center"><h3>회원을 찾을 수 없습니다</h3><a href="list.html">목록으로</a></div>'; return; }
@@ -112,15 +125,15 @@ async function render(){
   <tbody>
     <tr>
       <th>컨설턴트</th><td><strong>${m.consultant||'-'}</strong></td>
-      <th>상 태</th><td class="hs">${m.status}</td>
+      <th>상 태</th><td>${m.status}</td>
       <th>경로</th><td>[${m.channel?m.channel.charAt(0):'-'}]</td>
       <th>주민번호</th><td>${m.birthDate?new Date(m.birthDate).getFullYear().toString().slice(2)+new Date(m.birthDate).toISOString().slice(5,10).replace('-',''):'-'}-*******</td>
     </tr>
     <tr>
-      <th class="hn">회 원 명</th><td class="hn">${m.name} (${m.gender})</td>
+      <th>회 원 명</th><td>${m.name} (${m.gender})</td>
       <th>메모</th><td>${m.memo||'-'}</td>
       <th>생년월일</th><td>${birthFull}</td>
-      <th class="hm">결혼여부</th><td class="hm">${m.maritalStatus||'초혼'}</td>
+      <th>결혼여부</th><td>${m.maritalStatus||'초혼'}</td>
     </tr>
     <tr>
       <th>지 역</th><td>${m.region||'-'}</td>
@@ -134,42 +147,33 @@ async function render(){
       <th>체 중</th><td>${m.weight?m.weight+'kg':'-'}</td>
     </tr>
     <tr>
-      <th>직 장 명</th><td>${m.company||'-'}</td>
-      <th>부서</th><td>-</td>
-      <td rowspan="3" colspan="2" style="vertical-align:top;padding:0">
-        <table class="ct" style="border:none"><tbody>
-          <tr><th style="width:50px;border-top:none;border-left:none">자 녀</th><td style="border-top:none;border-right:none">${m.children||'-'}</td></tr>
-          <tr><th style="border-left:none;border-bottom:none">직 장</th><td style="border-right:none;border-bottom:none">-</td></tr>
-        </tbody></table>
-      </td>
-      <td rowspan="3" colspan="2" style="vertical-align:top;padding:0">
-        <table class="ct" style="border:none"><tbody>
-          <tr><th style="width:50px;border-top:none;border-left:none">관계</th><td style="border-top:none;border-right:none">-</td></tr>
-        </tbody></table>
-      </td>
+      <th>직 장 명</th><td colspan="7">${m.company||'-'}</td>
     </tr>
     <tr>
-      <th>이 메 일</th><td colspan="2">${m.email||'-'}</td>
+      <th>이 메 일</th><td colspan="3">${m.email||'-'}</td>
+      <th>자 택</th><td>${m.telHome||'--'}</td>
+      <th>직 장</th><td>${m.telOffice||'--'}</td>
     </tr>
     <tr>
-      <th>수신여부</th><td colspan="2" style="font-size:11px">핸드폰1 Sms:수신 / 핸드폰2 Sms:수신 / Mail:수신</td>
+      <th>수신여부</th><td colspan="3" style="font-size:11px">핸드폰1 Sms:수신 / 핸드폰2 Sms:수신 / Mail:수신 리텐션:O</td>
+      <th>연 락 처</th><td style="padding:3px 6px">핸드폰1 : <strong>${Formatters.phone(m.phone)}</strong> <button class="mb" id="btn-call-direct">통화</button></td>
+      <th>관계</th><td>-</td>
     </tr>
     <tr>
-      <th>연 락 처</th>
-      <td colspan="3" style="padding:3px 6px">
-        핸드폰: <strong>${Formatters.phone(m.phone)}</strong>
-        <button class="mb" id="btn-call-direct">통화</button>
-        &nbsp; 핸드폰2: ${m.phone2?Formatters.phone(m.phone2):'--'}
-      </td>
+      <th style="white-space:nowrap">문의전화정보</th><td colspan="3">-</td>
+      <th>연 락 처</th><td style="padding:3px 6px">핸드폰2 : ${m.phone2?Formatters.phone(m.phone2):'--'}</td>
+      <th>관계</th><td>-</td>
+    </tr>
+    <tr>
+      <th>자 녀</th><td>${m.children||'-'}</td>
+      <th>혈액형</th><td>${m.bloodType||'-'}</td>
       <th>취미</th><td>${m.hobby||'-'}</td>
       <th>종교</th><td>${m.religion||'-'}</td>
     </tr>
     <tr>
       <th>기타사항</th><td colspan="3">${m.memo||'-'}</td>
-      <th class="ty">희망 상대</th><td colspan="3" style="font-size:11px;line-height:1.5">${m.hope||'-'}</td>
-    </tr>
-    <tr>
-      <th class="ty">매니저 의견</th><td colspan="7" style="font-size:11px;line-height:1.5">-</td>
+      <th>매니저 지정</th><td>${m.consultant||'-'}</td>
+      <th>희망 상대</th><td style="font-size:11px;line-height:1.5">${m.hope||'-'}</td>
     </tr>
   </tbody>
 </table>
@@ -229,6 +233,24 @@ async function render(){
   <thead><tr><th style="width:40px">번호</th><th>상담일</th><th>시간</th><th>상담자</th><th>내용</th><th>약속일</th><th>결과</th><th>결과일</th></tr></thead>
   <tbody id="call-area">${renderCallTable(m)}</tbody>
 </table>
+
+<!-- 서류인증 -->
+<div class="crm-sec">
+  <div style="display:flex;align-items:center;gap:6px">
+    <span>서류인증</span>
+    <div class="sb">
+      <button id="btn-doc-remind">서류독촉 SMS</button>
+    </div>
+  </div>
+  <div class="sb">
+    <button class="pr" id="btn-doc-add">인증등록</button>
+    <button id="btn-doc-all">일괄인증</button>
+  </div>
+</div>
+<table class="ct" style="margin-top:4px">
+  <thead><tr><th style="width:40px">No</th><th>서류종류</th><th>인증상태</th><th>제출일</th><th>확인일</th><th>확인자</th><th>비고</th></tr></thead>
+  <tbody id="doc-area">${await renderDocTable(m)}</tbody>
+</table>
 `;
 
   window.Toast = Toast;
@@ -242,6 +264,19 @@ async function render(){
   document.getElementById('btn-status')?.addEventListener('click',()=>Toast.show('회원상태 수정 (기능 준비중)','info'));
   document.getElementById('btn-reg')?.addEventListener('click',()=>showRegModal(m));
   document.getElementById('btn-call')?.addEventListener('click',()=>showCallModal(m));
+  document.getElementById('btn-doc-add')?.addEventListener('click',()=>showDocModal(m));
+  document.getElementById('btn-doc-all')?.addEventListener('click',async ()=>{
+    const docs = await DocService.getList(m.id);
+    if(!docs.length){ Toast.show('등록된 서류가 없습니다.','warning'); return; }
+    const pending = docs.filter(d=>d.status==='대기');
+    if(!pending.length){ Toast.show('대기 중인 서류가 없습니다.','info'); return; }
+    if(confirm(`대기 중인 서류 ${pending.length}건을 모두 인증 완료 처리하시겠습니까?`)){
+      const count = await DocService.bulkApprove(m.id, m.consultant||'-');
+      document.getElementById('doc-area').innerHTML = await renderDocTable(m);
+      Toast.show(`${count}건의 서류가 인증 완료되었습니다.`,'success');
+    }
+  });
+  document.getElementById('btn-doc-remind')?.addEventListener('click',()=>Toast.show('서류독촉 SMS가 발송되었습니다.','success'));
 }
 
 function showMeetingModal(m){
@@ -360,6 +395,43 @@ function showRegModal(m){
       if(PROGRAM_GRADES[selectedProgram]&&!selectedGrade){Toast.show('등급을 선택해 주세요.','warning');return;}
       const pt=selectedGrade||selectedProgram;
       if(confirm(`${m.name}님을 [${pt}] 프로그램으로 정회원 등록하시겠습니까?`)){Toast.show('정회원 등록이 완료되었습니다.','success');document.getElementById('modal-root').innerHTML='';}
+    });
+  },100);
+}
+
+async function showDocModal(m){
+  const today=new Date().toISOString().slice(0,10);
+  const existDocs = await DocService.getList(m.id);
+  const usedTypes = existDocs.map(d=>d.docType);
+  const availTypes = DOC_TYPES.filter(t=>!usedTypes.includes(t));
+
+  Modal.show({ title:'서류인증 등록', size:'md',
+    content:`<div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">서류종류 *</label><select id="dc-type" class="form-select">${availTypes.length?availTypes.map(t=>`<option>${t}</option>`).join(''):'<option value="">모든 서류 등록완료</option>'}</select></div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">제출일 *</label><input type="date" id="dc-date" value="${today}" class="form-input"></div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">인증상태</label><select id="dc-status" class="form-select"><option>대기</option><option>완료</option><option>반려</option><option>미제출</option></select></div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">비고</label><textarea id="dc-memo" class="form-input" rows="2" placeholder="특이사항을 입력하세요"></textarea></div>
+    </div>`,
+    footer:'<button class="btn btn--secondary" onclick="document.getElementById(\'modal-root\').innerHTML=\'\'">취소</button><button class="btn btn--primary" id="btn-dc-ok">등록</button>'
+  });
+  setTimeout(()=>{
+    document.getElementById('btn-dc-ok')?.addEventListener('click',async ()=>{
+      const docType = document.getElementById('dc-type')?.value;
+      const submitDate = document.getElementById('dc-date')?.value;
+      const status = document.getElementById('dc-status')?.value || '대기';
+      const memo = document.getElementById('dc-memo')?.value?.trim() || '';
+      if(!docType){ Toast.show('서류종류를 선택해 주세요.','warning'); return; }
+      if(!submitDate){ Toast.show('제출일을 입력해 주세요.','warning'); return; }
+      const confirmDate = status==='완료' ? today : '';
+      const confirmer = status==='완료' ? (m.consultant||'-') : '';
+      const result = await DocService.add(m.id, { docType, submitDate, status, confirmDate, confirmer, memo });
+      if(result){
+        document.getElementById('doc-area').innerHTML = await renderDocTable(m);
+        Toast.show(`[${docType}] 서류가 등록되었습니다.`,'success');
+        document.getElementById('modal-root').innerHTML='';
+      } else {
+        Toast.show('서류 등록에 실패했습니다.','error');
+      }
     });
   },100);
 }
