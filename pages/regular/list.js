@@ -404,7 +404,7 @@ function applyFilters(resetPage) {
     <td class="tc">${photoHtml(m)}</td>
     <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link col-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><div class="col-name" style="color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};line-height:1.3">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="display:inline-block;background:#ef4444;color:#fff;font-size:10px !important;font-weight:600;padding:1px 5px;border-radius:3px;line-height:14px;vertical-align:middle">미팅중</span>' : ''}</div><div style="font-size:11px;color:var(--text-muted)">${m.memberId}</div></a></td>
     <td class="tc">${m.gender}</td>
-    <td class="tc">${m.age}세</td>
+    <td class="tc">${m.birthDate ? new Date(m.birthDate).getFullYear() + '년' + String(new Date(m.birthDate).getMonth()+1).padStart(2,'0') + '월' : (m.age ? m.age + '세' : '-')}</td>
     <td class="tc">${m.brand}</td>
     <td class="tc">${['임시교제','교제','외부교제'].includes(m.status) ? `<a href="${detailUrl(m.id)}" target="_blank" style="color:#6366f1;text-decoration:underline;font-weight:600;cursor:pointer">${m.status}</a>` : m.status}</td>
     <td class="tc">${m.program}</td>
@@ -416,7 +416,7 @@ function applyFilters(resetPage) {
     <td class="tc">${m.consultantManager || '-'}</td>
     <td class="tc">${Formatters.date(m.joinDate)}</td>
     <td class="tc">${m.contractType === '기간제' ? `${m.contractCount || 12}개월` : `${m.contractCount || '-'}회`}</td>
-    <td class="tc">${m.meetingCount || 0}회</td>
+    <td class="tc">${(m.meetingCount || 0) + '/' + (m.contractCount || 12)}</td>
     <td class="tc">${meetingRegHtml(m)}</td>
     <td class="tc">${introRegHtml(m)}</td>
     <td class="tc">${m.expiryStatus === '없음' || !m.expiryStatus ? '-' : `<span class="col-bad">${m.expiryStatus}</span>`}</td>

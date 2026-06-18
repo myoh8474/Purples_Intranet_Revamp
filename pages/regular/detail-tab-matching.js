@@ -262,6 +262,8 @@ export function renderMatchingInfo(m) {
   html += '<option value="전체">구분: 전체</option>';
   Object.keys(MEMO_CATS).forEach(function(cat) { html += '<option value="' + cat + '">' + cat + '</option>'; });
   html += '</select>';
+  // REQ-071: 메모 키워드 검색
+  html += '<input type="text" class="form-input" id="memo-keyword" placeholder="키워드 검색" style="padding:3px 6px;width:120px;font-size:11px">';
   html += '<input type="date" class="form-input" id="memo-date-from" style="padding:3px 4px;width:120px;font-size:11px">';
   html += '<span style="color:var(--text-muted);font-size:11px">~</span>';
   html += '<input type="date" class="form-input" id="memo-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
@@ -377,9 +379,12 @@ export function renderMatchingInfo(m) {
 
 
   /* ── 소개장 (우하) ── */
+  // REQ-063: 소개장 등록 수 vs 발송 수 통계 표시
+  var totalIntros = 0, totalSent = 0;
+  intros.forEach(function(intro) { intro.rows.forEach(function(row) { totalIntros++; if (row.profile === '발송완료' || row.profile === '재발송완료') totalSent++; }); });
   html += '<div class="' + CARD + '">';
   html += '<div class="' + CARD_HDR + '">';
-  html += '<span class="mcard__title">소개장</span>';
+  html += '<span class="mcard__title">소개장 <span style="font-weight:400;font-size:11px;color:#888">(등록 ' + totalIntros + '건 / 발송 ' + totalSent + '건)</span></span>';
   html += '<div style="display:flex;gap:4px;align-items:center">';
   html += '<button class="btn btn--outline btn--sm" id="btn-intro-delete" style="font-size:11px;padding:2px 10px" disabled>삭제</button>';
   html += '<button class="btn btn--outline btn--sm" id="btn-add-intro" style="font-size:11px;padding:2px 10px">소개등록</button>';
@@ -446,8 +451,11 @@ function bindEvents(m) {
     var catVal = (document.getElementById('memo-filter-select') || {}).value || '전체';
     var fromVal = (document.getElementById('memo-date-from') || {}).value || '';
     var toVal = (document.getElementById('memo-date-to') || {}).value || '';
+    var keyword = (document.getElementById('memo-keyword') || {}).value.trim().toLowerCase();
     var filtered = allMemos.filter(function(x) {
       if (catVal !== '전체' && x.type !== catVal) return false;
+      // REQ-071: 키워드 검색
+      if (keyword && x.content.toLowerCase().indexOf(keyword) < 0 && x.writer.toLowerCase().indexOf(keyword) < 0) return false;
       if (fromVal || toVal) {
         // 날짜 파싱: "26.05.28 14:22" → "2026-05-28"
         var parts = x.date.split(' ')[0].split('.');

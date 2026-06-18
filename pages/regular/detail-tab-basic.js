@@ -133,7 +133,13 @@ export function renderBasicInfo(m) {
           return '<tr><td class="' + VAL + '" style="text-align:center">' + d.name + '</td><td class="' + VAL + '" style="text-align:center;color:' + stColor + ';font-weight:600">' + d.status + '</td><td class="' + VAL + '" style="text-align:center">' + (d.submitDate || '-') + '</td><td class="' + VAL + '" style="text-align:center">' + (d.expiryDate || '-') + '</td><td class="' + VAL + '" style="text-align:center;color:' + reauthColor + ';font-weight:600">' + (d.reauth || '-') + '</td><td class="' + VAL + '">' + (d.note || '-') + '</td></tr>';
         }).join('')}
       </tbody>
-    </table>` + SEC_END;
+    </table>`
+    // REQ-058: 인증 서류 별도 메모 칸
+    + `<div style="margin-top:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:4px">
+      <div style="font-weight:600;font-size:11px;color:#888;margin-bottom:4px">📋 인증 메모</div>
+      <div style="font-size:12px;line-height:1.6;color:#333">${m.certMemo || '인증 관련 특이사항이 없습니다.'}</div>
+    </div>`
+    + SEC_END;
 
 
   // ── 우측: 특이사항 + 소개프로필 ──

@@ -19,10 +19,11 @@ export function renderDetailPage(m, tabs) {
     + '  <div class="detail-header-bar__left">'
     + '    <h2 class="detail-header-bar__name">' + m.name + '</h2>'
     + '    <span class="detail-header-bar__id">' + m.memberId + '</span>'
-    + '    <span class="badge badge--red">이벤트불가</span>'
-    + '    <span class="badge badge--red">재가입불가</span>'
-    + '    <span class="badge badge--orange">난매칭</span>'
-    + '    <span class="badge badge--red" style="background:#fee2e2;color:#dc2626">미팅중</span>'
+    // REQ-054: 유의사항 태그 상단 배치
+    + (m.tags && m.tags.length ? m.tags.map(function(t){
+        var colors = {'이벤트불가':'badge--red','재가입불가':'badge--red','난매칭':'badge--orange','미팅중':'badge--red','미소개':'badge--purple','탈회CS관리중':'badge--orange','소송중':'badge--red','소보원진행':'badge--orange','비밀상담':'badge--yellow'};
+        return '    <span class="badge '+(colors[t]||'badge--gray')+'">' + t + '</span>';
+      }).join('') : '<span class="badge badge--red">이벤트불가</span><span class="badge badge--red">재가입불가</span><span class="badge badge--orange">난매칭</span><span class="badge badge--red" style="background:#fee2e2;color:#dc2626">미팅중</span>')
     + '  </div>'
     + '  <div class="detail-header-bar__actions">'
     + '    <button class="btn btn--sm" id="btn-recall-esign" style="background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:12px;padding:4px 14px;font-weight:700">연장신청서발송</button>'
@@ -35,8 +36,30 @@ export function renderDetailPage(m, tabs) {
     + '  </div>'
     + '</div>'
 
+    // REQ-055: 프로그램(상품)정보 상단 배치 + REQ-056: D-day + REQ-029: 약정진행률
+    + (function(){
+        var prog = m.program || '-';
+        var jd = m.joinDate ? Formatters.date(m.joinDate) : '-';
+        var ed = m.expiryDate ? Formatters.date(m.expiryDate) : '-';
+        var dday = '';
+        if (m.expiryDate) { var diff = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); dday = diff > 0 ? 'D-' + diff : '<span style="color:#ef4444;font-weight:700">만료</span>'; }
+        var ctLabel = m.contractType === '횟수제' && m.contractCount ? m.contractCount + '회' : (m.contractType || '-');
+        var mtCount = m.meetingCount || 0;
+        var mtTotal = m.contractCount || 12;
+        var pct = Math.round((mtCount / mtTotal) * 100);
+        return '<div style="display:flex;gap:12px;padding:10px 0 6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #e5e7eb;margin-bottom:12px">'
+          + '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#888">프로그램</span><span style="font-weight:700;color:#6a1b9a">' + prog + '</span></div>'
+          + '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#888">가입일</span><span style="font-weight:600">' + jd + '</span></div>'
+          + '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#888">만료일</span><span style="font-weight:600">' + ed + '</span>' + (dday ? '<span style="background:#fff3e0;color:#e65100;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700">' + dday + '</span>' : '') + '</div>'
+          + '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#888">미팅</span><span style="font-weight:700;color:#1565c0">' + mtCount + '/' + mtTotal + '</span>'
+          + '<div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden"><div style="width:' + Math.min(pct,100) + '%;height:100%;background:' + (pct>=100?'#ef4444':'#3b82f6') + ';border-radius:4px"></div></div>'
+          + '<span style="font-size:10px;color:#888">' + pct + '%</span></div>'
+          + '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#888">계약</span><span style="font-weight:600">' + ctLabel + '</span></div>'
+          + '</div>';
+      })()
+
     // ── 상단: [사진] [기본정보] [유의사항] 3단 ──
-    + '<div style="display:grid;grid-template-columns:auto 3fr 1fr;gap:14px;padding:16px 0 20px;align-items:start">'
+    + '<div style="display:grid;grid-template-columns:auto 3fr 1fr;gap:14px;padding:8px 0 20px;align-items:start">'
 
     // 좌측: 사진
     + '  <div style="flex-shrink:0;cursor:pointer" id="btn-photo-more">'
@@ -56,7 +79,7 @@ export function renderDetailPage(m, tabs) {
     + '      </tr>'
     + '      <tr>'
     + '        <td class="lbl">생년월일</td><td class="val">' + Formatters.date(m.birthDate) + '</td>'
-    + '        <td class="lbl">나이</td><td class="val">' + (m.age ? m.age + '세' : '-') + '</td>'
+    + '        <td class="lbl">생년월</td><td class="val">' + (m.birthDate ? new Date(m.birthDate).getFullYear() + '년 ' + String(new Date(m.birthDate).getMonth()+1).padStart(2,'0') + '월생' : '-') + '</td>'
     + '        <td class="lbl">성별</td><td class="val">' + (m.gender || '-') + '</td>'
     + '        <td class="lbl">결혼여부</td><td class="val">' + (m.maritalHistory || '-') + '</td>'
     + '      </tr>'
@@ -76,8 +99,13 @@ export function renderDetailPage(m, tabs) {
     + '        <td class="lbl">연락처</td><td class="val" colspan="3">' + Formatters.phone(m.phone) + '</td>'
     + '        <td class="lbl">이메일</td><td class="val" colspan="3">' + (m.email || '-') + '</td>'
     + '      </tr>'
+    // REQ-061: 직장주소·자택주소·등본주소 구분
     + '      <tr>'
-    + '        <td class="lbl">집주소</td><td class="val" colspan="7">' + (m.homeAddress || '-') + '</td>'
+    + '        <td class="lbl">자택주소</td><td class="val" colspan="3">' + (m.homeAddress || '-') + '</td>'
+    + '        <td class="lbl">직장주소</td><td class="val" colspan="3">' + (m.workAddress || '-') + '</td>'
+    + '      </tr>'
+    + '      <tr>'
+    + '        <td class="lbl">등본주소</td><td class="val" colspan="7">' + (m.registerAddress || m.hometown || '-') + '</td>'
     + '      </tr>'
     + '    </tbody></table>'
     + '  </div>'
