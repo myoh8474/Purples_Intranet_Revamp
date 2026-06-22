@@ -53,7 +53,17 @@ export const DataTable = {
       const pageIds = pageData.map(r => r.id);
       const allPageChecked = pageIds.length > 0 && pageIds.every(id => checkedSet.has(id));
 
-      let html = `<div style="overflow-x:auto"><table class="std-table${compactClass}" style="white-space:nowrap"><thead><tr>`;
+      let html = '';
+
+      // 체크된 건수 표시 (테이블 상단)
+      if (checkbox && checkedSet.size > 0) {
+        html += `<div style="padding:6px 12px;background:var(--accent-bg);border:1px solid var(--accent);font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+          <span><strong>${checkedSet.size}</strong>건 선택됨</span>
+          <button class="btn btn--ghost btn--sm dt-clear-checks" style="font-size:11px">선택 해제</button>
+        </div>`;
+      }
+
+      html += `<div style="overflow-x:auto"><table class="std-table${compactClass}" style="white-space:nowrap"><thead><tr>`;
 
       // 체크박스 헤더
       if (checkbox) {
@@ -91,13 +101,7 @@ export const DataTable = {
       }
       html += '</tbody></table></div>';
 
-      // 체크된 건수 표시
-      if (checkbox && checkedSet.size > 0) {
-        html += `<div style="padding:6px 12px;background:var(--accent-bg);border:1px solid var(--accent);font-size:12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center">
-          <span>✅ <strong>${checkedSet.size}</strong>건 선택됨</span>
-          <button class="btn btn--ghost btn--sm dt-clear-checks" style="font-size:11px">선택 해제</button>
-        </div>`;
-      }
+
 
       // 페이지네이션
       if (totalPages > 1) {

@@ -29,13 +29,17 @@ function calcStats(dateFrom, dateTo) {
   const managerStats = CONSULTANTS.map(name => {
     const members = data.filter(m => m.consultant === name);
     const branch = branchMap[CONSULTANT_BRANCH[name]] || '-';
-    let contacts = 0, meetingRes = 0, actualVisits = 0, joins = 0, joinAmount = 0, totalAmount = 0;
+    let callCount = 0, contacts = 0, meetingRes = 0, actualVisits = 0, joins = 0, joinAmount = 0, totalAmount = 0;
+    // DB 포기/변경 건수
+    const abandoned = members.filter(m => (m.status || '').includes('불가')).length;
+    const changed = members.filter(m => m.status === '변경').length;
 
     members.forEach(m => {
       (m.contactHistory || []).forEach(h => {
         const d = (h.date || '').slice(0, 10);
         if (d >= dateFrom && d <= dateTo) {
-          contacts++;
+          callCount++;
+          if (h.result !== '부재중(미연락)' && h.result !== '부재중') contacts++;
           if (h.result === '방문상담') meetingRes++;
           if (h.result === '가입완료' || h.result === '가입중') { joins++; joinAmount += 3000000; totalAmount += 3000000; }
         }
@@ -44,7 +48,8 @@ function calcStats(dateFrom, dateTo) {
         JSON.parse(localStorage.getItem('purples_call_history_' + m.id) || '[]').forEach(h => {
           const d = (h.date || '').slice(0, 10);
           if (d >= dateFrom && d <= dateTo) {
-            contacts++;
+            callCount++;
+            if (h.result !== '부재중(미연락)' && h.result !== '부재중') contacts++;
             if (h.result === '방문상담') meetingRes++;
             if (h.result === '가입완료' || h.result === '가입중') { joins++; joinAmount += 3000000; totalAmount += 3000000; }
           }
@@ -62,15 +67,16 @@ function calcStats(dateFrom, dateTo) {
     const closeRate = actualVisits > 0 ? Math.round((joins / actualVisits) * 100) : 0;
     const convertedAmount = Math.round(totalAmount * 0.91);
 
-    return { name, branch, db: members.length, contacts, meetingRes, actualVisits, visitRate, joins, closeRate, joinAmount, totalAmount, convertedAmount };
+    return { name, branch, db: members.length, callCount, contacts, abandoned, changed, meetingRes, actualVisits, visitRate, joins, closeRate, joinAmount, totalAmount, convertedAmount };
   });
 
   const totals = managerStats.reduce((t, m) => ({
-    db: t.db + m.db, contacts: t.contacts + m.contacts,
+    db: t.db + m.db, callCount: t.callCount + m.callCount, contacts: t.contacts + m.contacts,
+    abandoned: t.abandoned + m.abandoned, changed: t.changed + m.changed,
     meetingRes: t.meetingRes + m.meetingRes, actualVisits: t.actualVisits + m.actualVisits,
     joins: t.joins + m.joins, joinAmount: t.joinAmount + m.joinAmount,
     totalAmount: t.totalAmount + m.totalAmount, convertedAmount: t.convertedAmount + m.convertedAmount,
-  }), { db: 0, contacts: 0, meetingRes: 0, actualVisits: 0, joins: 0, joinAmount: 0, totalAmount: 0, convertedAmount: 0 });
+  }), { db: 0, callCount: 0, contacts: 0, abandoned: 0, changed: 0, meetingRes: 0, actualVisits: 0, joins: 0, joinAmount: 0, totalAmount: 0, convertedAmount: 0 });
   totals.visitRate = totals.meetingRes > 0 ? Math.round((totals.actualVisits / totals.meetingRes) * 100) : 0;
   totals.closeRate = totals.actualVisits > 0 ? Math.round((totals.joins / totals.actualVisits) * 100) : 0;
 
@@ -137,13 +143,17 @@ function render() {
               <th rowspan="2" style="width:60px">지사</th>
               <th rowspan="2" style="width:70px">부서</th>
               <th rowspan="2" style="width:60px">상담사</th>
+              <th rowspan="2">보유DB</th>
               <th rowspan="2">콜수</th>
               <th rowspan="2">회원컨텍수</th>
+              <th colspan="2" style="background:#fff0f0;color:#c62828">DB정리</th>
               <th colspan="3" class="th-blue">방문상담</th>
               <th colspan="2" class="th-green">체결</th>
               <th colspan="3" class="th-yellow">매출</th>
             </tr>
             <tr>
+              <th style="background:#fff0f0;color:#c62828">포기(불가)</th>
+              <th style="background:#fff0f0;color:#c62828">변경</th>
               <th class="th-blue">총 방문예약</th>
               <th class="th-blue">실제 방문</th>
               <th class="th-blue">실방문율(%)</th>
@@ -184,25 +194,23 @@ function render() {
     // 부서 데이터 추가
     managerStats = managerStats.map(m => ({ ...m, dept: DEPT_MAP[m.name] || '-', date: from === to ? from : `${from}~${to}` }));
 
-    // 콜수 더미 (컨텍수의 2~4배)
-    managerStats = managerStats.map(m => ({ ...m, callCount: m.contacts > 0 ? m.contacts + Math.floor(Math.random() * m.contacts * 2) + m.contacts : Math.floor(Math.random() * 15) }));
-
     if (branchFilter) managerStats = managerStats.filter(m => m.branch === branchFilter);
     if (selMgrs.length > 0) managerStats = managerStats.filter(m => selMgrs.includes(m.name));
 
     totals = managerStats.reduce((t, m) => ({
-      contacts: t.contacts + m.contacts, meetingRes: t.meetingRes + m.meetingRes,
-      actualVisits: t.actualVisits + m.actualVisits, joins: t.joins + m.joins,
-      joinAmount: t.joinAmount + m.joinAmount, totalAmount: t.totalAmount + m.totalAmount,
-      convertedAmount: t.convertedAmount + m.convertedAmount, db: t.db + m.db,
-      callCount: t.callCount + (m.callCount || 0),
-    }), { contacts:0, meetingRes:0, actualVisits:0, joins:0, joinAmount:0, totalAmount:0, convertedAmount:0, db:0, callCount:0 });
+      db: t.db + m.db, callCount: t.callCount + m.callCount, contacts: t.contacts + m.contacts,
+      abandoned: t.abandoned + m.abandoned, changed: t.changed + m.changed,
+      meetingRes: t.meetingRes + m.meetingRes, actualVisits: t.actualVisits + m.actualVisits,
+      joins: t.joins + m.joins, joinAmount: t.joinAmount + m.joinAmount,
+      totalAmount: t.totalAmount + m.totalAmount, convertedAmount: t.convertedAmount + m.convertedAmount,
+    }), { db:0, callCount:0, contacts:0, abandoned:0, changed:0, meetingRes:0, actualVisits:0, joins:0, joinAmount:0, totalAmount:0, convertedAmount:0 });
     totals.visitRate = totals.meetingRes > 0 ? Math.round((totals.actualVisits / totals.meetingRes) * 100) : 0;
     totals.closeRate = totals.actualVisits > 0 ? Math.round((totals.joins / totals.actualVisits) * 100) : 0;
 
     document.getElementById('period-label').textContent = from === to ? from : `${from} ~ ${to}`;
 
     const kpiData = [
+      { label: '총 보유DB', value: totals.db, color: '#374151' },
       { label: '회원 컨텍수', value: totals.contacts, color: '#3b82f6' },
       { label: '총 콜수', value: totals.callCount, color: '#6366f1' },
       { label: '총 방문예약', value: totals.meetingRes, color: '#8b5cf6' },
@@ -238,8 +246,11 @@ function render() {
       <td class="tc">${m.branch}</td>
       <td class="tc">${m.dept}</td>
       <td class="tc" style="font-weight:600"><span style="color:var(--accent);cursor:pointer" onclick="window.open('consult-detail.html?manager=${encodeURIComponent(m.name)}&date=${document.getElementById('f-to').value}','_blank')">${m.name}</span></td>
+      ${numCell(m.db, '#374151')}
       ${numCell(m.callCount, '#6366f1')}
       ${numCell(m.contacts, '#2563eb')}
+      ${numCell(m.abandoned, '#c62828')}
+      ${numCell(m.changed, '#e65100')}
       ${numCell(m.meetingRes, '#7c3aed')}
       ${numCell(m.actualVisits, '#0ea5e9')}
       ${pctCell(m.visitRate)}
@@ -251,8 +262,11 @@ function render() {
     </tr>`).join('') + `<tr style="background:var(--bg-secondary);font-weight:700;border-top:1px solid var(--border-light)">
       <td class="tc" colspan="2">합계</td>
       <td class="tc" colspan="2">${managerStats.length}명</td>
+      <td class="tc">${totals.db}</td>
       <td class="tc" style="color:#6366f1">${totals.callCount}</td>
       <td class="tc" style="color:#2563eb">${totals.contacts}</td>
+      <td class="tc" style="color:#c62828">${totals.abandoned}</td>
+      <td class="tc" style="color:#e65100">${totals.changed}</td>
       <td class="tc" style="color:#7c3aed">${totals.meetingRes}</td>
       <td class="tc" style="color:#0ea5e9">${totals.actualVisits}</td>
       <td class="tc">${totals.visitRate}%</td>

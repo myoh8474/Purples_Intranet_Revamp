@@ -7,7 +7,7 @@ import { Formatters } from '@utils/formatters.js';
 import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { MockRegulars, BRANDS, MATCH_MANAGERS, REGIONS, BRANCHES, CONSULTANTS } from '@mock/regulars.js';
-import { REGULAR_STATUSES, PROGRAMS_FLAT } from '@config/constants.js';
+import { REGULAR_STATUSES, PROGRAMS_FLAT, JOB_TREE, JOBS, JOB_CATEGORIES, EDUCATIONS } from '@config/constants.js';
 
 initLayout({ pageId: 'regular-list', breadcrumbs: ['정회원 관리', '정회원 목록'] });
 
@@ -15,29 +15,12 @@ const content = document.getElementById('content');
 
 const MARITAL_OPTIONS = ['상관없음','미혼','재혼','사별','사실혼','삼혼이상'];
 const CHILD_OPTIONS = ['무','본인','전배우자','기타'];
-const EDUCATION_OPTIONS = ['고졸','전문대졸','대졸','석사','박사'];
+
 const RELIGION_OPTIONS = ['무교','기독교','천주교','불교','기타'];
 const WEALTH_OPTIONS = ['10억미만','10~20억','20~30억','30~50억','50~100억','100~200억','200~300억','300~500억','500억이상'];
 const OVERSEAS_OPTIONS = ['없음','시민권자','영주권자'];
 const REJOIN_OPTIONS = [1,2,3,4,5,6];
-const JOB_TREE = {
-  '고시/법조': ['고시출신(5급)','법조인','판검사','변호사','변리사','법무사','회계사','세무사','감정평가사','관세사','노무사'],
-  '의사': ['의사','의사-개원의','내과','외과','성형외과','피부과','안과','이비인후과','정형외과','산부인과','소아청소년과','신경외과','비뇨의학과','영상의학과','마취통증의학과','정신건강의학과','재활의학과','가정의학과','응급의학과','흉부외과','신경과'],
-  '한의사': ['한의사','한의사-개원의'],
-  '치과의사': ['치과의사','치과의사-개원의'],
-  '수의사': ['수의사','수의사-개원의'],
-  '약사': ['약사','약사-개원의'],
-  '의료인': ['의료인','의료인-개원의','간호사','물리치료사','방사선사','임상병리사','치위생사','작업치료사','의료기사','대병원'],
-  '교육직': ['교수','교사','강사','유치원','초등학교','중고등','특수교사','학원장'],
-  '공무원': ['공무원-5급(사무관)','공무원-6급(주사)','공무원-7급(주사보)','공무원-8급(서기)','공무원-9급(서기보)','경찰','소방','군인','외교관','검찰'],
-  '금융계': ['금융계','은행원','증권사','보험사','자산운용','펀드매니저','애널리스트'],
-  '대기업': ['대기업','삼성','LG','현대','SK','롯데','포스코','한화','GS','CJ','네이버','카카오'],
-  '사업가': ['사업가','사업승계','대표이사','법인대표','스타트업','투자'],
-  '연구직': ['연구원','박사후연구원','국책연구소','기업연구소'],
-  '기타직종': ['자영업','프리랜서','승무원/항공','예체능','건축사','학생','기타'],
-};
-const JOB_OPTIONS = Object.values(JOB_TREE).flat();
-const JOB_CATEGORIES = Object.keys(JOB_TREE);
+
 
 function selectHtml(id, label, options, w) {
   return `<div class="select-wrap"><select class="form-select form-input--sm" id="${id}" style="width:100%;font-size:12px">

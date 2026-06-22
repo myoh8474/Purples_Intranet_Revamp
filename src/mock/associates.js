@@ -8,13 +8,13 @@ import { CONSULTANTS, CONSULTANT_BRANCH, BRANCHES } from '../config/constants.js
 
 function regionToBranch(region) {
   const map = {
-    '서울': '1', '인천': '1', '경기': '8', '강원': '8',
-    '부산': '2', '울산': '2', '경남': '2',
-    '대구': '4', '경북': '4',
-    '대전': '3', '세종': '3', '충북': '3', '충남': '3',
-    '광주': '5', '전북': '5', '전남': '5', '제주': '5',
+    '서울': '본사', '인천': '본사', '경기': '경기', '강원': '경기',
+    '부산': '부산', '울산': '부산', '경남': '부산',
+    '대구': '대구', '경북': '대구',
+    '대전': '대전', '세종': '대전', '충북': '대전', '충남': '대전',
+    '광주': '광주', '전북': '광주', '전남': '광주', '제주': '광주',
   };
-  return map[region] || '1';
+  return map[region] || '본사';
 }
 
 const CHANNELS = [
@@ -89,6 +89,7 @@ function toCamel(row) {
     duplicateEntries: [],
     contactHistory: [],
     sales: [],
+    isSecret: row.is_secret || false,
   };
 }
 
@@ -151,6 +152,7 @@ if (useMock()) {
           { date: lastContact.toISOString(), type: '통화', content: '초기 상담 진행.', result: '상담중' },
         ],
         sales: [],
+        isSecret: idSeq <= 4 || Math.random() > 0.9,
       });
     }
   });
@@ -192,6 +194,7 @@ if (useMock()) {
       bloodType: randomPick(BLOODS), children: '없음', religion: randomPick(RELIGIONS),
       hobby: randomPick(HOBBIES), hope: '', email: '', telHome: '', telOffice: '', phone2: '',
       duplicateEntries: [], contactHistory: [], sales: [],
+      isSecret: false,
     });
   });
 
@@ -219,6 +222,7 @@ if (useMock()) {
       height: 0, weight: 0, bloodType: '', children: '', religion: '', hobby: '', hope: '',
       email: '', telHome: '', telOffice: '', phone2: '',
       duplicateEntries: [], contactHistory: [], sales: [],
+      isSecret: false,
     });
   });
 
@@ -244,6 +248,7 @@ if (useMock()) {
       height: 0, weight: 0, bloodType: '', children: '', religion: '', hobby: '', hope: '',
       email: '', telHome: '', telOffice: '', phone2: '',
       duplicateEntries: [], contactHistory: [], sales: [],
+      isSecret: false,
     });
   });
 
@@ -280,6 +285,7 @@ if (useMock()) {
       pastTotalPayment: d.totalPay,
       pastClaim: d.claim,
       duplicateEntries: [], contactHistory: [], sales: [],
+      isSecret: false,
     });
   });
 

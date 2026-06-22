@@ -5,15 +5,13 @@ import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { AssociateService } from '@services/associate.service.js';
 import { MockAssociates } from '@mock/associates.js';
-import { CONSULTANTS, ASSOCIATE_STATUSES, BRANCHES, CONSULTANT_BRANCH } from '@config/constants.js';
+import { CONSULTANTS, ASSOCIATE_STATUSES, BRANCHES, CONSULTANT_BRANCH, EDUCATIONS, REGIONS, CHANNELS } from '@config/constants.js';
 import { ManagerPicker, renderManagerPickerHTML, getManagerPickerStyles } from '@components/ManagerPicker.js';
 
 initLayout({ pageId: 'associate-list', breadcrumbs: ['준회원 관리', '준회원 목록'] });
 const content = document.getElementById('content');
 
-const REGIONS=['서울','부산','대구','광주','인천','대전','울산','경기','강원','세종','충북','충남','경북','경남','전북','전남','제주','해외','지역없음'];
-const CHANNELS=['가입비견적','결혼테스트','네이버예약','네이버커플','무료상담','무료맞선권','블라인드커플','실시간상담','이상형매칭','카카오커플','카카오톡','MBTI테스트','TV광고','구글커플','메타커플','당근커플','렌딩-두두'];
-const EDUCATIONS=['고졸','전문대 재중','전문대 중퇴','전문대 졸업','대학 재중','대학 중퇴','대학 졸업','대학원 재중','대학원 중퇴','대학원 졸업','박사 과정','박사 수료','박사'];
+
 
 function getRole(){ return localStorage.getItem('purples_role')||'admin'; }
 function roleName(r){ return {admin:'관리자 (본사)',branch:'지사장',manager:'일반 매니저'}[r]||r; }
@@ -71,49 +69,70 @@ async function render(){
       </td>
       <th>성별</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-gender" style="width:100%">
-          <option value="">성별 전체</option><option value="남">남</option><option value="여">여</option>
-        </select></div>
+        <div class="ms-wrap" data-ms="f-gender">
+          <div class="ms-display form-input--sm">성별 전체</div>
+          <div class="ms-dropdown">
+            ${['남','여'].map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+          </div>
+        </div>
       </td>
       <th>결혼여부</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-marital" style="width:100%">
-          <option value="">전체</option><option value="초혼">초혼</option><option value="재혼">재혼</option>
-        </select></div>
+        <div class="ms-wrap" data-ms="f-marital">
+          <div class="ms-display form-input--sm">전체</div>
+          <div class="ms-dropdown">
+            ${['초혼','재혼','사별'].map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+          </div>
+        </div>
       </td>
     </tr>
     <tr>
       <th>학력</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-edu" style="width:100%">
-          <option value="">학력 전체</option>${EDUCATIONS.map(e=>`<option>${e}</option>`).join('')}
-        </select></div>
+        <div class="ms-wrap" data-ms="f-edu">
+          <div class="ms-display form-input--sm">학력 전체</div>
+          <div class="ms-dropdown">
+            ${EDUCATIONS.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+          </div>
+        </div>
       </td>
       <th>상태</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-status" style="width:100%">
-          <option value="">상태 전체</option>${ASSOCIATE_STATUSES.map(s=>`<option>${s}</option>`).join('')}
-        </select></div>
+        <div class="ms-wrap" data-ms="f-status">
+          <div class="ms-display form-input--sm">상태 전체</div>
+          <div class="ms-dropdown">
+            ${ASSOCIATE_STATUSES.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+          </div>
+        </div>
       </td>
       <th>지역</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-region" style="width:100%">
-          <option value="">지역 전체</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}
-        </select></div>
+        <div class="ms-wrap" data-ms="f-region">
+          <div class="ms-display form-input--sm">지역 전체</div>
+          <div class="ms-dropdown">
+            ${REGIONS.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+          </div>
+        </div>
       </td>
       <th>가입경로</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-channel" style="width:100%">
-          <option value="">경로 전체</option>${CHANNELS.map(c=>`<option>${c}</option>`).join('')}
-        </select></div>
+        <div class="ms-wrap" data-ms="f-channel">
+          <div class="ms-display form-input--sm">경로 전체</div>
+          <div class="ms-dropdown">
+            ${CHANNELS.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+          </div>
+        </div>
       </td>
     </tr>
     <tr>
       <th>지사</th>
       <td>
-        <div class="select-wrap"><select class="form-select form-input--sm" id="f-branch" style="width:100%">
-          <option value="">지사 전체</option>${BRANCHES.map(b=>`<option value="${b.name}">${b.name}</option>`).join('')}
-        </select></div>
+        <div class="ms-wrap" data-ms="f-branch">
+          <div class="ms-display form-input--sm">지사 전체</div>
+          <div class="ms-dropdown">
+            ${BRANCHES.map(b=>`<label class="ms-opt"><input type="checkbox" value="${b.name}"> ${b.name}</label>`).join('')}
+          </div>
+        </div>
       </td>
       <th>매니저</th>
       <td colspan="5">
@@ -133,7 +152,17 @@ async function render(){
   <div style="display:flex;gap:8px">${roleButtons(role)}</div>
 </div>
 <div id="tbl"></div>
-<style>${getManagerPickerStyles()}</style>`;
+<style>
+${getManagerPickerStyles()}
+.ms-wrap{position:relative;cursor:pointer}
+.ms-display{border:1px solid var(--border-light);padding:4px 8px;font-size:12px;background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:26px;display:flex;align-items:center}
+.ms-display::after{content:'▾';margin-left:auto;padding-left:6px;font-size:10px;color:#888}
+.ms-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border-light);box-shadow:0 3px 8px rgba(0,0,0,.15);z-index:100;max-height:200px;overflow-y:auto;min-width:120px}
+.ms-wrap.open .ms-dropdown{display:block}
+.ms-opt{display:flex;align-items:center;gap:5px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap}
+.ms-opt:hover{background:#f0f4ff}
+.ms-opt input[type="checkbox"]{margin:0}
+</style>`;
 
   const initData=getStatusData();
 
@@ -143,37 +172,56 @@ async function render(){
 
   table=DataTable.render('tbl',{
     columns:[
-      {key:'_no',label:'No.',width:'45px',render:(v,r,i)=>i+1,sortable:false},
-      {key:'name',label:'이름',render:(v,r)=>`<a href="detail.html?id=${r.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none" onclick="event.stopPropagation()">${v}</a>`},
-      {key:'phone',label:'연락처',render:v=>Formatters.phone(v),sortable:false},
-      {key:'gender',label:'성별',width:'50px'},
+      {key:'_no',label:'번호',width:'45px',render:(v,r,i)=>i+1,sortable:false},
+      {key:'branch',label:'지사',width:'55px'},
+      {key:'registeredAt',label:'등록일',render:v=>Formatters.date(v),width:'90px',sortable:true},
+      {key:'assignedAt',label:'분배일',render:v=>v?Formatters.date(v):'-',width:'90px',sortable:true},
+      {key:'lastContactAt',label:'최종컨텍일',render:v=>v?Formatters.date(v):'-',width:'90px',sortable:true},
+      {key:'name',label:'회원명',render:(v,r)=>`<a href="detail.html?id=${r.id}" target="_blank" style="font-weight:600;color:var(--accent);text-decoration:none" onclick="event.stopPropagation()">${v}</a>`},
       {key:'age',label:'생년',width:'50px',render:v=>{ const y=new Date().getFullYear()-parseInt(v)+1; return y+'년'; }},
-      {key:'status',label:'상태',render:v=>Formatters.statusBadge(v,'associate')},
-      {key:'channel',label:'가입경로'},
-      {key:'region',label:'지역',width:'60px'},
-      {key:'maritalStatus',label:'결혼',width:'50px'},
-      {key:'branch',label:'지사',width:'60px'},
-      {key:'consultant',label:'담당자',width:'70px'},
-      {key:'registeredAt',label:'등록일 ▼',render:v=>Formatters.date(v),width:'100px',sortable:true},
-      {key:'lastContactAt',label:'최종컨텍 ▼',render:v=>Formatters.date(v),width:'100px',sortable:true},
+      {key:'gender',label:'성별',width:'42px'},
+      {key:'maritalStatus',label:'결혼',width:'45px'},
+      {key:'channel',label:'가입경로',width:'70px'},
+      {key:'education',label:'학력',width:'65px'},
+      {key:'phone',label:'연락처',render:v=>Formatters.phone(v),sortable:false},
+      {key:'job',label:'직업',width:'70px',render:v=>v||'-'},
+      {key:'region',label:'지역',width:'55px'},
+      {key:'status',label:'회원상태',render:v=>Formatters.statusBadge(v,'associate')},
+      {key:'consultant',label:'담당자',width:'65px'},
     ],
     data:initData, pageSize:20, checkbox:true,
     onRowClick:r=>{ window.open(`detail.html?id=${r.id}`, '_blank'); },
   });
 
+  function getCheckedValues(msName) {
+    const wrap = document.querySelector(`[data-ms="${msName}"]`);
+    if (!wrap) return [];
+    return Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+  }
+
+  function updateMsDisplay(wrap) {
+    const display = wrap.querySelector('.ms-display');
+    const checked = Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+    const defaultText = { 'f-gender':'성별 전체','f-marital':'전체','f-edu':'학력 전체','f-status':'상태 전체','f-region':'지역 전체','f-channel':'경로 전체','f-branch':'지사 전체' };
+    const key = wrap.dataset.ms;
+    if (checked.length === 0) display.textContent = defaultText[key] || '전체';
+    else if (checked.length === 1) display.textContent = checked[0];
+    else display.textContent = checked[0] + ' 외 ' + (checked.length - 1) + '건';
+  }
+
   function applyFilters(){
     let d=getStatusData();
-    const gv=id=>document.getElementById(id)?.value||'';
-    if(gv('f-branch')) d=d.filter(x=>x.branch===gv('f-branch'));
+    const mv = id => getCheckedValues(id);
+    const br = mv('f-branch');   if(br.length>0) d=d.filter(x=>br.includes(x.branch));
     const selMgrs = mgrPicker ? mgrPicker.getSelected() : [];
     if(selMgrs.length > 0) d=d.filter(x=>selMgrs.includes(x.consultant));
-    if(gv('f-gender')) d=d.filter(x=>x.gender===gv('f-gender'));
-    if(gv('f-marital')) d=d.filter(x=>x.maritalStatus===gv('f-marital'));
-    if(gv('f-edu')) d=d.filter(x=>x.education===gv('f-edu'));
-    if(gv('f-status')) d=d.filter(x=>x.status===gv('f-status'));
-    if(gv('f-region')) d=d.filter(x=>x.region===gv('f-region'));
-    if(gv('f-channel')) d=d.filter(x=>x.channel===gv('f-channel'));
-    const kw=gv('f-keyword').toLowerCase();
+    const ge = mv('f-gender');   if(ge.length>0) d=d.filter(x=>ge.includes(x.gender));
+    const ma = mv('f-marital');  if(ma.length>0) d=d.filter(x=>ma.includes(x.maritalStatus));
+    const ed = mv('f-edu');      if(ed.length>0) d=d.filter(x=>ed.includes(x.education));
+    const st = mv('f-status');   if(st.length>0) d=d.filter(x=>st.includes(x.status));
+    const rg = mv('f-region');   if(rg.length>0) d=d.filter(x=>rg.includes(x.region));
+    const ch = mv('f-channel');  if(ch.length>0) d=d.filter(x=>ch.includes(x.channel));
+    const kw=(document.getElementById('f-keyword')?.value||'').toLowerCase();
     if(kw) d=d.filter(x=>x.name.includes(kw)||x.phone.includes(kw)||(x.company&&x.company.toLowerCase().includes(kw)));
     table.update(d);
     updateCount(d.length);
@@ -182,6 +230,29 @@ async function render(){
   document.getElementById('btn-search').onclick=()=>{
     applyFilters();
   };
+
+  // 멀티셀렉트 드롭다운 토글
+  document.querySelectorAll('.ms-wrap').forEach(wrap => {
+    const display = wrap.querySelector('.ms-display');
+    display.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 다른 열린 드롭다운 닫기
+      document.querySelectorAll('.ms-wrap.open').forEach(w => { if(w !== wrap) w.classList.remove('open'); });
+      wrap.classList.toggle('open');
+    });
+    // 체크박스 변경 시 표시 업데이트 + 자동 검색
+    wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        updateMsDisplay(wrap);
+        applyFilters();
+      });
+    });
+  });
+  // 바깥 클릭 시 닫기
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.ms-wrap.open').forEach(w => w.classList.remove('open'));
+  });
+
   // 매니저 Picker 초기화
   mgrPicker = new ManagerPicker({
     inputId: 'amgr-search-input',
@@ -195,15 +266,11 @@ async function render(){
 
   // 초기화 버튼
   document.getElementById('btn-reset')?.addEventListener('click',()=>{
-    ['f-keyword'].forEach(id=>document.getElementById(id).value='');
-    ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-keyword').value='';
+    document.querySelectorAll('.ms-wrap input[type="checkbox"]').forEach(cb=>cb.checked=false);
+    document.querySelectorAll('.ms-wrap').forEach(w=>updateMsDisplay(w));
     if(mgrPicker) mgrPicker.reset();
     applyFilters();
-  });
-
-  // 드롭다운 변경 시 자동 검색
-  ['f-gender','f-marital','f-edu','f-status','f-region','f-channel','f-branch'].forEach(id=>{
-    document.getElementById(id)?.addEventListener('change', applyFilters);
   });
 
   // ── 일괄변경 모달 (관리자 전용) ──
