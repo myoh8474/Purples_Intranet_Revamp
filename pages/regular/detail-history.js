@@ -92,9 +92,12 @@ export function bindHistoryPopup(m) {
     // 카테고리별 데이터 소스 매핑
     var list = [];
     if (category === '상태변경') {
-      list = (m.statusHistory || []).map(function(h) { return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-', reserveDate: h.reserveDate || '-' }; });
+      list = (m.statusHistory || []).map(function(h) { return { date: h.date, before: h.from || '-', after: h.to || '-', reason: h.reason || '-', processor: h.processor || '-' }; });
     } else if (category === '프로그램') {
-      list = (m.programHistory || []).map(function(h) { return { date: h.date, content: h.note || '-', detail: h.program + ' (' + Formatters.money(h.totalFee) + ')', processor: h.changer || '-' }; });
+      list = (m.programHistory || [
+        { date: '2024-03-15', before: '-', after: '다이아몬드 B', reason: '최초등록', changer: '박수진' },
+        { date: '2025-01-10', before: '다이아몬드 B', after: '다이아몬드 C', reason: '업그레이드', changer: '김지현' },
+      ]).map(function(h) { return { date: h.date, before: h.before || '-', after: h.after || h.program || '-', reason: h.reason || h.note || '-', processor: h.changer || '-' }; });
     } else if (category === '미팅횟수') {
       list = (m.meetingCountHistory || [
         { date: '2024-06-20', before: 5, after: 7, changer: '박수진' },
@@ -116,8 +119,19 @@ export function bindHistoryPopup(m) {
         { date: '2025-04-01', no: 5, contractType: '기간제', period: '2025.04.01 ~ 2026.03.31', meetingCount: 2, manager: '오세은' },
       ]).map(function(h) { return { joinDate: h.date, no: h.no, contractType: h.contractType || '-', period: h.period || '-', meetingCount: h.meetingCount != null ? h.meetingCount + '회' : '-', manager: h.manager || '-' }; });
     } else if (category === '매칭매니저' || category === '상담매니저' || category === '지사') {
-      list = (m.statusHistory || []).filter(function(h) { return (h.reason || '').indexOf(category) > -1; }).map(function(h) { return { date: h.date, content: h.reason || '-', detail: (h.from || '-') + '→' + (h.to || '-'), processor: h.processor || '-' }; });
-      if (list.length === 0) list = [{ date: m.joinDate, content: '최초 배정', detail: category + ': ' + (category === '매칭매니저' ? m.matchingManager : category === '상담매니저' ? m.consultantManager : m.branch) || '-', processor: '-' }];
+      var currentVal = category === '매칭매니저' ? m.matchingManager : category === '상담매니저' ? m.consultantManager : m.branch;
+      var dummyHistory = category === '상담매니저' ? [
+        { date: '2024-03-15', before: '-', after: '박수진', reason: '최초배정', processor: '시스템' },
+        { date: '2025-06-10', before: '박수진', after: currentVal, reason: '담당자 변경', processor: '김지현' },
+      ] : category === '매칭매니저' ? [
+        { date: '2024-03-15', before: '-', after: '이다손', reason: '최초배정', processor: '시스템' },
+        { date: '2025-04-20', before: '이다손', after: currentVal, reason: '매칭 담당자 변경', processor: '박수진' },
+      ] : [
+        { date: '2024-03-15', before: '-', after: currentVal, reason: '최초등록', processor: '시스템' },
+      ];
+      list = (m[category + 'History'] || dummyHistory).map(function(h) {
+        return { date: h.date, before: h.before || h.from || '-', after: h.after || h.to || '-', reason: h.reason || '-', processor: h.processor || '-' };
+      });
     }
 
     function getAttachment(h) {
@@ -142,17 +156,31 @@ export function bindHistoryPopup(m) {
         + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
         + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:90px;border:1px solid var(--border-light)">회원상태</td>'
         + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="status-change-select" style="width:200px;font-size:12px;padding:3px 8px">' + statusOptions.map(function(s) { return '<option' + (s === m.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td></tr>'
-        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">예약날짜</td>'
-        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:6px;align-items:center"><input type="date" class="form-input" id="status-date-from" style="font-size:12px;padding:3px 8px"> <span>~</span> <input type="date" class="form-input" id="status-date-to" style="font-size:12px;padding:3px 8px"></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">※ 보류/교제로 변경시 입력 (연장기한 Or 다음 컨텍일)</div></td></tr>'
+        + '<tr id="hold-period-row" style="opacity:0.4"><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">보류기간</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:6px;align-items:center"><input type="date" class="form-input" id="status-date-from" disabled style="font-size:12px;padding:3px 8px;background:#f0f0f0"> <span>~</span> <input type="date" class="form-input" id="status-date-to" disabled style="font-size:12px;padding:3px 8px;background:#f0f0f0"></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">※ 보류 상태 선택 시 활성화</div></td></tr>'
         + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
         + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="status-change-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-status-change-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
+        + '</tbody></table></div>';
+    }
+
+    var isMatchManager = (category === '매칭매니저');
+    var matchManagerForm = '';
+    if (isMatchManager) {
+      var managerList = ['박수진','김지현','이다손','오세은','정하나','최예린','김유나','송미라'];
+      matchManagerForm = '<div style="margin-bottom:16px;padding:0">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:100px;border:1px solid var(--border-light)">매칭매니저</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="match-manager-select" style="width:200px;font-size:12px;padding:3px 8px">' + managerList.map(function(n) { return '<option' + (n === m.matchingManager ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></td></tr>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="match-manager-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-match-manager-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
         + '</tbody></table></div>';
     }
 
     var isRejoin = (category === '가입횟수');
     var isExpiry = (category === '만료일');
     var isMeeting = (category === '미팅횟수');
-    var colCount = isStatusChange ? 6 : isRejoin ? 6 : isExpiry ? 5 : isMeeting ? 4 : 4;
+    var isSimpleChange = (category === '매칭매니저' || category === '상담매니저' || category === '지사' || category === '프로그램');
+    var colCount = isStatusChange ? 6 : isRejoin ? 6 : isExpiry ? 5 : isMeeting ? 4 : isSimpleChange ? 5 : 4;
     var rows = '';
 
     if (isRejoin) {
@@ -191,6 +219,18 @@ export function bindHistoryPopup(m) {
               + '</tr>';
           }).join('')
         : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
+    } else if (isSimpleChange) {
+      rows = list.length > 0
+        ? list.slice(0, 20).map(function(h) {
+            return '<tr>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.before || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;font-weight:600;color:' + catInfo.color + '">' + (h.after || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.reason || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
+              + '</tr>';
+          }).join('')
+        : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">변경 이력이 없습니다.</td></tr>';
     } else {
       rows = list.length > 0
         ? list.slice(0, 20).map(function(h) {
@@ -203,9 +243,9 @@ export function bindHistoryPopup(m) {
             }
             return '<tr>'
               + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;white-space:nowrap">' + Formatters.date(h.date) + '</td>'
-              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.content || '-') + '</td>'
-              + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.reserveDate || '-') + '</td>' : '')
-              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.detail || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.before || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center;font-weight:600;color:#ef4444">' + (h.after || '-') + '</td>'
+              + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px">' + (h.reason || h.content || '-') + '</td>'
               + '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + (h.processor || '-') + '</td>'
               + (isStatusChange ? '<td style="padding:6px 8px;border:1px solid var(--border-light);font-size:12px;text-align:center">' + attHtml + '</td>' : '')
               + '</tr>';
@@ -233,26 +273,48 @@ export function bindHistoryPopup(m) {
         + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경된 날짜</th>'
         + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경사유</th>'
         + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">처리자</th>';
+    } else if (isSimpleChange) {
+      thead = '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경전</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경후</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경사유</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">처리자</th>';
     } else {
       thead = '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경일</th>'
-        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">' + (isStatusChange ? '변경사유' : '내용') + '</th>'
-        + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">예약일</th>' : '')
-        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경전→변경후</th>'
-        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">매니저</th>'
-        + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px;width:24%">첨부</th>' : '');
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경전</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경후</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">변경사유</th>'
+        + '<th style="padding:8px;background:var(--bg-secondary);font-size:12px">처리자</th>'
+        + (isStatusChange ? '<th style="padding:8px;background:var(--bg-secondary);font-size:12px;width:20%">첨부</th>' : '');
     }
 
     Modal.show({
       title: isRejoin ? '<span style="color:' + catInfo.color + ';font-weight:700">가입이력</span>' : '<span style="color:' + catInfo.color + ';font-weight:700">' + catInfo.label + '</span> 변경이력',
       size: 'xl',
-      content: statusForm
-        + '<div style="max-height:' + (isStatusChange ? '380px' : '450px') + ';overflow-y:auto">'
+      content: statusForm + matchManagerForm
+        + '<div style="max-height:' + (isStatusChange || isMatchManager ? '380px' : '450px') + ';overflow-y:auto">'
         + '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;border-collapse:collapse"><thead><tr>'
         + thead
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
     });
 
     setTimeout(function() {
+      // 보류기간 활성화/비활성화 제어
+      var statusSelect = document.getElementById('status-change-select');
+      if (statusSelect) {
+        var holdStatuses = ['임시보류','약정보류','장기보류','강제보류'];
+        function toggleHoldPeriod() {
+          var isHold = holdStatuses.indexOf(statusSelect.value) > -1;
+          var row = document.getElementById('hold-period-row');
+          var fromInput = document.getElementById('status-date-from');
+          var toInput = document.getElementById('status-date-to');
+          if (row) row.style.opacity = isHold ? '1' : '0.4';
+          if (fromInput) { fromInput.disabled = !isHold; fromInput.style.background = isHold ? '#fff' : '#f0f0f0'; }
+          if (toInput) { toInput.disabled = !isHold; toInput.style.background = isHold ? '#fff' : '#f0f0f0'; }
+        }
+        statusSelect.addEventListener('change', toggleHoldPeriod);
+        toggleHoldPeriod();
+      }
       var confirmBtn = document.getElementById('btn-status-change-confirm');
       if (confirmBtn) {
         confirmBtn.addEventListener('click', function() {
@@ -267,6 +329,22 @@ export function bindHistoryPopup(m) {
           if (badgeArea) badgeArea.outerHTML = Formatters.statusBadge(newStatus, 'regular');
           Modal.hide();
           Toast.show('회원 상태가 ' + newStatus + '(으)로 변경되었습니다.', 'success');
+        });
+      }
+
+      // 매칭매니저 변경 확인
+      var matchConfirmBtn = document.getElementById('btn-match-manager-confirm');
+      if (matchConfirmBtn) {
+        matchConfirmBtn.addEventListener('click', function() {
+          var newManager = document.getElementById('match-manager-select').value;
+          var reason = document.getElementById('match-manager-reason').value.trim();
+          if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+          if (newManager === m.matchingManager) { Toast.show('현재 매칭매니저와 동일합니다.', 'warning'); return; }
+          var oldManager = m.matchingManager;
+          m.matchingManager = newManager;
+          addHistory({ memberId: m.id, category: '매칭매니저', content: reason, detail: oldManager + '→' + newManager, processor: m.consultantManager || '시스템', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('매칭매니저가 변경되었습니다.', 'success');
         });
       }
 

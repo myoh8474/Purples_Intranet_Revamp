@@ -87,67 +87,58 @@ async function render(){
   <button style="padding:3px 10px;border:1px solid #2e7d32;background:#2e7d32;color:#fff;font-weight:700;font-size:11px;cursor:pointer" id="btn-register-regular">정회원 등록</button>
 </div>
 
-<!-- 회원 기본정보 섹션 -->
+<!-- 상담 기본정보 섹션 -->
 <div class="crm-sec" style="margin-top:8px">
   <div style="display:flex;align-items:center;gap:6px">
-    <span>회원 기본정보</span>
+    <span>상담 기본정보</span>
     <div class="sb">
+      <button id="btn-memo-add">메모등록</button>
     </div>
   </div>
 </div>
 
-<!-- 기본정보 테이블 -->
+<!-- 상담 기본정보 테이블 (사진 + 밀집 테이블) -->
 <table class="ct">
-  <colgroup><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:17%"></colgroup>
+  <colgroup>
+    <col style="width:90px">
+    <col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%">
+    <col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%">
+  </colgroup>
   <tbody>
     <tr>
-      <th style="color:#c62828">컨설턴트</th><td style="font-weight:700"><a href="#" id="btn-change-history" style="color:#1565c0;text-decoration:underline;cursor:pointer" title="변경이력 조회">${m.consultant||''}</a></td>
-      <th style="color:#c62828">상 태</th><td style="font-weight:700">${m.status}</td>
-      <th style="color:#c62828">경로</th><td style="font-weight:700">[${m.channel?m.channel.charAt(0):''}]</td>
-      <th style="color:#c62828">생년월일</th><td style="font-weight:700">${m.birthDate ? Formatters.date(m.birthDate) : ''}</td>
+      <td rowspan="4" style="width:90px;padding:4px;text-align:center;vertical-align:middle;background:#f9f9f9;cursor:pointer" id="btn-photo-more">
+        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&size=200&background=dde1e6&color=555&bold=true&font-size=0.38" 
+             style="width:80px;height:100px;object-fit:cover;border:1px solid #bbb" id="header-photo">
+        <div style="font-size:10px;color:#888;margin-top:3px">사진</div>
+      </td>
+      <th>상담매니저</th><td style="font-weight:700"><a href="#" id="btn-change-history" style="color:#1565c0;text-decoration:underline;cursor:pointer" title="변경이력 조회">${m.consultant||''}</a></td>
+      <th>매칭매니저</th><td style="font-weight:700">${m.matchingManager||''}</td>
+      <th>프로그램</th><td style="font-weight:700">${m.program||''}</td>
+      <th style="color:#1565c0;font-weight:900">가입비</th><td style="font-weight:700;color:#c62828">${m.joinFee ? Number(m.joinFee).toLocaleString()+'원' : ''}</td>
+      <th>가입기간</th><td style="font-weight:700">${m.joinPeriod||''}</td>
+      <th>무이자</th><td>${m.interestFree||''}</td>
     </tr>
     <tr>
-      <th style="color:#c62828">회 원 명</th><td style="font-weight:700">${m.name} (${m.gender})</td>
-      <th>결혼여부</th><td>${m.maritalStatus||'초혼'}</td>
-      <th>지 역</th><td>${m.region||''}</td>
-      <th>최종학력</th><td>${m.education||''}</td>
+      <th>회원상태</th><td style="font-weight:700">${m.status}</td>
+      <th>지사</th><td>${m.branch||'본사'}</td>
+      <th>가입일/만료일</th><td>${m.joinDate||''} ${m.expireDate ? '~ '+m.expireDate : ''}</td>
+      <th>재가입비</th><td>${m.rejoinFee ? Number(m.rejoinFee).toLocaleString()+'원' : ''}</td>
+      <th>결제방법</th><td>${m.paymentMethod||''}</td>
+      <th>할인명</th><td>${m.discountName||''}</td>
     </tr>
     <tr>
-      <th>직 업</th><td>${m.job||''}</td>
-      <th>학 교</th><td>${m.school||''}</td>
-      <th>신 장</th><td>${m.height?m.height+'cm':''}</td>
-      <th>체 중</th><td>${m.weight?m.weight+'kg':''}</td>
+      <th>생년월일</th><td style="font-weight:700">${m.birthDate ? Formatters.date(m.birthDate) : ''}</td>
+      <th>주민번호</th><td>${m.ssn||''}</td>
+      <th>결혼경력</th><td>${m.maritalStatus||'초혼'}</td>
+      <th>기입횟수</th><td style="font-weight:700">${m.joinCount||''}</td>
+      <th>성혼비</th><td>${m.successFee ? Number(m.successFee).toLocaleString()+'원' : ''}</td>
+      <th>업그레이드</th><td>${m.upgrade||''}</td>
     </tr>
     <tr>
-      <th>집 주 소</th><td colspan="3">${m.address||''}</td>
-      <th>이 메 일</th><td colspan="3">${m.email||''}</td>
-    </tr>
-    <!-- REQ-045: 연락처 5개 지원 -->
-    <tr>
-      <th>자택연락처</th><td colspan="3">${m.telHome||''}</td>
-      <th>직장연락처</th><td colspan="3">${m.telOffice||''}</td>
-    </tr>
-    <tr>
-      <th>핸드폰1</th><td colspan="3">${m.phoneRelation1||'본인'} : <strong>${Formatters.phone(m.phone)}</strong> <button class="mb" id="btn-call-direct">통화</button></td>
-      <th>핸드폰2</th><td colspan="3">${m.phone2?(m.phone2Relation||'모친')+' : '+Formatters.phone(m.phone2):''}</td>
-    </tr>
-    <tr>
-      <th>핸드폰3</th><td colspan="3">${m.phone3?(m.phone3Relation||'본인')+' : '+Formatters.phone(m.phone3):''}</td>
-      <th>선호통화</th><td colspan="3" style="font-weight:700;color:#e65100">${m.preferCallTime||'미설정'}</td>
-    </tr>
-    <tr>
-      <th>자 녀</th><td>${m.children||''}</td>
-      <th>혈액형</th><td>${m.bloodType||''}</td>
-      <th>취미</th><td>${m.hobby||''}</td>
-      <th>종교</th><td>${m.religion||''}
-    </tr>
-    <tr>
-      <th>기타사항</th><td colspan="3">${m.memo||''}</td>
-      <th>매니저 지정</th><td>${m.consultant||''}</td>
-      <th>희망 상대</th><td style="font-size:11px;line-height:1.5">${m.hope||''}</td>
-    </tr>
-    <tr>
-      <th style="color:#c62828">메모</th><td colspan="7" style="font-weight:700">${m.memo||''} <button class="mb" id="btn-memo-add">메모등록</button></td>
+      <th>본인가입사실</th><td>${m.selfAware||''}</td>
+      <th>연락처</th><td style="font-weight:700">${Formatters.phone(m.phone)} <button class="mb" id="btn-call-direct">통화</button></td>
+      <th>소통방법</th><td>${m.contactMethod||''}</td>
+      <th>비고</th><td colspan="5" style="font-size:11px">${m.memo||''}</td>
     </tr>
   </tbody>
 </table>

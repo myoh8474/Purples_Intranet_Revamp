@@ -31,7 +31,7 @@ function selectHtml(id, label, options, w) {
 
 function multiSelectHtml(id, label, options) {
   return `<div class="multi-select" id="${id}-wrap" style="position:relative">
-    <button type="button" class="form-select form-input--sm" id="${id}-btn" style="width:100%;font-size:12px;text-align:left;cursor:pointer">${label} 전체</button>
+    <button type="button" class="form-select form-input--sm" id="${id}-btn" data-label="${label}" style="width:100%;font-size:12px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span class="ms-label">${label} 전체</span><span class="ms-arrow" style="font-size:9px;color:#999;margin-left:4px;flex-shrink:0">▼</span></button>
     <div class="multi-select__dropdown" id="${id}-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid var(--border-medium);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:320px;overflow-y:auto;min-width:200px;padding:6px 0;margin-top:2px">
       ${options.map(o => `<label style="display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background=''">
         <input type="checkbox" class="${id}-chk" value="${o}" style="accent-color:var(--accent)">${o}
@@ -79,26 +79,26 @@ content.innerHTML = `
         <th>통합검색</th>
         <td colspan="3"><input type="text" class="form-input form-input--sm" id="rf-keyword" placeholder="이름, 전화번호, ID 검색..." style="width:100%"></td>
         <th>상태</th>
-        <td colspan="3">${selectHtml('rf-status','상태',REGULAR_STATUSES)}</td>
+        <td colspan="3">${multiSelectHtml('rf-status','상태',REGULAR_STATUSES)}</td>
       </tr>
       <tr>
         <th>브랜드</th>
-        <td>${selectHtml('rf-brand','브랜드',BRANDS)}</td>
+        <td>${multiSelectHtml('rf-brand','브랜드',BRANDS)}</td>
         <th>지사</th>
-        <td>${selectHtml('rf-branch','지사',BRANCHES)}</td>
+        <td>${multiSelectHtml('rf-branch','지사',BRANCHES)}</td>
         <th>상담자</th>
-        <td>${selectHtml('rf-consultant','상담자',CONSULTANTS)}</td>
+        <td>${multiSelectHtml('rf-consultant','상담자',CONSULTANTS)}</td>
         <th>커플매니저</th>
-        <td>${selectHtml('rf-match-mgr','커플매니저',MATCH_MANAGERS)}</td>
+        <td>${multiSelectHtml('rf-match-mgr','커플매니저',MATCH_MANAGERS)}</td>
       </tr>
     </tbody>
     <!-- 상세 필터 행 (기본 숨김) -->
     <tbody id="adv-rows" style="display:none">
       <tr>
         <th>성별</th>
-        <td>${selectHtml('rf-gender','성별',['남','여'])}</td>
+        <td>${multiSelectHtml('rf-gender','성별',['남','여'])}</td>
         <th>결혼경력</th>
-        <td>${selectHtml('rf-marital','결혼경력',MARITAL_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-marital','결혼경력',MARITAL_OPTIONS)}</td>
         <th>나이</th>
         <td><div style="display:flex;gap:4px;align-items:center"><input type="number" class="form-input form-input--sm" id="rf-age-min" placeholder="최소" style="width:55px"><span>~</span><input type="number" class="form-input form-input--sm" id="rf-age-max" placeholder="최대" style="width:55px"></div></td>
         <th>키</th>
@@ -106,33 +106,33 @@ content.innerHTML = `
       </tr>
       <tr>
         <th>학력</th>
-        <td>${selectHtml('rf-edu','학력',EDUCATION_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-edu','학력',EDUCATIONS)}</td>
         <th>종교</th>
-        <td>${selectHtml('rf-religion','종교',RELIGION_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-religion','종교',RELIGION_OPTIONS)}</td>
         <th>직업</th>
         <td>${jobTreeSelectHtml()}</td>
         <th>해외</th>
-        <td>${selectHtml('rf-overseas','해외',OVERSEAS_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-overseas','해외',OVERSEAS_OPTIONS)}</td>
       </tr>
       <tr>
         <th>자녀양육</th>
-        <td>${selectHtml('rf-child','자녀양육',CHILD_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-child','자녀양육',CHILD_OPTIONS)}</td>
         <th>프로그램</th>
-        <td>${selectHtml('rf-program','프로그램명',PROGRAMS_FLAT)}</td>
+        <td>${multiSelectHtml('rf-program','프로그램명',PROGRAMS_FLAT)}</td>
         <th>재가입</th>
-        <td>${selectHtml('rf-rejoin','재가입횟수',REJOIN_OPTIONS.map(n => n+'가입'))}</td>
+        <td>${multiSelectHtml('rf-rejoin','재가입횟수',REJOIN_OPTIONS.map(n => n+'가입'))}</td>
         <th>난매칭</th>
-        <td>${selectHtml('rf-difficult','난매칭여부',['해당','미해당'])}</td>
+        <td>${multiSelectHtml('rf-difficult','난매칭여부',['해당','미해당'])}</td>
       </tr>
       <tr>
         <th>본적지</th>
-        <td>${selectHtml('rf-hometown','본적지',REGIONS)}</td>
+        <td>${multiSelectHtml('rf-hometown','본적지',REGIONS)}</td>
         <th>거주지역</th>
-        <td>${selectHtml('rf-region','거주지역',[...REGIONS,'거주지역 상관없음'])}</td>
+        <td>${multiSelectHtml('rf-region','거주지역',[...REGIONS,'거주지역 상관없음'])}</td>
         <th>본인재산</th>
-        <td>${selectHtml('rf-p-wealth','본인재산',WEALTH_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-p-wealth','본인재산',WEALTH_OPTIONS)}</td>
         <th>가족재산</th>
-        <td>${selectHtml('rf-f-wealth','가족재산',WEALTH_OPTIONS)}</td>
+        <td>${multiSelectHtml('rf-f-wealth','가족재산',WEALTH_OPTIONS)}</td>
       </tr>
     </tbody>
   </table>
@@ -148,7 +148,7 @@ content.innerHTML = `
   <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;flex-wrap:wrap;gap:8px">
     <div style="display:flex;align-items:center;gap:12px">
       <span style="font-size:12px;font-weight:600;color:var(--text-secondary)" id="reg-count"></span>
-      <button class="btn btn--outline btn--sm" id="btn-reg-manager" style="font-size:11px;padding:3px 10px">담당자 일부변경</button>
+      <button class="btn btn--outline btn--sm" id="btn-reg-manager" style="font-size:11px;padding:3px 10px">매칭매니져 변경</button>
     </div>
     <div style="display:flex;gap:14px;align-items:center;font-size:11px;color:#555">
       <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#fde2e2;border:1px solid #f87171;display:inline-block"></span>최종미팅 30일 초과</span>
@@ -161,27 +161,22 @@ content.innerHTML = `
       <thead>
         <tr>
           <th style="width:28px"><input type="checkbox" id="reg-check-all"></th>
-          <th style="width:45px">No.</th>
+          <th>번호</th>
           <th>사진</th>
-          <th>이름/ID</th>
           <th>성별</th>
-          <th>나이</th>
-          <th>브랜드</th>
-          <th>상태</th>
-          <th>회원종류</th>
-          <th>가입차수</th>
+          <th>이름</th>
+          <th>아이디</th>
           <th>지역</th>
-          <th>결혼</th>
-          <th>지사</th>
-          <th>매칭매니저</th>
-          <th>상담자</th>
-          <th id="th-join" style="cursor:pointer">가입일 ▼</th>
-          <th>계약</th>
-          <th>미팅(횟수)</th>
-          <th>미팅등록</th>
-          <th>소개장등록</th>
-          <th>만료</th>
-          <th>서류재인증</th>
+          <th>생년월일</th>
+          <th>직업</th>
+          <th>회원종류</th>
+          <th>회원상태</th>
+          <th>상담매니져</th>
+          <th>매칭매니져</th>
+          <th>미팅횟수</th>
+          <th>최종미팅일</th>
+          <th>최종컨택일</th>
+          <th>만료확인</th>
         </tr>
       </thead>
       <tbody id="reg-tbody"></tbody>
@@ -214,8 +209,13 @@ btnClose.addEventListener('click', closeAdvFilters);
 
 // ── 필터 초기화 ──
 btnReset.addEventListener('click', () => {
-  advRows.querySelectorAll('select').forEach(s => s.value = '');
-  advRows.querySelectorAll('input').forEach(i => i.value = '');
+  document.querySelectorAll('.multi-select input[type="checkbox"]').forEach(c => c.checked = false);
+  document.querySelectorAll('input[type="number"], #rf-keyword').forEach(i => i.value = '');
+  document.querySelectorAll('.multi-select button[id$="-btn"]').forEach(btn => {
+    const label = btn.dataset.label || '';
+    const labelSpan = btn.querySelector('.ms-label');
+    if (labelSpan) labelSpan.textContent = label + ' 전체';
+  });
   applyFilters(true);
 });
 
@@ -239,73 +239,82 @@ const PAGE_SIZE = 20;
 let currentPage = 1;
 let sortDesc = true; // 가입일 최신순
 
+// ── 다중선택 헬퍼 ──
+function chk(id) { return [...document.querySelectorAll(`.${id}-chk:checked`)].map(c => c.value); }
+
 // ── 필터 + 렌더링 ──
 function applyFilters(resetPage) {
   if (resetPage) currentPage = 1;
   let data = [...MockRegulars];
-  console.log('[DEBUG] 활동(미팅중) 회원:', data.filter(d => d.status === '활동').map(d => d.name + '/' + d.status));
 
-  // 기본 필터
-  const brand = document.getElementById('rf-brand').value;
-  const branch = document.getElementById('rf-branch').value;
-  const consultant = document.getElementById('rf-consultant').value;
-  const matchMgr = document.getElementById('rf-match-mgr').value;
-  const status = document.getElementById('rf-status').value;
+  // 기본 필터 (다중선택)
+  const brandSel = chk('rf-brand');
+  const branchSel = chk('rf-branch');
+  const consultantSel = chk('rf-consultant');
+  const matchMgrSel = chk('rf-match-mgr');
+  const statusSel = chk('rf-status');
   const keyword = document.getElementById('rf-keyword').value.trim().toLowerCase();
 
-  if (brand) data = data.filter(d => d.brand === brand);
-  if (branch) data = data.filter(d => d.branch === branch);
-  if (consultant) data = data.filter(d => d.consultantManager === consultant);
-  if (matchMgr) data = data.filter(d => d.matchingManager === matchMgr);
-  if (status) data = data.filter(d => d.status === status);
+  if (brandSel.length) data = data.filter(d => brandSel.includes(d.brand));
+  if (branchSel.length) data = data.filter(d => branchSel.includes(d.branch));
+  if (consultantSel.length) data = data.filter(d => consultantSel.includes(d.consultantManager));
+  if (matchMgrSel.length) data = data.filter(d => matchMgrSel.includes(d.matchingManager));
+  if (statusSel.length) data = data.filter(d => statusSel.includes(d.status));
   if (keyword) data = data.filter(d =>
     d.name.includes(keyword) || d.phone.includes(keyword) || d.memberId.toLowerCase().includes(keyword)
   );
 
-  // 상세 필터 (열려있을 때만)
-  const gender = document.getElementById('rf-gender')?.value;
-  const marital = document.getElementById('rf-marital')?.value;
+  // 상세 필터 (다중선택)
+  const genderSel = chk('rf-gender');
+  const maritalSel = chk('rf-marital');
   const ageMin = parseInt(document.getElementById('rf-age-min')?.value);
   const ageMax = parseInt(document.getElementById('rf-age-max')?.value);
   const heightMin = parseInt(document.getElementById('rf-height-min')?.value);
   const heightMax = parseInt(document.getElementById('rf-height-max')?.value);
-  const child = document.getElementById('rf-child')?.value;
-  const edu = document.getElementById('rf-edu')?.value;
-  const religion = document.getElementById('rf-religion')?.value;
-  const jobChecks = [...document.querySelectorAll('.rf-job-chk:checked')].map(c => c.value);
-  const overseas = document.getElementById('rf-overseas')?.value;
-  const program = document.getElementById('rf-program')?.value;
-  const rejoin = document.getElementById('rf-rejoin')?.value;
-  const difficult = document.getElementById('rf-difficult')?.value;
-  const hometown = document.getElementById('rf-hometown')?.value;
-  const region = document.getElementById('rf-region')?.value;
-  const pWealth = document.getElementById('rf-p-wealth')?.value;
-  const fWealth = document.getElementById('rf-f-wealth')?.value;
+  const childSel = chk('rf-child');
+  const eduSel = chk('rf-edu');
+  const religionSel = chk('rf-religion');
+  const jobSel = chk('rf-job');
+  const overseasSel = chk('rf-overseas');
+  const programSel = chk('rf-program');
+  const rejoinSel = chk('rf-rejoin');
+  const difficultSel = chk('rf-difficult');
+  const hometownSel = chk('rf-hometown');
+  const regionSel = chk('rf-region');
+  const pWealthSel = chk('rf-p-wealth');
+  const fWealthSel = chk('rf-f-wealth');
 
-  if (gender) data = data.filter(d => d.gender === gender);
-  if (marital && marital !== '상관없음') data = data.filter(d => d.maritalHistory === marital);
+  if (genderSel.length) data = data.filter(d => genderSel.includes(d.gender));
+  if (maritalSel.length) data = data.filter(d => maritalSel.includes(d.maritalHistory));
   if (!isNaN(ageMin)) data = data.filter(d => d.age >= ageMin);
   if (!isNaN(ageMax)) data = data.filter(d => d.age <= ageMax);
   if (!isNaN(heightMin)) data = data.filter(d => d.height >= heightMin);
   if (!isNaN(heightMax)) data = data.filter(d => d.height <= heightMax);
-  if (child) data = data.filter(d => d.childCare === child);
-  if (edu) data = data.filter(d => d.education === edu);
-  if (religion) data = data.filter(d => d.religion === religion);
-  if (jobChecks.length > 0) {
-    if (jobChecks.includes('직업상관없음')) data = data.filter(d => d.jobFlexible || jobChecks.includes(d.job));
-    else data = data.filter(d => jobChecks.includes(d.job));
+  if (childSel.length) data = data.filter(d => childSel.includes(d.childCare));
+  if (eduSel.length) data = data.filter(d => eduSel.includes(d.education));
+  if (religionSel.length) data = data.filter(d => religionSel.includes(d.religion));
+  if (jobSel.length) {
+    if (jobSel.includes('직업상관없음')) data = data.filter(d => d.jobFlexible || jobSel.includes(d.job));
+    else data = data.filter(d => jobSel.includes(d.job));
   }
-  if (overseas && overseas !== '없음') data = data.filter(d => d.overseas === overseas);
-  if (overseas === '없음') data = data.filter(d => d.overseas === '없음');
-  if (program) data = data.filter(d => d.program === program);
-  if (rejoin) { const n = parseInt(rejoin); data = data.filter(d => d.rejoinCount === n); }
-  if (difficult === '해당') data = data.filter(d => d.difficultMatch);
-  if (difficult === '미해당') data = data.filter(d => !d.difficultMatch);
-  if (hometown) data = data.filter(d => d.hometown === hometown);
-  if (region === '거주지역 상관없음') data = data.filter(d => d.residenceFlexible);
-  else if (region) data = data.filter(d => d.region === region);
-  if (pWealth) data = data.filter(d => d.personalWealth === pWealth);
-  if (fWealth) data = data.filter(d => d.familyWealth === fWealth);
+  if (overseasSel.length) data = data.filter(d => overseasSel.includes(d.overseas));
+  if (programSel.length) data = data.filter(d => programSel.includes(d.program));
+  if (rejoinSel.length) {
+    const nums = rejoinSel.map(r => parseInt(r));
+    data = data.filter(d => nums.includes(d.rejoinCount));
+  }
+  if (difficultSel.length) {
+    const wantYes = difficultSel.includes('해당'), wantNo = difficultSel.includes('미해당');
+    if (wantYes && !wantNo) data = data.filter(d => d.difficultMatch);
+    else if (wantNo && !wantYes) data = data.filter(d => !d.difficultMatch);
+  }
+  if (hometownSel.length) data = data.filter(d => hometownSel.includes(d.hometown));
+  if (regionSel.length) {
+    if (regionSel.includes('거주지역 상관없음')) data = data.filter(d => d.residenceFlexible || regionSel.includes(d.region));
+    else data = data.filter(d => regionSel.includes(d.region));
+  }
+  if (pWealthSel.length) data = data.filter(d => pWealthSel.includes(d.personalWealth));
+  if (fWealthSel.length) data = data.filter(d => fWealthSel.includes(d.familyWealth));
 
   // 가입일 정렬
   data.sort((a, b) => {
@@ -383,27 +392,22 @@ function applyFilters(resetPage) {
 
   tbody.innerHTML = paged.map((m, i) => `<tr data-id="${m.id}" class="${rowClass(m)}">
     <td class="tc" onclick="event.stopPropagation()"><input type="checkbox" class="reg-check" value="${m.id}"></td>
-    <td class="tc">${start + i + 1}</td>
+    <td class="tc" style="font-size:11px;color:var(--text-muted)">${m.id || '-'}</td>
     <td class="tc">${photoHtml(m)}</td>
-    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link col-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><div class="col-name" style="color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};line-height:1.3">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="display:inline-block;background:#ef4444;color:#fff;font-size:10px !important;font-weight:600;padding:1px 5px;border-radius:3px;line-height:14px;vertical-align:middle">미팅중</span>' : ''}</div><div style="font-size:11px;color:var(--text-muted)">${m.memberId}</div></a></td>
     <td class="tc">${m.gender}</td>
-    <td class="tc">${m.birthDate ? new Date(m.birthDate).getFullYear() + '년' + String(new Date(m.birthDate).getMonth()+1).padStart(2,'0') + '월' : (m.age ? m.age + '세' : '-')}</td>
-    <td class="tc">${m.brand}</td>
-    <td class="tc">${['임시교제','교제','외부교제'].includes(m.status) ? `<a href="${detailUrl(m.id)}" target="_blank" style="color:#6366f1;text-decoration:underline;font-weight:600;cursor:pointer">${m.status}</a>` : m.status}</td>
-    <td class="tc">${m.program}</td>
-    <td class="tc">${m.rejoinCount || 1}</td>
+    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link col-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><span style="color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};font-weight:600">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="display:inline-block;background:#ef4444;color:#fff;font-size:10px !important;font-weight:600;padding:1px 5px;border-radius:3px;line-height:14px;vertical-align:middle">미팅중</span>' : ''}</span></a></td>
+    <td class="tc" style="font-size:11px;color:var(--text-muted)">${m.memberId}</td>
     <td class="tc">${m.region || '-'}</td>
-    <td class="tc">${m.maritalHistory || '-'}</td>
-    <td class="tc">${m.branch || '-'}</td>
-    <td class="tc">${m.matchingManager || '-'}</td>
+    <td class="tc">${m.birthDate ? new Date(m.birthDate).getFullYear() + '.' + String(new Date(m.birthDate).getMonth()+1).padStart(2,'0') + '.' + String(new Date(m.birthDate).getDate()).padStart(2,'0') : '-'}</td>
+    <td class="tc">${m.job || '-'}</td>
+    <td class="tc">${m.program}</td>
+    <td class="tc">${['임시교제','교제','외부교제'].includes(m.status) ? `<a href="${detailUrl(m.id)}" target="_blank" style="color:#6366f1;text-decoration:underline;font-weight:600;cursor:pointer">${m.status}</a>` : m.status}</td>
     <td class="tc">${m.consultantManager || '-'}</td>
-    <td class="tc">${Formatters.date(m.joinDate)}</td>
-    <td class="tc">${m.contractType === '기간제' ? `${m.contractCount || 12}개월` : `${m.contractCount || '-'}회`}</td>
+    <td class="tc">${m.matchingManager || '-'}</td>
     <td class="tc">${(m.meetingCount || 0) + '/' + (m.contractCount || 12)}</td>
-    <td class="tc">${meetingRegHtml(m)}</td>
-    <td class="tc">${introRegHtml(m)}</td>
+    <td class="tc">${m.lastMeetingDate ? Formatters.date(m.lastMeetingDate) : '-'}</td>
+    <td class="tc">${m.lastContactDate ? Formatters.date(m.lastContactDate) : (m.lastIntroDate ? Formatters.date(m.lastIntroDate) : '-')}</td>
     <td class="tc">${m.expiryStatus === '없음' || !m.expiryStatus ? '-' : `<span class="col-bad">${m.expiryStatus}</span>`}</td>
-    <td class="tc">${m.docReauth ? '<span class="col-warn">필요</span>' : '-'}</td>
   </tr>`).join('');
 
   // 소송중 회원 클릭 시 경고 팝업
@@ -503,35 +507,56 @@ document.getElementById('reg-check-all').addEventListener('change', function() {
   document.querySelectorAll('.reg-check').forEach(c => { c.checked = this.checked; });
 });
 
-// 가입일 정렬 토글
-document.getElementById('th-join').addEventListener('click', () => {
-  sortDesc = !sortDesc;
-  document.getElementById('th-join').textContent = `가입일 ${sortDesc ? '▼' : '▲'}`;
-  applyFilters(true);
+
+
+// ── 범용 멀티셀렉트 드롭다운 초기화 ──
+const ALL_MS_IDS = [
+  'rf-status','rf-brand','rf-branch','rf-consultant','rf-match-mgr',
+  'rf-gender','rf-marital','rf-edu','rf-religion','rf-overseas',
+  'rf-child','rf-program','rf-rejoin','rf-difficult',
+  'rf-hometown','rf-region','rf-p-wealth','rf-f-wealth','rf-job'
+];
+
+ALL_MS_IDS.forEach(id => {
+  const btn = document.getElementById(`${id}-btn`);
+  const drop = document.getElementById(`${id}-dropdown`);
+  if (!btn || !drop) return;
+
+  // 원본 라벨 저장
+  btn.dataset.label = btn.textContent.replace(' 전체', '');
+
+  // 토글
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // 다른 드롭다운 닫기
+    ALL_MS_IDS.forEach(otherId => {
+      if (otherId !== id) {
+        const otherDrop = document.getElementById(`${otherId}-dropdown`);
+        if (otherDrop) otherDrop.style.display = 'none';
+      }
+    });
+    drop.style.display = drop.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // 체크 변경 → 버튼 텍스트 업데이트
+  drop.addEventListener('change', () => {
+    const checked = [...drop.querySelectorAll('input[type="checkbox"]:checked')].map(c => c.value);
+    const label = btn.dataset.label;
+    const labelSpan = btn.querySelector('.ms-label');
+    if (!labelSpan) return;
+    if (checked.length === 0) labelSpan.textContent = label + ' 전체';
+    else if (checked.length === 1) labelSpan.textContent = checked[0];
+    else labelSpan.textContent = `${checked[0]} 외 ${checked.length - 1}건`;
+  });
 });
 
-// ── 직업 멀티셀렉트 드롭다운 ──
-const jobBtn = document.getElementById('rf-job-btn');
-const jobDrop = document.getElementById('rf-job-dropdown');
-
-jobBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  jobDrop.style.display = jobDrop.style.display === 'none' ? 'block' : 'none';
-});
-
-// 체크 변경 시 버튼 텍스트 업데이트
-jobDrop.addEventListener('change', () => {
-  const checked = [...document.querySelectorAll('.rf-job-chk:checked')].map(c => c.value);
-  if (checked.length === 0) jobBtn.textContent = '직업 전체';
-  else if (checked.length <= 2) jobBtn.textContent = checked.join(', ');
-  else jobBtn.textContent = `${checked[0]} 외 ${checked.length - 1}건`;
-});
-
-// 외부 클릭 시 닫기
+// 외부 클릭 시 모든 드롭다운 닫기
 document.addEventListener('click', (e) => {
-  if (!document.getElementById('rf-job-wrap')?.contains(e.target)) {
-    jobDrop.style.display = 'none';
-  }
+  ALL_MS_IDS.forEach(id => {
+    const wrap = document.getElementById(`${id}-wrap`);
+    const drop = document.getElementById(`${id}-dropdown`);
+    if (wrap && drop && !wrap.contains(e.target)) drop.style.display = 'none';
+  });
 });
 
 // ── 담당자 변경 모달 ──
@@ -542,39 +567,35 @@ document.getElementById('btn-reg-manager').addEventListener('click', () => {
   // 선택된 회원 이름 목록
   const selectedNames = Array.from(checks).map(c => {
     const row = c.closest('tr');
-    const nameCell = row?.querySelector('td:nth-child(4)');
-    return nameCell ? nameCell.textContent.trim().split('\n')[0] : '';
+    const link = row?.querySelector('.member-link');
+    return link ? link.textContent.trim().replace('🔒 ', '').replace('미팅중', '').trim() : '';
   }).filter(Boolean);
   const namePreview = selectedNames.length <= 3 
     ? selectedNames.join(', ') 
     : selectedNames.slice(0,3).join(', ') + ` 외 ${selectedNames.length - 3}명`;
 
   Modal.show({
-    title: `담당자 일부변경`,
+    title: `매칭매니져 변경`,
     content: `
       <div style="padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-light);margin-bottom:16px;font-size:12px">
         <strong>선택 회원 (${checks.length}명):</strong> <span style="color:var(--text-secondary)">${namePreview}</span>
       </div>
       <div class="form-group" style="margin-bottom:14px">
-        <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">변경할 매니저 <span style="color:#e53e3e">*</span></label>
+        <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">변경할 매칭매니져 <span style="color:#e53e3e">*</span></label>
         <select class="form-select" id="modal-match-mgr" style="width:100%">
-          <option value="">매니저를 선택하세요</option>
+          <option value="">매칭매니져를 선택하세요</option>
           ${MATCH_MANAGERS.map(m=>`<option>${m}</option>`).join('')}
         </select>
       </div>
-      <div class="form-group" style="margin-bottom:14px">
+      <div class="form-group">
         <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">변경사유 <span style="color:#e53e3e">*</span></label>
         <select class="form-select" id="modal-change-reason" style="width:100%">
-          <option value="">매니저변경 사유</option>
-          <option>담당매니저 퇴사</option>
+          <option value="">변경사유를 선택하세요</option>
+          <option>담당매니져 퇴사</option>
           <option>지사로 이관</option>
-          <option>팀 변동으로 인한 인계</option>
+          <option>팀 변동으로 인한 이관</option>
           <option>지사내 매칭업무 분할</option>
         </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block">비고</label>
-        <textarea class="form-input" id="modal-change-note" rows="2" placeholder="변경 사유 상세 입력 (선택)" style="width:100%;resize:vertical"></textarea>
       </div>
     `,
     footer: `
@@ -582,11 +603,11 @@ document.getElementById('btn-reg-manager').addEventListener('click', () => {
       <button class="btn btn--primary" id="btn-modal-change" onclick="
         var mgr = document.getElementById('modal-match-mgr').value;
         var reason = document.getElementById('modal-change-reason').value;
-        if(!mgr){ alert('변경할 매니저를 선택하세요.'); return; }
+        if(!mgr){ alert('변경할 매칭매니져를 선택하세요.'); return; }
         if(!reason){ alert('변경사유를 선택하세요.'); return; }
+        alert('매칭매니져가 변경되었습니다.');
         document.getElementById('modal-root').innerHTML='';
-        Toast.show(mgr + '으로 ' + ${checks.length} + '명 담당자 변경 완료','success');
-      ">변경</button>
+      ">저장</button>
     `,
   });
 });

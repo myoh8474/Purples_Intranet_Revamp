@@ -32,6 +32,10 @@ const COMPANIES = ['삼성전자','LG전자','현대자동차','SK하이닉스',
 const BLOODS = ['A','B','O','AB'];
 const RELIGIONS = ['무교','기독교','천주교','불교','기타'];
 const HOBBIES = ['등산','독서','운동','영화','여행','요리','음악','골프','테니스','수영','카페탐방','사진'];
+const PAYMENT_METHODS = ['카드','현금','계좌이체','카드+현금','할부'];
+const CONTACT_METHODS = ['전화','문자','카카오톡','이메일','전화+문자'];
+const MATCHING_MANAGERS = ['김매니저','이매니저','박매니저','정매니저','최매니저','한매니저','강매니저','윤매니저'];
+const MOCK_PROGRAMS = ['전문직','브론즈','실버(에메랄드)','골드(사파이어)','플래티늄(루비)','다이아몬드','시크릿'];
 
 const NAMES_M = [
   '김민준','이서준','박도윤','최하준','정우진','강건우','조현우','윤태민','임지호','한성민',
@@ -112,6 +116,11 @@ if (useMock()) {
       const distDate = new Date(regDate.getTime() + Math.random() * 3 * 86400000);
       const lastContact = new Date(distDate.getTime() + Math.random() * 30 * 86400000);
       const region = randomPick(REGIONS);
+      const prog = randomPick(MOCK_PROGRAMS);
+      const joinFeeVal = [1500000,2000000,2500000,3000000,3500000,4500000,5800000,7000000,9500000][Math.floor(Math.random()*9)];
+      const periodMonths = [6,8,10,12][Math.floor(Math.random()*4)];
+      const joinDt = new Date(distDate.getTime() + Math.random() * 5 * 86400000);
+      const expDt = new Date(joinDt.getTime() + periodMonths * 30 * 86400000);
       MockAssociates.push({
         id: idSeq++,
         name: randomPick(names),
@@ -130,6 +139,23 @@ if (useMock()) {
         status: randomPick(ASSOC_STATUSES),
         channel: randomPick(CHANNELS.slice(0, 10)),
         consultant: mgr,
+        matchingManager: randomPick(MATCHING_MANAGERS),
+        program: prog,
+        joinFee: joinFeeVal,
+        joinPeriod: periodMonths + '개월',
+        interestFree: Math.random() > 0.5 ? '무이자 ' + [3,6,10,12][Math.floor(Math.random()*4)] + '개월' : '',
+        joinDate: joinDt.toISOString().slice(0,10),
+        expireDate: expDt.toISOString().slice(0,10),
+        rejoinFee: Math.random() > 0.7 ? [500000,800000,1000000][Math.floor(Math.random()*3)] : 0,
+        paymentMethod: randomPick(PAYMENT_METHODS),
+        discountName: Math.random() > 0.7 ? ['조기가입','재가입','이벤트','VIP'][Math.floor(Math.random()*4)] : '',
+        ssn: '',
+        joinCount: Math.random() > 0.7 ? '2가입' : '1가입',
+        successFee: [500000,800000,1000000,1500000][Math.floor(Math.random()*4)],
+        upgrade: Math.random() > 0.8 ? '업그레이드' : '',
+        selfAware: Math.random() > 0.3 ? '인지' : '비인지',
+        contactMethod: randomPick(CONTACT_METHODS),
+        address: randomPick(['서울시 강남구','서울시 마포구','부산시 해운대구','대전시 유성구','경기도 성남시','서울시 서초구']),
         distMethod: Math.random() > 0.4 ? '자동분배' : '수동분배',
         registeredAt: regDate.toISOString(),
         distributedAt: distDate.toISOString(),
@@ -193,6 +219,9 @@ if (useMock()) {
       weight: d.gender === '남' ? (65 + Math.floor(Math.random() * 20)) : (45 + Math.floor(Math.random() * 15)),
       bloodType: randomPick(BLOODS), children: '없음', religion: randomPick(RELIGIONS),
       hobby: randomPick(HOBBIES), hope: '', email: '', telHome: '', telOffice: '', phone2: '',
+      matchingManager: '', program: '', joinFee: 0, joinPeriod: '', interestFree: '',
+      joinDate: '', expireDate: '', rejoinFee: 0, paymentMethod: '', discountName: '',
+      ssn: '', joinCount: '', successFee: 0, upgrade: '', selfAware: '', contactMethod: '', address: '',
       duplicateEntries: [], contactHistory: [], sales: [],
       isSecret: false,
     });
@@ -221,6 +250,9 @@ if (useMock()) {
       distributedAt: '', lastContactAt: '',
       height: 0, weight: 0, bloodType: '', children: '', religion: '', hobby: '', hope: '',
       email: '', telHome: '', telOffice: '', phone2: '',
+      matchingManager: '', program: '', joinFee: 0, joinPeriod: '', interestFree: '',
+      joinDate: '', expireDate: '', rejoinFee: 0, paymentMethod: '', discountName: '',
+      ssn: '', joinCount: '', successFee: 0, upgrade: '', selfAware: '', contactMethod: '', address: '',
       duplicateEntries: [], contactHistory: [], sales: [],
       isSecret: false,
     });
@@ -247,6 +279,9 @@ if (useMock()) {
       distributedAt: '', lastContactAt: '',
       height: 0, weight: 0, bloodType: '', children: '', religion: '', hobby: '', hope: '',
       email: '', telHome: '', telOffice: '', phone2: '',
+      matchingManager: '', program: '', joinFee: 0, joinPeriod: '', interestFree: '',
+      joinDate: '', expireDate: '', rejoinFee: 0, paymentMethod: '', discountName: '',
+      ssn: '', joinCount: '', successFee: 0, upgrade: '', selfAware: '', contactMethod: '', address: '',
       duplicateEntries: [], contactHistory: [], sales: [],
       isSecret: false,
     });
@@ -284,6 +319,9 @@ if (useMock()) {
       pastMeetings: d.meetings,
       pastTotalPayment: d.totalPay,
       pastClaim: d.claim,
+      matchingManager: '', program: '', joinFee: 0, joinPeriod: '', interestFree: '',
+      joinDate: '', expireDate: '', rejoinFee: 0, paymentMethod: '', discountName: '',
+      ssn: '', joinCount: '', successFee: 0, upgrade: '', selfAware: '', contactMethod: '', address: '',
       duplicateEntries: [], contactHistory: [], sales: [],
       isSecret: false,
     });

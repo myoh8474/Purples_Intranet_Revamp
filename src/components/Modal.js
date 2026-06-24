@@ -5,7 +5,7 @@
 export const Modal = {
   show({ title, content, size, footer, onClose }) {
     const root = document.getElementById('modal-root');
-    const sizeClass = size === 'lg' ? 'modal--lg' : size === 'xl' ? 'modal--xl' : '';
+    const sizeClass = size === 'lg' ? 'modal--lg' : size === 'xxl' ? 'modal--xxl' : size === 'xl' ? 'modal--xl' : '';
     root.innerHTML = `
       <div class="modal-overlay active" id="modal-overlay">
         <div class="modal ${sizeClass}">

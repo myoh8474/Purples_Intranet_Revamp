@@ -5,14 +5,14 @@
 
 /* ── 섹션 카드 (.sec) ── */
 .sec {
-  margin-bottom: 12px;
+  margin-bottom: 4px !important;
   background: #fff;
   border: 1px solid var(--border-light);
   overflow: hidden;
 }
 
 .sec__header {
-  padding: 10px 14px;
+  padding: 3px 14px;
   border-bottom: 1px solid #cbd5e1;
   font-weight: 800;
   font-size: 14px;
@@ -46,7 +46,7 @@ th.lbl {
   color: #888;
   text-align: center;
   white-space: nowrap;
-  padding: 6px 8px;
+  padding: 2px 8px !important;
 }
 
 /* 헤더 기본정보 테이블 — val 흰색 배경 */
@@ -58,7 +58,7 @@ th.lbl {
 .dtbl .val,
 td.val {
   font-size: 13px;
-  padding: 6px 10px;
+  padding: 2px 10px !important;
   color: #1e3a5f;
 }
 
@@ -106,12 +106,13 @@ td.val {
 
 /* ── 상세페이지 헤더 바 ── */
 .detail-header-bar {
-  padding: 14px 0;
-  margin-bottom: 0;
-  border-bottom: 1px solid #cbd5e1;
+  padding: 10px 16px;
+  margin-bottom: 4px;
+  border-bottom: 2px solid #1e3a5f;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: none;
 }
 
 .detail-header-bar__left {
@@ -152,5 +153,10 @@ td[data-history]:hover,
 /* 뱃지가 들어있는 셀은 밑줄 대신 배경으로 구분 */
 td[data-history] .badge {
   cursor: pointer;
+}
+
+/* 상세페이지 탭 간격 축소 */
+.tabs__nav {
+  margin-bottom: 0 !important;
 }
 

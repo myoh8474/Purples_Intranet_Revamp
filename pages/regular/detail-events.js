@@ -69,21 +69,7 @@ export function bindEvents(m) {
   if (saveExtraBtn) saveExtraBtn.addEventListener('click', function() { Toast.show('추가정보가 저장되었습니다.', 'success'); });
 
 
-  /* ── 접기/펼치기 토글 ── */
-  function setupToggle(toggleId, bodyId, iconId) {
-    var toggle = document.getElementById(toggleId);
-    if (toggle) toggle.addEventListener('click', function(e) {
-      if (e.target.closest('.btn')) return;
-      var body = document.getElementById(bodyId);
-      var icon = document.getElementById(iconId);
-      if (body) {
-        var isHidden = body.style.display === 'none';
-        body.style.display = isHidden ? 'block' : 'none';
-        if (icon) icon.textContent = isHidden ? '▼' : '▶';
-      }
-    });
-  }
-  setupToggle('toggle-history', 'history-body', 'toggle-history-icon');
+
 
 
   /* ── 학력 추가 ── */

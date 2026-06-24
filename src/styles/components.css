@@ -295,9 +295,10 @@ select.form-select{appearance:none;-webkit-appearance:none;cursor:pointer;paddin
 /* ── 모달 ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.15s}
 .modal-overlay.active{opacity:1;pointer-events:auto}
-.modal{background:#fff;border:1px solid #999;box-shadow:0 4px 16px rgba(0,0,0,0.15);width:480px;max-width:92vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.modal{background:#fff;border:1px solid #999;box-shadow:0 4px 16px rgba(0,0,0,0.15);width:480px;max-width:92vw;max-height:95vh;display:flex;flex-direction:column;overflow:hidden}
 .modal--lg{width:640px}
 .modal--xl{width:960px}
+.modal--xxl{width:1400px}
 .modal__header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border-light);background:#f8f9fa}
 .modal__title{font-size:13px;font-weight:700;color:var(--text-primary)}
 .modal__close{background:none;border:none;font-size:1.1rem;color:var(--text-muted);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:color 0.1s}

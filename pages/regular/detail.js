@@ -19,6 +19,7 @@ import { renderDetailPage } from './detail-header.js';
 import { bindEvents } from './detail-events.js';
 import { bindModals } from './detail-modals.js';
 import { bindHistoryPopup } from './detail-history.js';
+import { bindDocAuth } from './detail-doc-auth.js';
 
 
 // ── 초기화 ──
@@ -136,3 +137,4 @@ document.getElementById('detail-tabs').addEventListener('click', function(e) {
 bindEvents(m);
 bindModals(m);
 bindHistoryPopup(m);
+bindDocAuth(m);
