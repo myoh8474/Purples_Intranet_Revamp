@@ -55,6 +55,8 @@ export function bindEvents(m) {
   /* ── 간단 버튼 이벤트 ── */
   var smsBtn = document.getElementById('btn-sms');
   if (smsBtn) smsBtn.addEventListener('click', function() { Toast.show('SMS 발송 화면으로 이동합니다.', 'info'); });
+  var smsInlineBtn = document.getElementById('btn-sms-inline');
+  if (smsInlineBtn) smsInlineBtn.addEventListener('click', function() { Toast.show('SMS 발송 화면으로 이동합니다.', 'info'); });
 
   var emailBtn = document.getElementById('btn-email');
   if (emailBtn) emailBtn.addEventListener('click', function() { Toast.show('Email 발송 화면으로 이동합니다.', 'info'); });
@@ -68,9 +70,84 @@ export function bindEvents(m) {
   var saveExtraBtn = document.getElementById('btn-save-extra');
   if (saveExtraBtn) saveExtraBtn.addEventListener('click', function() { Toast.show('추가정보가 저장되었습니다.', 'success'); });
 
+  /* ── 인증서류첨부 모달 ── */
+  var certAttachBtn = document.getElementById('btn-cert-attach');
+  if (certAttachBtn) certAttachBtn.addEventListener('click', function() {
+    var DOC_ITEMS = ['호적등본', '졸업증명서', '재직증명서', '계약서'];
+    var rowsHtml = DOC_ITEMS.map(function(name, idx) {
+      return '<tr>'
+        + '<td style="padding:8px 12px;border:1px solid var(--border-light);text-align:center;font-weight:600;background:#f8f9fa;white-space:nowrap">' + (idx + 1) + '</td>'
+        + '<td style="padding:8px 12px;border:1px solid var(--border-light);font-weight:600;background:#f8f9fa;white-space:nowrap">' + name + '</td>'
+        + '<td style="padding:8px 12px;border:1px solid var(--border-light)">'
+        + '<input type="file" class="cert-file-input" data-doc-name="' + name + '" accept="image/*,.pdf,.jpg,.jpeg,.png" style="font-size:12px;width:100%">'
+        + '</td>'
+        + '<td style="padding:8px 12px;border:1px solid var(--border-light);text-align:center" id="cert-status-' + idx + '">'
+        + '<span style="font-size:11px;color:var(--text-muted)">미첨부</span>'
+        + '</td>'
+        + '</tr>';
+    }).join('');
 
+    Modal.show({
+      title: '인증서류 첨부',
+      size: 'lg',
+      content: '<div style="margin-bottom:12px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:12px;color:#1e40af">'
+        + '📎 회원 인증에 필요한 서류를 첨부해주세요. (지원 형식: PDF, JPG, PNG)'
+        + '</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+        + '<thead><tr>'
+        + '<th style="padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border-light);font-size:12px;width:40px">No</th>'
+        + '<th style="padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border-light);font-size:12px;width:110px">서류항목</th>'
+        + '<th style="padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border-light);font-size:12px">파일선택</th>'
+        + '<th style="padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border-light);font-size:12px;width:80px">상태</th>'
+        + '</tr></thead>'
+        + '<tbody>' + rowsHtml + '</tbody>'
+        + '</table>'
+        + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">'
+        + '<button class="btn btn--ghost btn--sm" id="cert-attach-cancel" style="font-size:12px;padding:5px 18px">취소</button>'
+        + '<button class="btn btn--primary btn--sm" id="cert-attach-save" style="font-size:12px;padding:5px 18px;font-weight:700">저장</button>'
+        + '</div>',
+    });
 
+    setTimeout(function() {
+      // 파일 선택 시 상태 업데이트
+      document.querySelectorAll('.cert-file-input').forEach(function(input, idx) {
+        input.addEventListener('change', function() {
+          var statusCell = document.getElementById('cert-status-' + idx);
+          if (statusCell) {
+            if (input.files && input.files.length > 0) {
+              var fileName = input.files[0].name;
+              var fileSize = (input.files[0].size / 1024).toFixed(1);
+              statusCell.innerHTML = '<span style="font-size:11px;color:#15803d;font-weight:600">✔ 첨부완료</span>'
+                + '<div style="font-size:10px;color:#64748b;margin-top:2px">' + fileName + ' (' + fileSize + 'KB)</div>';
+            } else {
+              statusCell.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">미첨부</span>';
+            }
+          }
+        });
+      });
 
+      // 취소 버튼
+      var cancelBtn = document.getElementById('cert-attach-cancel');
+      if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+
+      // 저장 버튼
+      var saveBtn = document.getElementById('cert-attach-save');
+      if (saveBtn) saveBtn.addEventListener('click', function() {
+        var hasFile = false;
+        document.querySelectorAll('.cert-file-input').forEach(function(input) {
+          if (input.files && input.files.length > 0) hasFile = true;
+        });
+        if (!hasFile) {
+          Toast.show('첨부된 파일이 없습니다. 파일을 선택해주세요.', 'warning');
+          return;
+        }
+        if (window.confirm('파일이 저장되었습니다')) {
+          Modal.hide();
+          Toast.show('인증서류가 저장되었습니다.', 'success');
+        }
+      });
+    }, 100);
+  });
 
   /* ── 학력 추가 ── */
   var addEduBtn = document.getElementById('btn-add-edu');

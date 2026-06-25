@@ -102,21 +102,198 @@ export function bindModals(m) {
   });
 
 
-  /* ── 리콜대기: 기간연장 신청서 발송 ── */
-  var recallEsignBtn = document.getElementById('btn-recall-esign');
-  if (recallEsignBtn) {
-    recallEsignBtn.addEventListener('click', async function() {
-      if (!confirm(m.name + ' 회원에게 기간연장 신청서를 발송하시겠습니까?\n\n모두싸인을 통해 전자서명 요청이 발송됩니다.')) return;
-      recallEsignBtn.disabled = true;
-      recallEsignBtn.textContent = '발송 중...';
-      await new Promise(function(r) { setTimeout(r, 1500); });
-      recallEsignBtn.textContent = '발송완료 (서명 대기중)';
-      recallEsignBtn.style.background = '#3b82f6';
-      recallEsignBtn.style.borderColor = '#3b82f6';
-      recallEsignBtn.insertAdjacentHTML('afterend', ' <span style="font-size:11px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-weight:600">서명 대기중</span>');
-      Toast.show('기간연장 신청서가 발송되었습니다.', 'success');
-      addHistory({ memberId: m.id, category: '상태변경', content: '기간연장 신청서 발송 (모두싸인)', detail: '', processor: '시스템', date: new Date().toISOString() });
+  /* ── 헤더 버튼 교체 헬퍼 ── */
+  function replaceRecallButton(newId, label, bgColor) {
+    // 현재 버튼 찾기 (3개 중 하나)
+    var old = document.getElementById('btn-recall-send')
+           || document.getElementById('btn-recall-waiting')
+           || document.getElementById('btn-recall-complete');
+    if (!old) return null;
+    var btn = document.createElement('button');
+    btn.className = 'btn btn--sm';
+    btn.id = newId;
+    btn.style.cssText = 'margin-left:6px;background:' + bgColor + ';border-color:' + bgColor + ';color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px';
+    btn.textContent = label;
+    old.parentNode.replaceChild(btn, old);
+    return btn;
+  }
+
+  /* ── ① 연장신청서 발송 (리콜대기 + 미발송) ── */
+  var recallSendBtn = document.getElementById('btn-recall-send');
+  if (recallSendBtn) {
+    recallSendBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      // 연장기간 산정
+      var contractMonths = 12;
+      if (m.joinDate && m.expiryDate) {
+        contractMonths = Math.round((new Date(m.expiryDate) - new Date(m.joinDate)) / (30.44 * 86400000));
+      }
+      var extensionMonths = Math.max(0, contractMonths - (m.meetingCount || 0));
+      var curExpiry = m.expiryDate ? m.expiryDate.substring(0, 10) : '';
+      var newExpiry = '';
+      if (curExpiry && extensionMonths > 0) {
+        var d = new Date(curExpiry);
+        d.setMonth(d.getMonth() + extensionMonths);
+        newExpiry = d.toISOString().substring(0, 10);
+      }
+
+      // 계약내용 확인 모달
+      Modal.show({
+        title: '전자서명 계약내용 확인',
+        size: 'md',
+        content: ''
+          + '<div style="font-size:13px;margin-bottom:14px;color:var(--text-primary)">아래 내용으로 <b>' + m.name + '</b> 회원에게 기간연장 신청서를 발송합니다.</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:110px">회원명</td><td style="padding:8px 12px;border:1px solid var(--border-light)">' + m.name + '</td></tr>'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">계약기간</td><td style="padding:8px 12px;border:1px solid var(--border-light)">' + contractMonths + '개월</td></tr>'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">만남횟수</td><td style="padding:8px 12px;border:1px solid var(--border-light)">' + (m.meetingCount || 0) + '회</td></tr>'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">연장기간</td><td style="padding:8px 12px;border:1px solid var(--border-light);font-weight:700;color:#dc2626">' + extensionMonths + '개월</td></tr>'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">현재만료일</td><td style="padding:8px 12px;border:1px solid var(--border-light)">' + (curExpiry || '-') + '</td></tr>'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경만료일(예정)</td><td style="padding:8px 12px;border:1px solid var(--border-light);font-weight:700;color:#2563eb">' + (newExpiry || '-') + '</td></tr>'
+          + '<tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">발송수단</td><td style="padding:8px 12px;border:1px solid var(--border-light)">모두싸인 (이메일)</td></tr>'
+          + '</table>'
+          + '<div style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 확인 완료 후 회원에게 전자서명 요청이 발송됩니다.</div>'
+          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">'
+          + '<button class="btn btn--sm" id="recall-confirm-send" style="background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:12px;padding:4px 18px;font-weight:700">확인 및 발송</button>'
+          + '<button class="btn btn--ghost btn--sm" id="recall-cancel" style="font-size:12px;padding:4px 14px">취소</button>'
+          + '</div>',
+      });
+
+      setTimeout(function() {
+        var cancelBtn = document.getElementById('recall-cancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+
+        var confirmBtn = document.getElementById('recall-confirm-send');
+        if (confirmBtn) confirmBtn.addEventListener('click', async function() {
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = '발송 중...';
+          await new Promise(function(r) { setTimeout(r, 1500); });
+          m._esignStatus = '발송완료';
+          m._esignDocId = 'DOC-' + Date.now();
+          m._esignSentAt = new Date().toISOString();
+          m._esignMethod = '이메일';
+          addHistory({ memberId: m.id, category: '상태변경', content: '기간연장 신청서 발송 (모두싸인)', detail: '연장기간: ' + extensionMonths + '개월', processor: 'CS팀', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('전자서명 계약서가 발송되었습니다.', 'success');
+          // DOM에서 버튼 교체 → 전자서명 대기중
+          var newBtn = replaceRecallButton('btn-recall-waiting', '전자서명 대기중', '#8b5cf6');
+          if (newBtn) bindWaitingHandler(newBtn);
+        });
+      }, 100);
     });
+  }
+
+  /* ── ② 전자서명 대기중 핸들러 바인딩 함수 ── */
+  function bindWaitingHandler(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      alert('전자서명 대기중입니다.');
+      // 프로토타입: 확인 후 서명완료로 전환
+      m._esignStatus = '서명완료';
+      m._esignSignedAt = new Date().toISOString();
+      addHistory({ memberId: m.id, category: '상태변경', content: '기간연장 신청서 서명완료 (모두싸인)', detail: '', processor: '회원(전자서명)', date: new Date().toISOString() });
+      var newBtn = replaceRecallButton('btn-recall-complete', '전자서명 완료', '#16a34a');
+      if (newBtn) bindCompleteHandler(newBtn);
+    });
+  }
+
+  // 페이지 로드 시 이미 대기중 버튼이 있으면 바인딩
+  var recallWaitBtn = document.getElementById('btn-recall-waiting');
+  if (recallWaitBtn) {
+    bindWaitingHandler(recallWaitBtn);
+  }
+
+  /* ── ③ 전자서명 완료 핸들러 바인딩 함수 ── */
+  function bindCompleteHandler(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      var contractMonths = 12;
+      if (m.joinDate && m.expiryDate) {
+        contractMonths = Math.round((new Date(m.expiryDate) - new Date(m.joinDate)) / (30.44 * 86400000));
+      }
+      var extensionMonths = Math.max(0, contractMonths - (m.meetingCount || 0));
+      var curExpiry = m.expiryDate ? m.expiryDate.substring(0, 10) : '';
+      var newExpiryDate = '';
+      if (curExpiry && extensionMonths > 0) {
+        var d = new Date(curExpiry);
+        d.setMonth(d.getMonth() + extensionMonths);
+        newExpiryDate = d.toISOString().substring(0, 10);
+      }
+      var esignDocId = m._esignDocId || '';
+
+      Modal.show({
+        title: '전자서명 완료 — ' + m.name,
+        size: 'lg',
+        content: ''
+          + '<div style="margin-bottom:16px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">📎 서명 완료 서류</div>'
+          + '<div style="padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;display:flex;align-items:center;gap:10px">'
+          + '<span style="font-size:12px">📄 특별기간연장 신청서</span>'
+          + '<span class="badge badge--green" style="font-size:10px">서명완료</span>'
+          + '<button class="btn btn--ghost btn--sm" id="esign-doc-preview" style="font-size:10px;padding:1px 10px">미리보기</button>'
+          + '<button class="btn btn--ghost btn--sm" id="esign-doc-download" style="font-size:10px;padding:1px 10px">다운로드</button>'
+          + '</div></div>'
+          + '<div style="margin-bottom:16px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">📅 만료일 변경</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+          + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:100px">연장기간</td><td style="padding:6px 10px;border:1px solid var(--border-light);font-weight:700;color:#dc2626">' + extensionMonths + '개월</td><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:100px">현재만료일</td><td style="padding:6px 10px;border:1px solid var(--border-light)">' + (curExpiry || '-') + '</td></tr>'
+          + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경만료일</td><td colspan="3" style="padding:6px 10px;border:1px solid var(--border-light)"><input type="date" class="form-input" id="esign-new-expiry" value="' + newExpiryDate + '" style="font-size:12px;padding:3px 8px;width:160px"></td></tr>'
+          + '</table></div>'
+          + '<div style="margin-bottom:16px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">🔄 회원상태 변경</div>'
+          + '<div style="display:flex;align-items:center;gap:8px;font-size:12px">'
+          + '<span>' + m.status + '</span> <span style="color:var(--text-muted)">→</span> '
+          + '<select class="form-input" id="esign-new-status" style="font-size:12px;padding:3px 8px;width:120px">'
+          + '<option value="리콜" selected>리콜</option>'
+          + '<option value="리콜대기">리콜대기(유지)</option>'
+          + '</select></div></div>'
+          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">'
+          + '<button class="btn btn--sm" id="esign-apply-changes" style="background:#16a34a;border-color:#16a34a;color:#fff;font-size:12px;padding:4px 18px;font-weight:700">변경사항 저장</button>'
+          + '<button class="btn btn--ghost btn--sm" id="esign-close" style="font-size:12px;padding:4px 14px">닫기</button>'
+          + '</div>',
+      });
+
+      setTimeout(function() {
+        var closeBtn = document.getElementById('esign-close');
+        if (closeBtn) closeBtn.addEventListener('click', function() { Modal.hide(); });
+
+        var previewBtn = document.getElementById('esign-doc-preview');
+        if (previewBtn) previewBtn.addEventListener('click', function() {
+          Toast.show('서명 서류 미리보기를 불러옵니다...', 'info');
+          window.open('https://modusign.co.kr/envelope/' + (esignDocId || 'preview'), '_blank');
+        });
+
+        var downloadBtn = document.getElementById('esign-doc-download');
+        if (downloadBtn) downloadBtn.addEventListener('click', function() {
+          Toast.show('서명 서류 PDF 다운로드를 시작합니다.', 'info');
+        });
+
+        var applyBtn = document.getElementById('esign-apply-changes');
+        if (applyBtn) applyBtn.addEventListener('click', function() {
+          var newExpiry = document.getElementById('esign-new-expiry')?.value;
+          var newStatus = document.getElementById('esign-new-status')?.value;
+          if (!newExpiry) { Toast.show('변경만료일을 선택해주세요.', 'warning'); return; }
+          var msgs = [];
+          if (newExpiry !== curExpiry) msgs.push('만료일: ' + curExpiry + ' → ' + newExpiry);
+          if (newStatus !== m.status) msgs.push('상태: ' + m.status + ' → ' + newStatus);
+          if (msgs.length === 0) { Toast.show('변경사항이 없습니다.', 'info'); return; }
+          if (!confirm('아래 내용을 변경하시겠습니까?\n\n' + msgs.join('\n'))) return;
+          if (newExpiry !== curExpiry) m.expiryDate = newExpiry;
+          if (newStatus !== m.status) m.status = newStatus;
+          addHistory({ memberId: m.id, category: '상태변경', content: msgs.join(' / '), detail: '', processor: '전략기획', date: new Date().toISOString() });
+          Toast.show('변경사항이 저장되었습니다.', 'success');
+          Modal.hide();
+        });
+      }, 100);
+    });
+  }
+
+  // 페이지 로드 시 이미 완료 버튼이 있으면 바인딩
+  var recallCompleteBtn = document.getElementById('btn-recall-complete');
+  if (recallCompleteBtn) {
+    bindCompleteHandler(recallCompleteBtn);
   }
 
   /* ── 소개 프로필 등록/수정 모달 ── */

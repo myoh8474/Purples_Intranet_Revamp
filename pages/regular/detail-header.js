@@ -13,6 +13,17 @@ export function renderDetailPage(m, tabs) {
   // 프로필 사진
   var photos = Array.isArray(m.photo) ? m.photo : (m.photo ? [m.photo] : []);
 
+  // 연장신청서 발송 버튼 렌더링 (조건은 실제 개발 시 적용)
+  var recallBtnHtml = '';
+  var es = m._esignStatus || '';
+  if (!es) {
+    recallBtnHtml = ' <button class="btn btn--sm" id="btn-recall-send" style="margin-left:6px;background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">연장신청서 발송</button>';
+  } else if (es === '발송완료') {
+    recallBtnHtml = ' <button class="btn btn--sm" id="btn-recall-waiting" style="margin-left:6px;background:#8b5cf6;border-color:#8b5cf6;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">전자서명 대기중</button>';
+  } else if (es === '서명완료') {
+    recallBtnHtml = ' <button class="btn btn--sm" id="btn-recall-complete" style="margin-left:6px;background:#16a34a;border-color:#16a34a;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">전자서명 완료</button>';
+  }
+
   // ── 헤더 바: 이름 + 뱃지 + 버튼 ──
   var html = ''
     + '<div class="detail-header-bar">'
@@ -26,12 +37,13 @@ export function renderDetailPage(m, tabs) {
       }).join('') : '<span class="badge badge--red">이벤트불가</span><span class="badge badge--red">재가입불가</span><span class="badge badge--orange">난매칭</span><span class="badge badge--red" style="background:#fee2e2;color:#dc2626">미팅중</span>')
     + '  </div>'
     + '  <div class="detail-header-bar__actions">'
-    + '    <button class="btn btn--sm" id="btn-recall-esign" style="background:#f59e0b;border-color:#f59e0b;color:#fff;font-size:12px;padding:4px 14px;font-weight:700">연장신청서발송</button>'
+
     + '    <button class="btn btn--ghost btn--sm" id="btn-leave" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">탈회접수</button>'
-    + '    <button class="btn btn--ghost btn--sm" id="btn-sms" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">SMS</button>'
+
     + '    <button class="btn btn--ghost btn--sm" id="btn-event-sms" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">이벤트문자발송</button>'
     + '    <button class="btn btn--ghost btn--sm" id="btn-email" style="border:1px solid #333;color:#333;font-size:12px;padding:4px 14px">Email</button>'
 
+    + '    <button class="btn btn--sm" id="btn-cert-attach" style="background:#3b82f6;border-color:#3b82f6;color:#fff;font-size:12px;padding:4px 14px;font-weight:700">인증서류첨부</button>'
     + '    <button class="btn btn--secondary btn--sm" id="btn-claim" style="font-size:12px;padding:4px 14px">클레임등록</button>'
     + '    <button class="btn btn--primary btn--sm" id="btn-edit" style="font-size:12px;padding:4px 14px">수정</button>'
     + '  </div>'
@@ -59,8 +71,7 @@ export function renderDetailPage(m, tabs) {
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">서비스개시일</td><td class="val" style="text-align:left">' + (m.serviceStartDate ? Formatters.date(m.serviceStartDate) : '-') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">회원상태</td><td class="val hist-link" data-history="상태변경" style="text-align:left;cursor:pointer;color:#1565c0">' + (m.status || '-') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">지사</td><td class="val hist-link" data-history="지사" style="text-align:left;cursor:pointer;color:#1565c0">' + (m.branch || '-') + '</td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">회원상태</td><td class="val hist-link" data-history="상태변경" colspan="3" style="text-align:left;cursor:pointer;color:#1565c0">' + (m.status || '-') + recallBtnHtml + '</td>'
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">생년월일</td><td class="val" style="text-align:left">' + Formatters.date(m.birthDate) + '</td>'
@@ -69,8 +80,7 @@ export function renderDetailPage(m, tabs) {
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">본인가입사실</td><td class="val" style="text-align:left">' + (m.selfAware || '-') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">연락처</td><td class="val" style="text-align:left;white-space:nowrap">' + Formatters.phone(m.phone) + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">소통방법</td><td class="val" style="text-align:left">' + (m.contactMethod || '-') + '</td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">대표연락처</td><td class="val" colspan="3" style="text-align:left;white-space:nowrap">' + Formatters.phone(m.phone) + ' <button class="btn btn--sm" id="btn-sms-inline" style="margin-left:6px;background:#3b82f6;border-color:#3b82f6;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">SMS</button></td>'
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">미팅횟수</td><td class="val" style="text-align:left;font-weight:700">' + (m.meetingCount != null ? m.meetingCount + '/' + (m.totalMeetingCount || 12) + '회' : '-') + '</td>'
@@ -78,8 +88,8 @@ export function renderDetailPage(m, tabs) {
     + '  <td class="lbl" style="padding:2px 4px !important">가입차수</td><td class="val" style="text-align:left;font-weight:700">' + (m.rejoinLabel || m.rejoinCount + '가입' || '-') + '</td>'
     + '</tr>'
     + '<tr>'
-    + '  <td class="lbl" style="padding:2px 4px !important">남은기간</td><td class="val" style="text-align:left;font-weight:700;color:#ef4444">' + (m.expiryDate ? (function(){ var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return d > 0 ? d + '일' : '<span style="color:#dc2626">만료</span>'; })() : '-') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">가입일/만료일</td><td class="val hist-link" data-history="만료일" colspan="3" style="text-align:left;white-space:nowrap;font-size:11px;cursor:pointer;color:#1565c0">' + Formatters.date(m.joinDate) + (m.expiryDate ? '~' + Formatters.date(m.expiryDate) : '') + '</td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">가입일/만료일</td><td class="val" colspan="3" style="text-align:left;white-space:nowrap;font-size:11px">' + Formatters.date(m.joinDate) + (m.expiryDate ? ' - <span class="hist-link" data-history="만료일" style="cursor:pointer;color:#1565c0;text-decoration:underline">' + Formatters.date(m.expiryDate) + '</span>' : '') + (m.expiryDate ? (function(){ var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return ' <span style="font-weight:700;color:' + (d > 30 ? '#2563eb' : d > 0 ? '#f59e0b' : '#dc2626') + ';font-size:11px">(D' + (d > 0 ? '-' + d : d === 0 ? '-Day' : '+' + Math.abs(d)) + ')</span>'; })() : '') + '</td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">지사</td><td class="val hist-link" data-history="지사" style="text-align:left;cursor:pointer;color:#1565c0">' + (m.branch || '-') + '</td>'
     + '</tr>'
     + '</tbody></table>'
     + '</div></div>'
