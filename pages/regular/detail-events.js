@@ -12,32 +12,10 @@ import { Toast } from '@components/Toast.js';
  */
 export function bindEvents(m) {
 
-  /* ── 수정 버튼 (편집/저장 토글) ── */
+  /* ── 수정 버튼 → 수정 페이지 이동 ── */
   var editBtn = document.getElementById('btn-edit');
   if (editBtn) editBtn.addEventListener('click', function() {
-    var panel = document.getElementById('panel-basic');
-    var isEditing = editBtn.dataset.editing === 'true';
-    if (!isEditing) {
-      editBtn.dataset.editing = 'true';
-      editBtn.textContent = '저장';
-      editBtn.insertAdjacentHTML('afterend', ' <button class="btn btn--ghost btn--sm" id="btn-edit-cancel">취소</button>');
-      panel.querySelectorAll('td[data-editable]').forEach(function(td) {
-        var val = td.textContent.trim();
-        var field = td.dataset.editable;
-        td.dataset.original = val;
-        td.innerHTML = '<input type="text" class="form-input" value="' + val + '" data-field="' + field + '" style="font-size:12px;padding:4px 8px;width:100%">';
-      });
-      Toast.show('편집모드가 활성화되었습니다.', 'info');
-    } else {
-      editBtn.dataset.editing = 'false';
-      editBtn.textContent = '수정';
-      var cancelBtn = document.getElementById('btn-edit-cancel');
-      if (cancelBtn) cancelBtn.remove();
-      panel.querySelectorAll('td[data-editable] input').forEach(function(input) {
-        input.closest('td').textContent = input.value;
-      });
-      Toast.show('회원정보가 저장되었습니다.', 'success');
-    }
+    window.location.href = '/pages/regular/edit.html?id=' + m.id;
   });
 
   document.addEventListener('click', function(ev) {
@@ -61,11 +39,9 @@ export function bindEvents(m) {
   var emailBtn = document.getElementById('btn-email');
   if (emailBtn) emailBtn.addEventListener('click', function() { Toast.show('Email 발송 화면으로 이동합니다.', 'info'); });
 
-  var claimBtn = document.getElementById('btn-claim');
-  if (claimBtn) claimBtn.addEventListener('click', function() { Toast.show('클레임 등록 모달을 엽니다.', 'info'); });
+  // 클레임등록 → detail-modals.js에서 처리
 
-  var leaveBtn = document.getElementById('btn-leave');
-  if (leaveBtn) leaveBtn.addEventListener('click', function() { Toast.show('탈회 접수 프로세스를 시작합니다.', 'warning'); });
+  // 탈회접수 → detail-modals.js에서 처리
 
   var saveExtraBtn = document.getElementById('btn-save-extra');
   if (saveExtraBtn) saveExtraBtn.addEventListener('click', function() { Toast.show('추가정보가 저장되었습니다.', 'success'); });

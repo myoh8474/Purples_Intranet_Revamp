@@ -176,6 +176,80 @@ export function bindHistoryPopup(m) {
         + '</tbody></table></div>';
     }
 
+    // 상담매니저 변경 폼
+    var isConsultManager = (category === '상담매니저');
+    var consultManagerForm = '';
+    if (isConsultManager) {
+      var consultList = ['김지현','이다슨','오영수','박미라','최현우','정소영','강태희','임수진','한도윤','서지민'];
+      consultManagerForm = '<div style="margin-bottom:16px;padding:0">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:100px;border:1px solid var(--border-light)">상담매니저</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="consult-manager-select" style="width:200px;font-size:12px;padding:3px 8px">' + consultList.map(function(n) { return '<option' + (n === m.consultantManager ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></td></tr>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="consult-manager-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-consult-manager-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
+        + '</tbody></table></div>';
+    }
+
+    // 프로그램 변경 폼
+    var isProgramChange = (category === '프로그램');
+    var programForm = '';
+    if (isProgramChange) {
+      var programList = ['브론즈','실버','골드','다이아몬드','에메랄드','사파이어','전문직','준전문직','프로모션','VIP'];
+      programForm = '<div style="margin-bottom:16px;padding:0">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:100px;border:1px solid var(--border-light)">프로그램</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="program-change-select" style="width:200px;font-size:12px;padding:3px 8px">' + programList.map(function(p) { return '<option' + (p === m.program ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></td></tr>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="program-change-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-program-change-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
+        + '</tbody></table></div>';
+    }
+
+    // 지사 변경 폼
+    var isBranchChange = (category === '지사');
+    var branchForm = '';
+    if (isBranchChange) {
+      var branchList = ['강남본점','서초지사','송파지사','잠실지사','분당지사','일산지사','인천지사','수원지사','대전지사','부산지사','대구지사','광주지사'];
+      branchForm = '<div style="margin-bottom:16px;padding:0">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:100px;border:1px solid var(--border-light)">지사</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="branch-change-select" style="width:200px;font-size:12px;padding:3px 8px">' + branchList.map(function(b) { return '<option' + (b === m.branch ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select></td></tr>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="branch-change-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-branch-change-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
+        + '</tbody></table></div>';
+    }
+
+    // 만료일 변경 폼
+    var isExpiryChange = (category === '만료일');
+    var expiryForm = '';
+    if (isExpiryChange) {
+      expiryForm = '<div style="margin-bottom:16px;padding:0">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:90px;border:1px solid var(--border-light)">현재 만료일</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light);font-weight:700">' + (m.expiryDate ? Formatters.date(m.expiryDate) : '-') + '</td>'
+        + '<td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:90px;border:1px solid var(--border-light)">변경 만료일</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="date" class="form-input" id="expiry-change-date" value="' + (m.expiryDate ? m.expiryDate.substring(0, 10) : '') + '" style="font-size:12px;padding:3px 8px;width:100%"></td></tr>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+        + '<td colspan="3" style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="expiry-change-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-expiry-change-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
+        + '</tbody></table></div>';
+    }
+
+    // 미팅횟수 변경 폼
+    var isMeetingChange = (category === '미팅횟수');
+    var meetingForm = '';
+    if (isMeetingChange) {
+      var curMeeting = m.meetingCount != null ? m.meetingCount : 0;
+      var totalMeeting = m.totalMeetingCount || 12;
+      meetingForm = '<div style="margin-bottom:16px;padding:0">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:90px;border:1px solid var(--border-light);white-space:nowrap">현재 미팅횟수</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light);font-weight:700">' + curMeeting + '/' + totalMeeting + '회</td>'
+        + '<td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:90px;border:1px solid var(--border-light);white-space:nowrap">변경 미팅횟수</td>'
+        + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:6px;align-items:center"><input type="number" class="form-input" id="meeting-change-count" value="' + curMeeting + '" min="0" style="font-size:12px;padding:3px 8px;width:70px"> <span style="color:var(--text-muted)">/</span> <input type="number" class="form-input" id="meeting-change-total" value="' + totalMeeting + '" min="1" style="font-size:12px;padding:3px 8px;width:70px"> <span style="font-size:11px;color:var(--text-muted)">회</span></div></td></tr>'
+        + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+        + '<td colspan="3" style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px"><input type="text" class="form-input" id="meeting-change-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px"><button class="btn btn--primary btn--sm" id="btn-meeting-change-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button></div></td></tr>'
+        + '</tbody></table></div>';
+    }
+
     var isRejoin = (category === '가입횟수');
     var isExpiry = (category === '만료일');
     var isMeeting = (category === '미팅횟수');
@@ -291,8 +365,8 @@ export function bindHistoryPopup(m) {
     Modal.show({
       title: isRejoin ? '<span style="color:' + catInfo.color + ';font-weight:700">가입이력</span>' : '<span style="color:' + catInfo.color + ';font-weight:700">' + catInfo.label + '</span> 변경이력',
       size: 'xl',
-      content: statusForm + matchManagerForm
-        + '<div style="max-height:' + (isStatusChange || isMatchManager ? '380px' : '450px') + ';overflow-y:auto">'
+      content: statusForm + matchManagerForm + consultManagerForm + programForm + branchForm + expiryForm + meetingForm
+        + '<div style="max-height:' + (isStatusChange || isMatchManager || isConsultManager || isProgramChange || isBranchChange || isExpiryChange || isMeetingChange ? '380px' : '450px') + ';overflow-y:auto">'
         + '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;border-collapse:collapse"><thead><tr>'
         + thead
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
@@ -345,6 +419,110 @@ export function bindHistoryPopup(m) {
           addHistory({ memberId: m.id, category: '매칭매니저', content: reason, detail: oldManager + '→' + newManager, processor: m.consultantManager || '시스템', date: new Date().toISOString() });
           Modal.hide();
           Toast.show('매칭매니저가 변경되었습니다.', 'success');
+        });
+      }
+
+      // 상담매니저 변경 확인
+      var consultConfirmBtn = document.getElementById('btn-consult-manager-confirm');
+      if (consultConfirmBtn) {
+        consultConfirmBtn.addEventListener('click', function() {
+          var newManager = document.getElementById('consult-manager-select').value;
+          var reason = document.getElementById('consult-manager-reason').value.trim();
+          if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+          if (newManager === m.consultantManager) { Toast.show('현재 상담매니저와 동일합니다.', 'warning'); return; }
+          var oldManager = m.consultantManager;
+          m.consultantManager = newManager;
+          var hdrConsultant = document.getElementById('hdr-consultant');
+          if (hdrConsultant) hdrConsultant.textContent = newManager;
+          addHistory({ memberId: m.id, category: '상담매니저', content: reason, detail: oldManager + '→' + newManager, processor: '전략기획', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('상담매니저가 변경되었습니다.', 'success');
+        });
+      }
+
+      // 프로그램 변경 확인
+      var programConfirmBtn = document.getElementById('btn-program-change-confirm');
+      if (programConfirmBtn) {
+        programConfirmBtn.addEventListener('click', function() {
+          var newProgram = document.getElementById('program-change-select').value;
+          var reason = document.getElementById('program-change-reason').value.trim();
+          if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+          if (newProgram === m.program) { Toast.show('현재 프로그램과 동일합니다.', 'warning'); return; }
+          var oldProgram = m.program;
+          m.program = newProgram;
+          var hdrProgram = document.getElementById('hdr-program');
+          if (hdrProgram) hdrProgram.textContent = newProgram;
+          addHistory({ memberId: m.id, category: '프로그램', content: reason, detail: oldProgram + '→' + newProgram, processor: m.consultantManager || '전략기획', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('프로그램이 변경되었습니다.', 'success');
+        });
+      }
+
+      // 지사 변경 확인
+      var branchConfirmBtn = document.getElementById('btn-branch-change-confirm');
+      if (branchConfirmBtn) {
+        branchConfirmBtn.addEventListener('click', function() {
+          var newBranch = document.getElementById('branch-change-select').value;
+          var reason = document.getElementById('branch-change-reason').value.trim();
+          if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+          if (newBranch === m.branch) { Toast.show('현재 지사와 동일합니다.', 'warning'); return; }
+          var oldBranch = m.branch;
+          m.branch = newBranch;
+          var hdrBranch = document.getElementById('hdr-branch');
+          if (hdrBranch) hdrBranch.textContent = newBranch;
+          addHistory({ memberId: m.id, category: '지사', content: reason, detail: oldBranch + '→' + newBranch, processor: m.consultantManager || '전략기획', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('지사가 변경되었습니다.', 'success');
+        });
+      }
+
+      // 만료일 변경 확인
+      var expiryConfirmBtn = document.getElementById('btn-expiry-change-confirm');
+      if (expiryConfirmBtn) {
+        expiryConfirmBtn.addEventListener('click', function() {
+          var newDate = document.getElementById('expiry-change-date').value;
+          var reason = document.getElementById('expiry-change-reason').value.trim();
+          if (!newDate) { Toast.show('변경 만료일을 선택해주세요.', 'warning'); return; }
+          if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+          if (newDate === (m.expiryDate ? m.expiryDate.substring(0, 10) : '')) { Toast.show('현재 만료일과 동일합니다.', 'warning'); return; }
+          var oldExpiry = m.expiryDate ? Formatters.date(m.expiryDate) : '-';
+          m.expiryDate = newDate;
+          // 헤더 만료일 셀 갱신
+          var expiryCell = document.getElementById('hdr-expiry-cell');
+          if (expiryCell) {
+            var d = Math.ceil((new Date(newDate) - new Date()) / 86400000);
+            var dDayColor = d > 30 ? '#2563eb' : d > 0 ? '#f59e0b' : '#dc2626';
+            var dDayText = d > 0 ? 'D-' + d : d === 0 ? 'D-Day' : 'D+' + Math.abs(d);
+            expiryCell.innerHTML = Formatters.date(m.joinDate)
+              + ' - <span class="hist-link" id="hdr-expiry" data-history="만료일" style="cursor:pointer;color:#1565c0;text-decoration:underline">' + Formatters.date(newDate) + '</span>'
+              + ' <span style="font-weight:700;color:' + dDayColor + ';font-size:11px">(' + dDayText + ')</span>';
+          }
+          addHistory({ memberId: m.id, category: '만료일', content: reason, detail: oldExpiry + '→' + Formatters.date(newDate), processor: m.consultantManager || '전략기획', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('만료일이 변경되었습니다.', 'success');
+        });
+      }
+
+      // 미팅횟수 변경 확인
+      var meetingConfirmBtn = document.getElementById('btn-meeting-change-confirm');
+      if (meetingConfirmBtn) {
+        meetingConfirmBtn.addEventListener('click', function() {
+          var newCount = parseInt(document.getElementById('meeting-change-count').value, 10);
+          var newTotal = parseInt(document.getElementById('meeting-change-total').value, 10);
+          var reason = document.getElementById('meeting-change-reason').value.trim();
+          if (isNaN(newCount) || newCount < 0) { Toast.show('미팅횟수를 올바르게 입력해주세요.', 'warning'); return; }
+          if (isNaN(newTotal) || newTotal < 1) { Toast.show('총 미팅횟수를 올바르게 입력해주세요.', 'warning'); return; }
+          if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+          var oldCount = m.meetingCount != null ? m.meetingCount : 0;
+          var oldTotal = m.totalMeetingCount || 12;
+          if (newCount === oldCount && newTotal === oldTotal) { Toast.show('현재 미팅횟수와 동일합니다.', 'warning'); return; }
+          m.meetingCount = newCount;
+          m.totalMeetingCount = newTotal;
+          var hdrMeeting = document.getElementById('hdr-meeting-count');
+          if (hdrMeeting) hdrMeeting.textContent = newCount + '/' + newTotal + '회';
+          addHistory({ memberId: m.id, category: '미팅횟수', content: reason, detail: oldCount + '/' + oldTotal + '회→' + newCount + '/' + newTotal + '회', processor: m.consultantManager || '전략기획', date: new Date().toISOString() });
+          Modal.hide();
+          Toast.show('미팅횟수가 변경되었습니다.', 'success');
         });
       }
 

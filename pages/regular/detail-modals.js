@@ -296,7 +296,324 @@ export function bindModals(m) {
     bindCompleteHandler(recallCompleteBtn);
   }
 
-  /* ── 소개 프로필 등록/수정 모달 ── */
+  /* ── 탈회신청서 미리보기 새창 ── */
+  var leaveFormBtn = document.getElementById('btn-leave-form');
+  if (leaveFormBtn) {
+    leaveFormBtn.addEventListener('click', function() {
+      var contractMonths = 12;
+      if (m.joinDate && m.expiryDate) {
+        contractMonths = Math.round((new Date(m.expiryDate) - new Date(m.joinDate)) / (30.44 * 86400000));
+      }
+      var contractMeetings = m.totalMeetingCount || 12;
+      var meetingCount = m.meetingCount || 0;
+      var remainMeetings = Math.max(0, contractMeetings - meetingCount);
+      var leaveData = m._leaveData || {};
+      var today = new Date().toISOString().substring(0, 10);
+
+      var win = window.open('', '_blank', 'width=900,height=1100,scrollbars=yes');
+      if (!win) { Toast.show('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.', 'warning'); return; }
+
+      var html = '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>회원탈회 신청서 - ' + m.name + '</title>';
+      html += '<style>';
+      html += '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }';
+      html += 'body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; padding: 40px 50px; background: #fff; color: #1a1a1a; font-size: 13px; line-height: 1.6; }';
+      html += '.doc-container { max-width: 780px; margin: 0 auto; }';
+      html += '.doc-title { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: 8px; margin-bottom: 6px; padding-bottom: 10px; border-bottom: 3px double #333; }';
+      html += '.doc-subtitle { text-align: center; font-size: 12px; color: #666; margin-bottom: 30px; }';
+      html += '.doc-date { text-align: right; font-size: 12px; margin-bottom: 16px; color: #555; }';
+      html += 'table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }';
+      html += 'th, td { border: 1px solid #333; padding: 8px 12px; font-size: 12px; }';
+      html += 'th { background: #f5f5f5; font-weight: 700; text-align: center; white-space: nowrap; width: 110px; }';
+      html += '.section-title { font-size: 14px; font-weight: 700; margin: 28px 0 10px; padding-left: 8px; border-left: 4px solid #333; }';
+      html += '.stamp-area { display: flex; justify-content: flex-end; gap: 30px; margin-top: 40px; margin-bottom: 30px; }';
+      html += '.stamp-box { text-align: center; width: 100px; }';
+      html += '.stamp-box .label { font-size: 11px; margin-bottom: 4px; color: #555; }';
+      html += '.stamp-box .circle { width: 70px; height: 70px; border: 2px solid #ccc; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #aaa; }';
+      html += '.agreement { font-size: 11px; line-height: 1.8; color: #333; margin: 20px 0; padding: 16px; background: #fafafa; border: 1px solid #e0e0e0; }';
+      html += '.agreement li { margin-bottom: 4px; }';
+      html += '.sign-area { margin-top: 40px; text-align: center; font-size: 14px; }';
+      html += '.sign-area .date { margin-bottom: 20px; font-size: 13px; }';
+      html += '.sign-area .signer { font-size: 15px; font-weight: 600; }';
+      html += '.sign-area .seal { display: inline-block; width: 50px; height: 50px; border: 2px solid #ccc; border-radius: 50%; line-height: 46px; font-size: 10px; color: #aaa; margin-left: 10px; vertical-align: middle; }';
+      html += '.company-info { text-align: center; margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 16px; }';
+      html += '.no-print { margin-bottom: 20px; text-align: center; }';
+      html += '.no-print button { padding: 8px 24px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; border-radius: 4px; margin: 0 4px; }';
+      html += '.btn-print { background: #2563eb; color: #fff; }';
+      html += '.btn-close { background: #e5e7eb; color: #333; }';
+      html += '@media print { .no-print { display: none !important; } body { padding: 20px 30px; } }';
+      html += '</style></head><body>';
+
+      html += '<div class="doc-container">';
+
+      // 인쇄/닫기 버튼
+      html += '<div class="no-print">';
+      html += '<button class="btn-print" onclick="window.print()">🖨️ 인쇄</button>';
+      html += '<button class="btn-close" onclick="window.close()">닫기</button>';
+      html += '</div>';
+
+      // 제목
+      html += '<div class="doc-title">회 원 탈 회 신 청 서</div>';
+      html += '<div class="doc-subtitle">MEMBERSHIP WITHDRAWAL APPLICATION</div>';
+      html += '<div class="doc-date">작성일: ' + today + '</div>';
+
+      // 1. 회원정보
+      html += '<div class="section-title">1. 회원정보</div>';
+      html += '<table>';
+      html += '<tr><th>회원명</th><td>' + (m.name || '-') + '</td><th>회원번호</th><td>' + (m.memberId || '-') + '</td></tr>';
+      html += '<tr><th>생년월일</th><td>' + (m.birthDate ? Formatters.date(m.birthDate) : '-') + '</td><th>연락처</th><td>' + Formatters.phone(m.phone) + '</td></tr>';
+      html += '<tr><th>프로그램</th><td>' + (m.program || '-') + '</td><th>지사</th><td>' + (m.branch || '-') + '</td></tr>';
+      html += '<tr><th>상담매니저</th><td>' + (m.consultantManager || '-') + '</td><th>매칭매니저</th><td>' + (m.matchingManager || '-') + '</td></tr>';
+      html += '</table>';
+
+      // 2. 계약정보
+      html += '<div class="section-title">2. 계약정보</div>';
+      html += '<table>';
+      html += '<tr><th>가입일</th><td>' + (m.joinDate ? Formatters.date(m.joinDate) : '-') + '</td><th>만료일</th><td>' + (m.expiryDate ? Formatters.date(m.expiryDate) : '-') + '</td></tr>';
+      html += '<tr><th>계약기간</th><td>' + contractMonths + '개월</td><th>가입비</th><td>' + (m.programFee ? Number(m.programFee).toLocaleString() + '원' : '-') + '</td></tr>';
+      html += '<tr><th>계약미팅</th><td>' + contractMeetings + '회</td><th>진행미팅</th><td>' + meetingCount + '회</td></tr>';
+      html += '<tr><th>잔여미팅</th><td>' + remainMeetings + '회</td><th>결제방법</th><td>' + (m.paymentMethod || '-') + '</td></tr>';
+      html += '</table>';
+
+      // 3. 탈회내역
+      html += '<div class="section-title">3. 탈회내역</div>';
+      html += '<table>';
+      html += '<tr><th>탈회사유</th><td colspan="3">' + (leaveData.reason || '') + '</td></tr>';
+      html += '<tr><th>환불금액</th><td>' + (leaveData.refundAmount ? Number(leaveData.refundAmount).toLocaleString() + '원' : '') + '</td><th>프로필제공</th><td>' + (leaveData.profileCount || '0') + '회</td></tr>';
+      html += '<tr><th>산출내역</th><td colspan="3" style="white-space:pre-wrap">' + (leaveData.calcDetail || '') + '</td></tr>';
+      html += '</table>';
+
+      // 4. 환불계좌정보
+      html += '<div class="section-title">4. 환불계좌정보</div>';
+      html += '<table>';
+      html += '<tr><th>은행명</th><td>' + (leaveData.bank || '') + '</td><th>계좌번호</th><td>' + (leaveData.account || '') + '</td></tr>';
+      html += '<tr><th>예금주</th><td colspan="3">' + (leaveData.accountName || m.name || '') + '</td></tr>';
+      html += '</table>';
+
+      // 동의사항
+      html += '<div class="section-title">5. 동의사항</div>';
+      html += '<div class="agreement">';
+      html += '<ol>';
+      html += '<li>본인은 상기 내용을 확인하였으며, 회원 탈회를 신청합니다.</li>';
+      html += '<li>탈회 후 재가입 시 기존 계약조건이 적용되지 않을 수 있음을 확인합니다.</li>';
+      html += '<li>탈회 처리 완료 후 개인정보는 관련 법령에 따라 보관 후 파기됩니다.</li>';
+      html += '<li>환불금액은 「소비자분쟁해결기준」에 따라 산정되었으며, 이에 동의합니다.</li>';
+      html += '<li>환불은 신청일로부터 영업일 기준 7일 이내 지정 계좌로 입금됩니다.</li>';
+      html += '</ol>';
+      html += '</div>';
+
+      // 서명란
+      html += '<div class="sign-area">';
+      html += '<div class="date">' + new Date().getFullYear() + '년 ' + (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일</div>';
+      html += '<div class="signer">신청인: ' + (m.name || '________') + ' <span class="seal">(인)</span></div>';
+      html += '</div>';
+
+      // 결재란
+      html += '<div class="stamp-area">';
+      html += '<div class="stamp-box"><div class="label">담당</div><div class="circle"></div></div>';
+      html += '<div class="stamp-box"><div class="label">팀장</div><div class="circle"></div></div>';
+      html += '<div class="stamp-box"><div class="label">본부장</div><div class="circle"></div></div>';
+      html += '</div>';
+
+      // 회사정보
+      html += '<div class="company-info">';
+      html += '<strong>퍼플스</strong><br>';
+      html += '서울특별시 강남구 | TEL: 02-000-0000 | FAX: 02-000-0001';
+      html += '</div>';
+
+      html += '</div></body></html>';
+
+      win.document.write(html);
+      win.document.close();
+    });
+  }
+
+  /* ── 탈회접수 모달 ── */
+  var leaveBtn = document.getElementById('btn-leave');
+  if (leaveBtn) {
+    leaveBtn.addEventListener('click', function() {
+      var contractMonths = 12;
+      if (m.joinDate && m.expiryDate) {
+        contractMonths = Math.round((new Date(m.expiryDate) - new Date(m.joinDate)) / (30.44 * 86400000));
+      }
+      var contractMeetings = m.totalMeetingCount || 12;
+      var meetingCount = m.meetingCount || 0;
+      var remainMeetings = Math.max(0, contractMeetings - meetingCount);
+
+      Modal.show({
+        title: '탈회 접수 — ' + m.name,
+        size: 'lg',
+        content: ''
+          // 탈회사유
+          + '<div style="margin-bottom:14px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">탈회사유</div>'
+          + '<select class="form-input" id="leave-reason" style="font-size:12px;padding:4px 8px;width:100%">'
+          + '<option value="">선택하세요</option>'
+          + '<option value="본인요청">본인요청</option>'
+          + '<option value="부모요청">부모요청</option>'
+          + '<option value="서비스불만">서비스불만</option>'
+          + '<option value="매칭불만">매칭불만</option>'
+          + '<option value="개인사정">개인사정(취업/유학/이민 등)</option>'
+          + '<option value="건강문제">건강문제</option>'
+          + '<option value="교제중">교제중(자체성사 포함)</option>'
+          + '<option value="기타">기타</option>'
+          + '</select>'
+          + '</div>'
+          // 탈회내역
+          + '<div style="margin-bottom:14px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">탈회내역</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+          + '<tr>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:120px">가입금액</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="leave-amount" placeholder="0" style="font-size:12px;padding:3px 8px;width:140px;text-align:right"> 원</td>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:120px">계약미팅횟수</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="number" class="form-input" id="leave-contract-meetings" value="' + contractMeetings + '" style="font-size:12px;padding:3px 8px;width:80px;text-align:right"> 회</td>'
+          + '</tr>'
+          + '<tr>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">미팅횟수</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="number" class="form-input" id="leave-meeting-count" value="' + meetingCount + '" style="font-size:12px;padding:3px 8px;width:80px;text-align:right"> 회</td>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">남은횟수</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="number" class="form-input" id="leave-remain-meetings" value="' + remainMeetings + '" style="font-size:12px;padding:3px 8px;width:80px;text-align:right" readonly> 회</td>'
+          + '</tr>'
+          + '<tr>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">프로필제공횟수</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="number" class="form-input" id="leave-profile-count" value="0" style="font-size:12px;padding:3px 8px;width:80px;text-align:right"> 회</td>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">환불금액</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="leave-refund-amount" placeholder="0" style="font-size:12px;padding:3px 8px;width:140px;text-align:right"> 원</td>'
+          + '</tr>'
+          + '</table>'
+          + '</div>'
+          // 산출내역
+          + '<div style="margin-bottom:14px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">산출내역</div>'
+          + '<textarea class="form-input" id="leave-calc-detail" rows="3" style="width:100%;font-size:12px;resize:vertical" placeholder="환불금액 산출 근거를 입력하세요..."></textarea>'
+          + '</div>'
+          // 환불계좌정보
+          + '<div style="margin-bottom:14px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">환불계좌정보</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+          + '<tr>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:120px">은행명</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="leave-bank" style="font-size:12px;padding:3px 8px;width:140px">'
+          + '<option value="">선택</option><option>국민은행</option><option>신한은행</option><option>우리은행</option><option>하나은행</option><option>농협</option><option>기업은행</option><option>카카오뱅크</option><option>토스뱅크</option><option>기타</option>'
+          + '</select></td>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);width:120px">계좌번호</td>'
+          + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="leave-account" placeholder="계좌번호 입력" style="font-size:12px;padding:3px 8px;width:180px"></td>'
+          + '</tr>'
+          + '<tr>'
+          + '<td class="lbl" style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">예금주</td>'
+          + '<td colspan="3" style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="leave-account-name" value="' + (m.name || '') + '" style="font-size:12px;padding:3px 8px;width:140px"></td>'
+          + '</tr>'
+          + '</table>'
+          + '</div>'
+          // 버튼
+          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">'
+          + '<button class="btn btn--sm" id="leave-submit" style="background:#dc2626;border-color:#dc2626;color:#fff;font-size:12px;padding:4px 18px;font-weight:700">탈회접수</button>'
+          + '<button class="btn btn--ghost btn--sm" id="leave-cancel" style="font-size:12px;padding:4px 14px">취소</button>'
+          + '</div>',
+      });
+
+      setTimeout(function() {
+        // 남은횟수 자동 계산
+        var contractInput = document.getElementById('leave-contract-meetings');
+        var meetingInput = document.getElementById('leave-meeting-count');
+        var remainInput = document.getElementById('leave-remain-meetings');
+        function updateRemain() {
+          var c = parseInt(contractInput?.value) || 0;
+          var mt = parseInt(meetingInput?.value) || 0;
+          if (remainInput) remainInput.value = Math.max(0, c - mt);
+        }
+        if (contractInput) contractInput.addEventListener('input', updateRemain);
+        if (meetingInput) meetingInput.addEventListener('input', updateRemain);
+
+        // 취소
+        var cancelBtn = document.getElementById('leave-cancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+
+        // 탈회접수
+        var submitBtn = document.getElementById('leave-submit');
+        if (submitBtn) submitBtn.addEventListener('click', function() {
+          var reason = document.getElementById('leave-reason')?.value;
+          if (!reason) { Toast.show('탈회사유를 선택해주세요.', 'warning'); return; }
+
+          var leaveData = {
+            reason: reason,
+            amount: document.getElementById('leave-amount')?.value || '',
+            contractMeetings: document.getElementById('leave-contract-meetings')?.value || '',
+            meetingCount: document.getElementById('leave-meeting-count')?.value || '',
+            remainMeetings: document.getElementById('leave-remain-meetings')?.value || '',
+            profileCount: document.getElementById('leave-profile-count')?.value || '',
+            refundAmount: document.getElementById('leave-refund-amount')?.value || '',
+            calcDetail: document.getElementById('leave-calc-detail')?.value || '',
+            bank: document.getElementById('leave-bank')?.value || '',
+            account: document.getElementById('leave-account')?.value || '',
+            accountName: document.getElementById('leave-account-name')?.value || '',
+          };
+
+          alert('탈회접수 완료되었습니다.');
+
+          // 회원 상태 변경 & 이력 저장
+          m._leaveData = leaveData;
+          m._leaveDate = new Date().toISOString();
+          addHistory({ memberId: m.id, category: '상태변경', content: '탈회접수 (' + reason + ')', detail: '환불금액: ' + (leaveData.refundAmount || '-') + '원', processor: 'CS팀', date: new Date().toISOString() });
+
+           Modal.hide();
+          Toast.show('탈회 신청서가 회원에게 발송되었습니다.', 'success');
+        });
+      }, 100);
+    });
+  }
+
+  /* ── 클레임등록 모달 ── */
+  var claimBtn = document.getElementById('btn-claim');
+  if (claimBtn) {
+    claimBtn.addEventListener('click', function() {
+      Modal.show({
+        title: '클레임 접수 — ' + m.name,
+        size: 'md',
+        content: ''
+          + '<div style="margin-bottom:14px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">클레임사유</div>'
+          + '<select class="form-input" id="claim-reason" style="font-size:12px;padding:4px 8px;width:100%">'
+          + '<option value="">선택하세요</option>'
+          + '<option value="매칭불만">매칭불만</option>'
+          + '<option value="서비스불만">서비스불만</option>'
+          + '<option value="매니저불만">매니저불만</option>'
+          + '<option value="일정불만">일정불만</option>'
+          + '<option value="커뮤니케이션">커뮤니케이션 문제</option>'
+          + '<option value="프로필불만">프로필불만</option>'
+          + '<option value="환불요청">환불요청</option>'
+          + '<option value="기타">기타</option>'
+          + '</select>'
+          + '</div>'
+          + '<div style="margin-bottom:14px">'
+          + '<div style="font-size:12px;font-weight:700;margin-bottom:6px">상세내용</div>'
+          + '<textarea class="form-input" id="claim-detail" rows="4" style="width:100%;font-size:12px;resize:vertical" placeholder="클레임 상세 내용을 입력하세요..."></textarea>'
+          + '</div>'
+          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">'
+          + '<button class="btn btn--sm" id="claim-submit" style="background:#dc2626;border-color:#dc2626;color:#fff;font-size:12px;padding:4px 18px;font-weight:700">클레임접수</button>'
+          + '<button class="btn btn--ghost btn--sm" id="claim-cancel" style="font-size:12px;padding:4px 14px">취소</button>'
+          + '</div>',
+      });
+
+      setTimeout(function() {
+        var cancelBtn = document.getElementById('claim-cancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+
+        var submitBtn = document.getElementById('claim-submit');
+        if (submitBtn) submitBtn.addEventListener('click', function() {
+          var reason = document.getElementById('claim-reason')?.value;
+          if (!reason) { Toast.show('클레임사유를 선택해주세요.', 'warning'); return; }
+          var detail = document.getElementById('claim-detail')?.value || '';
+
+          alert('클레임 접수 완료되었습니다.');
+
+          addHistory({ memberId: m.id, category: '클레임', content: '클레임접수 (' + reason + ')', detail: detail, processor: 'CS팀', date: new Date().toISOString() });
+          Modal.hide();
+        });
+      }, 100);
+    });
+  }
+
   var editIntroBtn = document.getElementById('btn-edit-intro');
   if (editIntroBtn) editIntroBtn.addEventListener('click', function() {
     Modal.show({
