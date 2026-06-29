@@ -30,11 +30,19 @@ export function renderDetailPage(m, tabs) {
     + '  <div class="detail-header-bar__left">'
     + '    <h2 class="detail-header-bar__name">' + m.name + '</h2>'
     + '    <span class="detail-header-bar__id">' + m.memberId + '</span>'
-    // REQ-054: 유의사항 태그 상단 배치
-    + (m.tags && m.tags.length ? m.tags.map(function(t){
+    // REQ-054: 유의사항 태그 상단 배치 (플래그 기반 자동 생성)
+    + (function() {
+        var tags = m.tags && m.tags.length ? m.tags : [];
+        if (!tags.length) {
+          if (m.flagNoEvent) tags.push('이벤트불가');
+          if (m.flagSecret) tags.push('비밀상담');
+          if (m.flagNoRejoin) tags.push('재가입불가');
+          if (m.flagDifficult) tags.push('난매칭');
+        }
+        if (!tags.length) return '';
         var colors = {'이벤트불가':'badge--red','재가입불가':'badge--red','난매칭':'badge--orange','미팅중':'badge--red','미소개':'badge--purple','탈회CS관리중':'badge--orange','소송중':'badge--red','소보원진행':'badge--orange','비밀상담':'badge--yellow'};
-        return '    <span class="badge '+(colors[t]||'badge--gray')+'">' + t + '</span>';
-      }).join('') : '<span class="badge badge--red">이벤트불가</span><span class="badge badge--red">재가입불가</span><span class="badge badge--orange">난매칭</span><span class="badge badge--red" style="background:#fee2e2;color:#dc2626">미팅중</span><span class="badge badge--yellow">비밀상담</span>')
+        return tags.map(function(t) { return '    <span class="badge '+(colors[t]||'badge--gray')+'">' + t + '</span>'; }).join('');
+      })()
     + '  </div>'
     + '  <div class="detail-header-bar__actions">'
 
@@ -80,12 +88,14 @@ export function renderDetailPage(m, tabs) {
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">본인가입사실</td><td class="val" style="text-align:left">' + (m.selfAware || '-') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">대표연락처</td><td class="val" colspan="3" style="text-align:left;white-space:nowrap">' + Formatters.phone(m.phone) + ' <button class="btn btn--sm" id="btn-sms-inline" style="margin-left:6px;background:#3b82f6;border-color:#3b82f6;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">SMS</button></td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">대표연락처</td><td class="val" colspan="3" style="text-align:left;white-space:nowrap">'
+    + Formatters.phone(m.phone) + ' <span style="font-size:11px;color:#888">(' + (m.preferredCaller === '부모' || m.preferredCaller === '부' ? '부' : m.preferredCaller === '모' ? '모' : '본인') + ')</span>'
+    + ' <button class="btn btn--sm" id="btn-sms-inline" style="margin-left:6px;background:#3b82f6;border-color:#3b82f6;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">SMS</button></td>'
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">미팅횟수</td><td class="val hist-link" id="hdr-meeting-count" data-history="미팅횟수" style="text-align:left;font-weight:700;cursor:pointer;color:#1565c0">' + (m.meetingCount != null ? m.meetingCount + '/' + (m.totalMeetingCount || 12) + '회' : '-') + '</td>'
     + '  <td class="lbl" style="padding:2px 4px !important">인증상태</td><td class="val" id="btn-doc-auth" style="text-align:left;font-weight:700;cursor:pointer;text-decoration:underline;color:' + (m.certStatus === '인증완료' ? '#10b981' : '#ef4444') + '">' + (m.certStatus || '인증전') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">가입차수</td><td class="val" style="text-align:left;font-weight:700">' + (m.rejoinLabel || m.rejoinCount + '가입' || '-') + '</td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">가입차수</td><td class="val hist-link" data-history="가입횟수" style="text-align:left;font-weight:700;cursor:pointer;color:#1565c0">' + (m.rejoinLabel || m.rejoinCount + '가입' || '-') + '</td>'
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">가입일/만료일</td><td class="val" id="hdr-expiry-cell" colspan="3" style="text-align:left;white-space:nowrap;font-size:11px">' + Formatters.date(m.joinDate) + (m.expiryDate ? ' - <span class="hist-link" id="hdr-expiry" data-history="만료일" style="cursor:pointer;color:#1565c0;text-decoration:underline">' + Formatters.date(m.expiryDate) + '</span>' : '') + (m.expiryDate ? (function(){ var d = Math.ceil((new Date(m.expiryDate) - new Date()) / 86400000); return ' <span style="font-weight:700;color:' + (d > 30 ? '#2563eb' : d > 0 ? '#f59e0b' : '#dc2626') + ';font-size:11px">(D' + (d > 0 ? '-' + d : d === 0 ? '-Day' : '+' + Math.abs(d)) + ')</span>'; })() : '') + '</td>'
@@ -131,6 +141,7 @@ export function renderDetailPage(m, tabs) {
     + '    <button class="tabs__btn active" data-tab="basic">회원정보</button>'
     + '    <button class="tabs__btn" data-tab="payment">결제정보</button>'
     + '    <button class="tabs__btn" data-tab="matching">매칭관리</button>'
+    + '    <button class="tabs__btn" data-tab="consult">상담관리</button>'
     + '  </div>'
     + '</div>'
 
@@ -139,6 +150,7 @@ export function renderDetailPage(m, tabs) {
     + '  <div class="tab-panel active" id="panel-basic">' + tabs.basic + '</div>'
     + '  <div class="tab-panel" id="panel-payment">' + tabs.payment + '</div>'
     + '  <div class="tab-panel" id="panel-matching">' + tabs.matching + '</div>'
+    + '  <div class="tab-panel" id="panel-consult">' + tabs.consult + '</div>'
     + '</div>';
 
   return html;

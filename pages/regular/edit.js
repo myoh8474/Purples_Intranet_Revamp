@@ -4,8 +4,10 @@
 import { initLayout } from '@core/layout.js';
 import { Formatters } from '@utils/formatters.js';
 import { Toast } from '@components/Toast.js';
+import { Modal } from '@components/Modal.js';
 import { MockRegulars, BRANCHES, PROGRAMS, MATCH_MANAGERS, CONSULTANTS, REGIONS } from '@mock/regulars.js';
 import { REGULAR_STATUSES } from '@config/constants.js';
+import { addHistory } from '@services/history.js';
 
 initLayout({ pageId: 'regular-edit', breadcrumbs: ['정회원 관리', '정회원 수정'] });
 
@@ -44,6 +46,8 @@ function secHdr(title) {
 /* ── 렌더링 ── */
 content.style.padding = '12px 16px';
 content.style.background = '#fff';
+content.style.maxWidth = '1400px';
+content.style.margin = '0 auto';
 
 content.innerHTML = ''
 
@@ -75,71 +79,72 @@ content.innerHTML = ''
   + '<div style="display:flex;gap:16px;align-items:flex-start">'
 
   /* ── 가입정보 (좌측) ── */
-  + '<div style="flex:1">'
-  + secHdr('가입정보')
+  + '<div style="flex:0 0 55%">'
+  + secHdr('서비스가입정보')
   + '<table style="width:100%;border-collapse:collapse;margin-top:4px">'
   + '<tbody>'
 
   // 1행: 상담매니저, 매칭매니저, 프로그램
   + '<tr>'
   + '  <td style="' + L + ';width:80px">상담매니저</td>'
-  + '  <td style="' + V + '"><select id="edit-consultant" ' + S + '>' + opts(CONSULTANTS, m.consultantManager) + '</select></td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="consultant" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-consultant">' + (m.consultantManager || '-') + '</span></td>'
   + '  <td style="' + L + ';width:80px">매칭매니저</td>'
-  + '  <td style="' + V + '"><select id="edit-matcher" ' + S + '>' + opts(MATCH_MANAGERS, m.matchingManager) + '</select></td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="matcher" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-matcher">' + (m.matchingManager || '-') + '</span></td>'
   + '  <td style="' + L + ';width:70px">프로그램</td>'
-  + '  <td style="' + V + '"><select id="edit-program" ' + S + '>' + opts(PROGRAMS, m.program) + '</select></td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="program" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-program">' + (m.program || '-') + '</span></td>'
   + '</tr>'
 
   // 2행: 회원상태, 지사, 가입일
   + '<tr>'
   + '  <td style="' + L + '">회원상태</td>'
-  + '  <td style="' + V + '"><select id="edit-status" ' + S + '>' + opts(REGULAR_STATUSES, m.status) + '</select></td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="status" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-status">' + (m.status || '-') + '</span></td>'
   + '  <td style="' + L + '">지사</td>'
-  + '  <td style="' + V + '"><select id="edit-branch" ' + S + '>' + opts(BRANCHES, m.branch) + '</select></td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="branch" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-branch">' + (m.branch || '-') + '</span></td>'
   + '  <td style="' + L + '">가입일</td>'
   + '  <td style="' + V + '"><input type="date" id="edit-join-date" value="' + (m.joinDate ? m.joinDate.substring(0,10) : '') + '" ' + I + '></td>'
   + '</tr>'
 
-  // 3행: 서비스, 재가입, 본인가입사실
+  // 3행: 만료일, 미팅횟수, 서비스개시일
   + '<tr>'
+  + '  <td style="' + L + '">만료일</td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="expiry" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-expiry">' + (m.expiryDate ? Formatters.date(m.expiryDate) : '-') + '</span></td>'
+  + '  <td style="' + L + '">미팅횟수</td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="meeting" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-meeting">' + (m.meetingCount != null ? m.meetingCount + '/' + (m.totalMeetingCount || 12) + '회' : '-') + '</span></td>'
   + '  <td style="' + L + '">서비스</td>'
-  + '  <td style="' + V + '"><select id="edit-contract" ' + S + '>' + opts(['인증제','횟수제','기간제'], m.contractType) + '</select></td>'
-  + '  <td style="' + L + '">아이디</td>'
-  + '  <td style="' + V + '"><span style="font-size:12px;font-weight:600">' + m.memberId + '</span></td>'
-  + '  <td style="' + L + '">본인가입사실</td>'
-  + '  <td style="' + V + '"><select id="edit-self-aware" ' + S + '><option></option><option>인지</option><option>비인지</option></select></td>'
+  + '  <td style="' + V + '"><span class="edit-modal-link" data-field="contract" style="cursor:pointer;color:#1565c0;text-decoration:underline;font-weight:600" id="val-contract">' + (m.contractType || '-') + '</span></td>'
   + '</tr>'
 
   + '</tbody></table>'
   + '</div>'
 
   /* ── 결제정보 (우측) ── */
-  + '<div style="flex:0 0 380px">'
+  + '<div style="flex:1">'
   + secHdr('결제정보')
-  + '<table style="width:100%;border-collapse:collapse;margin-top:4px">'
+  + '<table style="width:100%;border-collapse:collapse;margin-top:4px;table-layout:fixed">'
+  + '<colgroup><col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%"></colgroup>'
   + '<tbody>'
 
   // 1행: 주가입비, 무이자
   + '<tr>'
-  + '  <td style="' + L + ';width:80px">주가입비</td>'
-  + '  <td style="' + V + '"><input type="text" id="edit-program-fee" value="' + Formatters.money(m.programFee) + '" ' + I + '></td>'
-  + '  <td style="' + L + ';width:70px">무이자</td>'
-  + '  <td style="' + V + ';width:80px"><select id="edit-interest" ' + S + '><option>-</option><option>3개월</option><option>6개월</option><option>12개월</option></select></td>'
+  + '  <td style="' + L + '">주가입비</td>'
+  + '  <td style="' + V + '"><span style="font-size:12px;color:#555">' + Formatters.money(m.programFee) + '</span></td>'
+  + '  <td style="' + L + '">무이자</td>'
+  + '  <td style="' + V + '"><span style="font-size:12px;color:#555">' + (m.interestFree || '-') + '</span></td>'
   + '</tr>'
 
   // 2행: 재가입비, 결제방법
   + '<tr>'
   + '  <td style="' + L + '">재가입비</td>'
-  + '  <td style="' + V + '"><input type="text" id="edit-rejoin-fee" value="' + Formatters.money(m.rejoinFee) + '" ' + I + '></td>'
+  + '  <td style="' + V + '"><span style="font-size:12px;color:#555">' + Formatters.money(m.rejoinFee) + '</span></td>'
   + '  <td style="' + L + '">결제방법</td>'
-  + '  <td style="' + V + '"><select id="edit-pay-method" ' + S + '><option>카드</option><option>현금</option><option>계좌이체</option><option>복합</option></select></td>'
+  + '  <td style="' + V + '"><span style="font-size:12px;color:#555">' + (m.payMethod || '카드') + '</span></td>'
   + '</tr>'
 
   // 3행: 성혼비, 할인명
   + '<tr>'
   + '  <td style="' + L + '">성혼비</td>'
-  + '  <td style="' + V + '"><input type="text" id="edit-marriage-fee" value="' + Formatters.money(m.marriageFee) + '" ' + I + '></td>'
-  + '  <td style="' + L + '">할인명</td>'
+  + '  <td style="' + V + '"><span style="font-size:12px;color:#555">' + Formatters.money(m.marriageFee) + '</span></td>'
+  + '  <td style="' + L + '">할인율</td>'
   + '  <td style="' + V + '"><input type="text" id="edit-discount" value="-" ' + I + '></td>'
   + '</tr>'
 
@@ -391,10 +396,8 @@ content.innerHTML = ''
   + '</tbody></table>'
 
   /* ===== 학력 ===== */
-  + secHdr('학력')
-
-  // ── 추가 버튼 영역
-  + '<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 0 2px">'
+  + '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px 2px;margin-top:16px">'
+  + '  <div style="font-size:12px;font-weight:700;color:#333">학력</div>'
   + '  <button type="button" id="btn-add-edu" style="font-size:11px;padding:2px 12px;border:1px solid #1a3a5c;background:#1a3a5c;color:#fff;cursor:pointer;border-radius:2px">+ 추가하기</button>'
   + '</div>'
 
@@ -926,17 +929,161 @@ document.getElementById('btn-cancel').addEventListener('click', goBack);
 document.getElementById('btn-cancel-bottom').addEventListener('click', goBack);
 
 function handleSave() {
-  m.consultantManager = document.getElementById('edit-consultant').value;
-  m.matchingManager = document.getElementById('edit-matcher').value;
-  m.program = document.getElementById('edit-program').value;
-  m.status = document.getElementById('edit-status').value;
-  m.branch = document.getElementById('edit-branch').value;
+  // 기본 필드 저장 (모달 변경 항목은 모달 확인 시 이미 반영됨)
   m.joinDate = document.getElementById('edit-join-date').value || m.joinDate;
-  m.contractType = document.getElementById('edit-contract').value;
 
   Toast.show('회원 정보가 저장되었습니다.', 'success');
   setTimeout(goBack, 1000);
 }
+
+/* ── 모달 변경 이벤트 바인딩 ── */
+var FIELD_CONFIG = {
+  consultant: { label: '상담매니저', category: '상담매니저', options: CONSULTANTS, getCurrent: function() { return m.consultantManager || '-'; }, apply: function(v) { m.consultantManager = v; } },
+  matcher:    { label: '매칭매니저', category: '매칭매니저', options: MATCH_MANAGERS, getCurrent: function() { return m.matchingManager || '-'; }, apply: function(v) { m.matchingManager = v; } },
+  program:    { label: '프로그램',   category: '프로그램',   options: PROGRAMS, getCurrent: function() { return m.program || '-'; }, apply: function(v) { m.program = v; } },
+  status:     { label: '회원상태',   category: '상태변경',   options: REGULAR_STATUSES, getCurrent: function() { return m.status || '-'; }, apply: function(v) { m.status = v; } },
+  branch:     { label: '지사',       category: '지사',       options: BRANCHES, getCurrent: function() { return m.branch || '-'; }, apply: function(v) { m.branch = v; } },
+  contract:   { label: '서비스',     category: '서비스',     options: ['인증제','횟수제','기간제'], getCurrent: function() { return m.contractType || '-'; }, apply: function(v) { m.contractType = v; } },
+  expiry:     { label: '만료일',     category: '만료일',     type: 'date', getCurrent: function() { return m.expiryDate ? m.expiryDate.substring(0,10) : ''; }, getDisplay: function() { return m.expiryDate ? Formatters.date(m.expiryDate) : '-'; }, apply: function(v) { m.expiryDate = v; } },
+  meeting:    { label: '미팅횟수',   category: '미팅횟수',   type: 'meeting', getCurrent: function() { return { count: m.meetingCount != null ? m.meetingCount : 0, total: m.totalMeetingCount || 12 }; }, getDisplay: function() { return (m.meetingCount != null ? m.meetingCount : 0) + '/' + (m.totalMeetingCount || 12) + '회'; }, apply: function(v) { m.meetingCount = v.count; m.totalMeetingCount = v.total; } },
+};
+
+function showEditModal(field) {
+  var cfg = FIELD_CONFIG[field];
+  if (!cfg) return;
+  var current = cfg.getCurrent();
+  var formHtml = '';
+
+  if (field === 'program') {
+    // 프로그램 전용 모달
+    var today = new Date().toISOString().slice(0,10);
+    formHtml = '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:130px;border:1px solid var(--border-light);white-space:nowrap">현재 프로그램</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light);font-weight:700">' + current + '</td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">변경 프로그램</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="modal-edit-value" style="width:100%;font-size:12px;padding:3px 8px">'
+      + cfg.options.map(function(o) { return '<option' + (o === current ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">변경프로그램 시작일</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="date" class="form-input" id="modal-pgm-start" value="' + today + '" style="font-size:12px;padding:3px 8px;width:200px"></td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">추가결제금액</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="modal-pgm-add-fee" placeholder="0" style="font-size:12px;padding:3px 8px;width:200px;text-align:right"></td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">추가성혼비</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="modal-pgm-add-marriage" placeholder="0" style="font-size:12px;padding:3px 8px;width:200px;text-align:right"></td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">추가재가입결제비용</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="modal-pgm-add-rejoin" placeholder="0" style="font-size:12px;padding:3px 8px;width:200px;text-align:right"></td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">결제방법</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="modal-pgm-pay-method" style="width:200px;font-size:12px;padding:3px 8px"><option>카드</option><option>현금</option><option>계좌이체</option><option>복합결제</option></select></td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">요청자</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="text" class="form-input" id="modal-pgm-requester" placeholder="요청자명" style="font-size:12px;padding:3px 8px;width:200px"></td></tr>';
+  } else if (cfg.type === 'date') {
+    formHtml = '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:100px;border:1px solid var(--border-light)">현재 ' + cfg.label + '</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light);font-weight:700">' + (cfg.getDisplay ? cfg.getDisplay() : current) + '</td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경 ' + cfg.label + '</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><input type="date" class="form-input" id="modal-edit-value" value="' + current + '" style="font-size:12px;padding:3px 8px;width:200px"></td></tr>';
+  } else if (cfg.type === 'meeting') {
+    var cur = current;
+    formHtml = '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:110px;border:1px solid var(--border-light);white-space:nowrap">현재 미팅횟수</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light);font-weight:700">' + cur.count + '/' + cur.total + '회</td></tr>'
+      + '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light);white-space:nowrap">변경 미팅횟수</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:6px;align-items:center">'
+      + '<input type="number" class="form-input" id="modal-edit-count" value="' + cur.count + '" min="0" style="font-size:12px;padding:3px 8px;width:70px">'
+      + ' <span style="color:var(--text-muted)">/</span> '
+      + '<input type="number" class="form-input" id="modal-edit-total" value="' + cur.total + '" min="1" style="font-size:12px;padding:3px 8px;width:70px">'
+      + ' <span style="font-size:11px;color:var(--text-muted)">회</span></div></td></tr>';
+  } else {
+    formHtml = '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;width:100px;border:1px solid var(--border-light)">' + cfg.label + '</td>'
+      + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><select class="form-input" id="modal-edit-value" style="width:200px;font-size:12px;padding:3px 8px">'
+      + cfg.options.map(function(o) { return '<option' + (o === current ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></td></tr>';
+  }
+
+  formHtml += '<tr><td style="padding:6px 10px;background:#f8f9fa;font-weight:600;border:1px solid var(--border-light)">변경사유</td>'
+    + '<td style="padding:6px 10px;border:1px solid var(--border-light)"><div style="display:flex;gap:8px">'
+    + '<input type="text" class="form-input" id="modal-edit-reason" placeholder="변경 사유를 입력하세요" style="flex:1;font-size:12px;padding:3px 8px">'
+    + '<button class="btn btn--primary btn--sm" id="btn-modal-confirm" style="font-size:12px;padding:4px 16px;white-space:nowrap">확인</button>'
+    + '</div></td></tr>';
+
+  Modal.show({
+    title: '<span style="font-weight:700">' + cfg.label + '</span> 변경',
+    size: 'md',
+    content: '<div style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' + formHtml + '</tbody></table></div>',
+  });
+
+  setTimeout(function() {
+    var confirmBtn = document.getElementById('btn-modal-confirm');
+    if (!confirmBtn) return;
+    confirmBtn.addEventListener('click', function() {
+      var reason = document.getElementById('modal-edit-reason').value.trim();
+      if (!reason) { Toast.show('변경 사유를 입력해주세요.', 'warning'); return; }
+
+      var now = new Date().toISOString();
+      var processor = '인증팀';
+      var oldDisplay = cfg.getDisplay ? cfg.getDisplay() : cfg.getCurrent();
+      var newVal, newDisplay, detailStr;
+
+      if (field === 'program') {
+        newVal = document.getElementById('modal-edit-value').value;
+        if (newVal === cfg.getCurrent()) { Toast.show('현재 값과 동일합니다.', 'warning'); return; }
+        var pgmStart = document.getElementById('modal-pgm-start').value;
+        var pgmAddFee = document.getElementById('modal-pgm-add-fee').value.replace(/[^0-9]/g, '') || '0';
+        var pgmAddMarriage = document.getElementById('modal-pgm-add-marriage').value.replace(/[^0-9]/g, '') || '0';
+        var pgmAddRejoin = document.getElementById('modal-pgm-add-rejoin').value.replace(/[^0-9]/g, '') || '0';
+        var pgmPayMethod = document.getElementById('modal-pgm-pay-method').value;
+        var pgmRequester = document.getElementById('modal-pgm-requester').value.trim();
+        detailStr = cfg.getCurrent() + '→' + newVal;
+        cfg.apply(newVal);
+        newDisplay = newVal;
+        // 프로그램 이력에 추가 정보 저장
+        addHistory({ memberId: m.id, category: cfg.category, content: reason, detail: detailStr, processor: pgmRequester || processor, date: now,
+          extra: { startDate: pgmStart, addFee: parseInt(pgmAddFee), addMarriageFee: parseInt(pgmAddMarriage), addRejoinFee: parseInt(pgmAddRejoin), payMethod: pgmPayMethod, requester: pgmRequester }
+        });
+        var valEl2 = document.getElementById('val-' + field);
+        if (valEl2) valEl2.textContent = newDisplay;
+        Modal.hide();
+        Toast.show(cfg.label + '이(가) 변경되었습니다.', 'success');
+        return;
+      } else if (cfg.type === 'date') {
+        newVal = document.getElementById('modal-edit-value').value;
+        if (!newVal) { Toast.show('날짜를 선택해주세요.', 'warning'); return; }
+        if (newVal === cfg.getCurrent()) { Toast.show('현재 값과 동일합니다.', 'warning'); return; }
+        cfg.apply(newVal);
+        newDisplay = Formatters.date(newVal);
+        detailStr = oldDisplay + '→' + newDisplay;
+      } else if (cfg.type === 'meeting') {
+        var nc = parseInt(document.getElementById('modal-edit-count').value, 10);
+        var nt = parseInt(document.getElementById('modal-edit-total').value, 10);
+        if (isNaN(nc) || nc < 0) { Toast.show('미팅횟수를 올바르게 입력해주세요.', 'warning'); return; }
+        if (isNaN(nt) || nt < 1) { Toast.show('총 미팅횟수를 올바르게 입력해주세요.', 'warning'); return; }
+        var cur2 = cfg.getCurrent();
+        if (nc === cur2.count && nt === cur2.total) { Toast.show('현재 값과 동일합니다.', 'warning'); return; }
+        detailStr = cur2.count + '/' + cur2.total + '회→' + nc + '/' + nt + '회';
+        cfg.apply({ count: nc, total: nt });
+        newDisplay = nc + '/' + nt + '회';
+      } else {
+        newVal = document.getElementById('modal-edit-value').value;
+        if (newVal === cfg.getCurrent()) { Toast.show('현재 값과 동일합니다.', 'warning'); return; }
+        detailStr = cfg.getCurrent() + '→' + newVal;
+        cfg.apply(newVal);
+        newDisplay = newVal;
+      }
+
+      addHistory({ memberId: m.id, category: cfg.category, content: reason, detail: detailStr, processor: processor, date: now });
+
+      // UI 갱신
+      var valEl = document.getElementById('val-' + field);
+      if (valEl) valEl.textContent = newDisplay;
+
+      Modal.hide();
+      Toast.show(cfg.label + '이(가) 변경되었습니다.', 'success');
+    });
+  }, 100);
+}
+
+// 모달 링크 클릭 바인딩
+document.addEventListener('click', function(e) {
+  var link = e.target.closest('.edit-modal-link');
+  if (!link) return;
+  var field = link.getAttribute('data-field');
+  if (field) showEditModal(field);
+});
 
 document.getElementById('btn-save').addEventListener('click', handleSave);
 document.getElementById('btn-save-bottom').addEventListener('click', handleSave);
@@ -959,7 +1106,7 @@ function calcYearPeriod(startEl, endEl, cell) {
   var eduBody = document.getElementById('edu-table-body');
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
 
-  document.getElementById('btn-add-edu').addEventListener('click', function() {
+  function addEduRow() {
     eduIdx++;
     var tr = document.createElement('tr');
     tr.innerHTML =
@@ -985,7 +1132,12 @@ function calcYearPeriod(startEl, endEl, cell) {
     sEl.addEventListener('change', function() { calcYearPeriod(sEl, eEl, pEl); });
     eEl.addEventListener('change', function() { calcYearPeriod(sEl, eEl, pEl); });
     tr.querySelector('.btn-del-edu').addEventListener('click', function() { tr.remove(); });
-  });
+  }
+
+  // 기본 1줄 노출
+  addEduRow();
+
+  document.getElementById('btn-add-edu').addEventListener('click', addEduRow);
 })();
 
 /* ── 어학연수 행 추가/삭제 ── */
@@ -993,7 +1145,7 @@ function calcYearPeriod(startEl, endEl, cell) {
   var langBody = document.getElementById('lang-table-body');
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
 
-  document.getElementById('btn-add-lang').addEventListener('click', function() {
+  function addLangRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '"><input type="text" placeholder="국가" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
@@ -1002,13 +1154,14 @@ function calcYearPeriod(startEl, endEl, cell) {
       + '<td style="' + V + ';text-align:center" class="lang-period">-</td>'
       + '<td style="' + V + '"><input type="text" placeholder="학교/기관명" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-lang" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
-
     langBody.appendChild(tr);
     var sEl = tr.querySelector('.lang-start'), eEl = tr.querySelector('.lang-end'), pEl = tr.querySelector('.lang-period');
     sEl.addEventListener('change', function() { calcYearPeriod(sEl, eEl, pEl); });
     eEl.addEventListener('change', function() { calcYearPeriod(sEl, eEl, pEl); });
     tr.querySelector('.btn-del-lang').addEventListener('click', function() { tr.remove(); });
-  });
+  }
+  addLangRow();
+  document.getElementById('btn-add-lang').addEventListener('click', addLangRow);
 })();
 
 /* ── 직장 행 추가/삭제 ── */
@@ -1017,7 +1170,7 @@ function calcYearPeriod(startEl, endEl, cell) {
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
   var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
 
-  document.getElementById('btn-add-job').addEventListener('click', function() {
+  function addJobRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '"><input type="text" placeholder="직장명" ' + TI + '></td>'
@@ -1034,10 +1187,11 @@ function calcYearPeriod(startEl, endEl, cell) {
       + '</select></td>'
       + '<td style="' + V + '"><input type="text" placeholder="구체적인 설명" ' + TI + '></td>'
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-job" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
-
     jobBody.appendChild(tr);
     tr.querySelector('.btn-del-job').addEventListener('click', function() { tr.remove(); });
-  });
+  }
+  addJobRow();
+  document.getElementById('btn-add-job').addEventListener('click', addJobRow);
 })();
 
 /* ── 가족사항 행 추가/삭제 ── */
@@ -1046,7 +1200,7 @@ function calcYearPeriod(startEl, endEl, cell) {
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
   var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
 
-  document.getElementById('btn-add-family').addEventListener('click', function() {
+  function addFamilyRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '">'
@@ -1068,10 +1222,11 @@ function calcYearPeriod(startEl, endEl, cell) {
       + '<td style="' + V + '"><input type="text" placeholder="거주지" ' + TI + '></td>'
       + '<td style="' + V + '"><input type="text" placeholder="비고" ' + TI + '></td>'
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-fam" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
-
     famBody.appendChild(tr);
     tr.querySelector('.btn-del-fam').addEventListener('click', function() { tr.remove(); });
-  });
+  }
+  addFamilyRow();
+  document.getElementById('btn-add-family').addEventListener('click', addFamilyRow);
 })();
 
 /* ── 재혼정보 행 추가/삭제 ── */
@@ -1080,41 +1235,34 @@ function calcYearPeriod(startEl, endEl, cell) {
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
   var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
 
-  document.getElementById('btn-add-remarry').addEventListener('click', function() {
+  function addRemarryRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
-      // 구분
       '<td style="' + V + '">'
       + '<select ' + TI + '><option>선택</option><option>이혼</option><option>사별</option><option>사실혼</option></select></td>'
-      // 결혼년도
       + '<td style="' + V + '"><select class="rm-year" ' + SEL_Y + '>' + yearOpts + '</select></td>'
-      // 결혼기간 (--년 --개월)
       + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
       + '<input type="text" placeholder="0" style="width:25px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">년</span>'
       + '<input type="text" placeholder="0" style="width:25px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">개월</span>'
       + '</div></td>'
-      // 이혼사유
       + '<td style="' + V + '"><input type="text" placeholder="이혼사유" ' + TI + '></td>'
-      // 자녀 (-남 -녀)
       + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
       + '<input type="text" placeholder="0" style="width:22px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">남</span>'
       + '<input type="text" placeholder="0" style="width:22px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">녀</span>'
       + '</div></td>'
-      // 자녀양육
       + '<td style="' + V + '">'
       + '<select ' + TI + '><option>선택</option><option>본인</option><option>전배우자</option><option>공동</option></select></td>'
-      // 추가사항
       + '<td style="' + V + '"><input type="text" placeholder="추가사항" ' + TI + '></td>'
-      // 삭제
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-rm" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
-
     rmBody.appendChild(tr);
     tr.querySelector('.btn-del-rm').addEventListener('click', function() { tr.remove(); });
-  });
+  }
+  addRemarryRow();
+  document.getElementById('btn-add-remarry').addEventListener('click', addRemarryRow);
 })();
 
 /* ── 자녀정보 행 추가/삭제 ── */
@@ -1123,7 +1271,7 @@ function calcYearPeriod(startEl, endEl, cell) {
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
   var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
 
-  document.getElementById('btn-add-child').addEventListener('click', function() {
+  function addChildRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '"><select ' + TI + '><option>선택</option><option>남</option><option>녀</option></select></td>'
@@ -1138,10 +1286,11 @@ function calcYearPeriod(startEl, endEl, cell) {
       + '<td style="' + V + '"><select ' + TI + '><option>선택</option><option>본인</option><option>배우자</option><option>공동</option></select></td>'
       + '<td style="' + V + '"><input type="text" placeholder="비고" ' + TI + '></td>'
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-child" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
-
     chBody.appendChild(tr);
     tr.querySelector('.btn-del-child').addEventListener('click', function() { tr.remove(); });
-  });
+  }
+  addChildRow();
+  document.getElementById('btn-add-child').addEventListener('click', addChildRow);
 })();
 
 } // end if (!m)

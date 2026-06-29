@@ -25,8 +25,8 @@ export function renderBasicInfo(m) {
     + SEC('연락처 / 주소')
     + `<table class="data-table data-table--bordered data-table--no-outer dtbl">
       <tbody>
-        <tr><td class="${LBL}">핸드폰1</td><td class="${VAL}">${fmtPhone(m.phone)}</td><td class="${LBL}">핸드폰2</td><td class="${VAL}">${m.phone2 ? fmtPhone(m.phone2) : '-'}</td></tr>
-        <tr><td class="${LBL}">핸드폰3</td><td class="${VAL}">${m.phone3 ? fmtPhone(m.phone3) : '-'}</td><td class="${LBL}">이메일</td><td class="${VAL}">${m.email ? '<a href="mailto:' + m.email + '" style="color:#1565c0;text-decoration:underline;cursor:pointer">' + m.email + '</a>' : '-'}</td></tr>
+        <tr><td class="${LBL}">핸드폰1</td><td class="${VAL}">${fmtPhone(m.phone)} <span style="font-size:11px;color:#888">(본인)</span></td><td class="${LBL}">핸드폰2</td><td class="${VAL}">${m.fatherPhone ? fmtPhone(m.fatherPhone) : (m.phone2 ? fmtPhone(m.phone2) : '-')} <span style="font-size:11px;color:#888">(부)</span></td></tr>
+        <tr><td class="${LBL}">핸드폰3</td><td class="${VAL}">${m.motherPhone ? fmtPhone(m.motherPhone) : (m.phone3 ? fmtPhone(m.phone3) : '-')} <span style="font-size:11px;color:#888">(모)</span></td><td class="${LBL}">이메일</td><td class="${VAL}">${m.email ? '<a href="mailto:' + m.email + '" style="color:#1565c0;text-decoration:underline;cursor:pointer">' + m.email + '</a>' : '-'}</td></tr>
         <tr><td class="${LBL}">자택번호</td><td class="${VAL}">${m.homePhone ? fmtPhone(m.homePhone) : '-'}</td><td class="${LBL}">직장번호</td><td class="${VAL}">${m.workPhone ? fmtPhone(m.workPhone) : '-'}</td></tr>
         <tr><td class="${LBL}">통화희망자</td><td class="${VAL}">${m.callTarget || '본인'}</td><td class="${LBL}">소통방법</td><td class="${VAL}">${m.contactMethod || '문자+통화'}</td></tr>
         <tr><td class="${LBL}">연락가능시간</td><td class="${VAL}">${m.contactableTime || '-'}</td><td class="${LBL}">미팅가능시간</td><td class="${VAL}">${m.meetingAvailTime || '-'}</td></tr>

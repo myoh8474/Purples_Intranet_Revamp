@@ -390,12 +390,35 @@ function applyFilters(resetPage) {
     return m.lastIntroDate ? 'Y' : 'N';
   }
 
+  // 회원유의 뱃지 헬퍼
+  function flagBadges(m) {
+    var badges = '';
+    var flagMap = [
+      { key: 'flagNoEvent', label: '이벤트불가', bg: '#fee2e2', color: '#dc2626' },
+      { key: 'flagSecret', label: '비밀상담', bg: '#fef9c3', color: '#a16207' },
+      { key: 'flagNoRejoin', label: '재가입불가', bg: '#fee2e2', color: '#dc2626' },
+      { key: 'flagDifficult', label: '난매칭', bg: '#ffedd5', color: '#ea580c' },
+    ];
+    flagMap.forEach(function(f) {
+      if (m[f.key]) badges += ' <span style="display:inline-block;background:' + f.bg + ';color:' + f.color + ';font-size:9px;font-weight:600;padding:1px 4px;border-radius:2px;line-height:13px;vertical-align:middle">' + f.label + '</span>';
+    });
+    // tags 기반 (플래그가 없을 때)
+    if (!badges && m.tags && m.tags.length) {
+      var colorMap = {'이벤트불가':['#fee2e2','#dc2626'],'재가입불가':['#fee2e2','#dc2626'],'난매칭':['#ffedd5','#ea580c'],'비밀상담':['#fef9c3','#a16207']};
+      m.tags.forEach(function(t) {
+        var c = colorMap[t] || ['#f3f4f6','#374151'];
+        badges += ' <span style="display:inline-block;background:' + c[0] + ';color:' + c[1] + ';font-size:9px;font-weight:600;padding:1px 4px;border-radius:2px;line-height:13px;vertical-align:middle">' + t + '</span>';
+      });
+    }
+    return badges;
+  }
+
   tbody.innerHTML = paged.map((m, i) => `<tr data-id="${m.id}" class="${rowClass(m)}">
     <td class="tc" onclick="event.stopPropagation()"><input type="checkbox" class="reg-check" value="${m.id}"></td>
     <td class="tc" style="font-size:11px;color:var(--text-muted)">${m.id || '-'}</td>
     <td class="tc">${photoHtml(m)}</td>
     <td class="tc">${m.gender}</td>
-    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link col-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><span style="color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};font-weight:600">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="display:inline-block;background:#ef4444;color:#fff;font-size:10px !important;font-weight:600;padding:1px 5px;border-radius:3px;line-height:14px;vertical-align:middle">미팅중</span>' : ''}</span></a></td>
+    <td><a href="${detailUrl(m.id)}" target="_blank" style="text-decoration:none" class="member-link col-link" data-confirm="${m.marriageConfirm || ''}" data-name="${m.name}" onclick="event.stopPropagation()"><span style="color:${m.marriageConfirm === '소송중' ? '#dc2626' : 'var(--accent)'};font-weight:600">${m.marriageConfirm === '소송중' ? '🔒 ' : ''}${m.name}${isMeeting(m) ? ' <span style="display:inline-block;background:#ef4444;color:#fff;font-size:10px !important;font-weight:600;padding:1px 5px;border-radius:3px;line-height:14px;vertical-align:middle">미팅중</span>' : ''}</span></a>${flagBadges(m)}</td>
     <td class="tc" style="font-size:11px;color:var(--text-muted)">${m.memberId}</td>
     <td class="tc">${m.region || '-'}</td>
     <td class="tc">${m.birthDate ? new Date(m.birthDate).getFullYear() + '.' + String(new Date(m.birthDate).getMonth()+1).padStart(2,'0') + '.' + String(new Date(m.birthDate).getDate()).padStart(2,'0') : '-'}</td>

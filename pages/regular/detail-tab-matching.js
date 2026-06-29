@@ -1518,74 +1518,68 @@ function showMeetingManageModal(mt, m) {
    ═══════════════════════════════════════════ */
 
 /**
- * 권한별 특이사항 구분 매핑
- * - consultant(컨설턴트) → '상담' 고정
- * - manager(매니저)      → '관리' 고정 (매칭매니저일 경우 '매칭')
- * - admin / director      → 전체 선택 가능
- * - legal                 → '관리' 고정
- * - viewer                → 등록 불가
+ * 권한별 특이사항 구분 매핑 (접속 ID 기반 자동 결정)
+ * - admin / director → '관리'
+ * - consultant       → '상담'
+ * - manager          → '관리' (매칭매니저인 경우 '매칭')
+ * - cert             → '인증'
+ * - legal            → '관리'
+ * - viewer           → 등록 불가
  */
 var ROLE_SN_MAP = {
+  admin: '관리',
+  director: '관리',
   consultant: '상담',
   manager: '관리',
+  cert: '인증',
   legal: '관리',
   viewer: null
 };
 
-function showSpecialNoteModal(m) {
+export function showSpecialNoteModal(m) {
   var LB = 'background:var(--bg-secondary);font-weight:600;width:80px;text-align:center;white-space:nowrap';
   var VL = 'padding:6px 12px';
 
-  // 로그인 사용자 정보
   var user = Auth.getUser() || { name: '관리자', role: 'admin' };
   var userRole = user.role || 'admin';
   var userName = user.name || '매니저';
 
-  // viewer는 등록 불가
   if (userRole === 'viewer') {
     Toast.show('등록 권한이 없습니다.', 'warning');
     return;
   }
 
-  // 권한별 구분 결정
-  var fixedType = ROLE_SN_MAP[userRole] || null; // null이면 전체 선택 가능 (admin/director)
-  // 매칭매니저인 경우 '매칭'으로 자동 설정
+  // 접속 ID 기반 구분 자동 결정
+  var snType = ROLE_SN_MAP[userRole] || '관리';
   if (userRole === 'manager' && m.matchingManager && m.matchingManager === userName) {
-    fixedType = '매칭';
+    snType = '매칭';
   }
-  var canSelect = !fixedType; // admin, director는 선택 가능
+  var typeColor = { '관리': '#3b82f6', '상담': '#10b981', '매칭': '#f59e0b', '인증': '#6366f1' };
 
   var body = '';
   body += '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;table-layout:fixed">';
   body += '<colgroup><col style="width:80px"><col></colgroup>';
   body += '<tbody>';
 
-  // 작성자
+  // 작성자 — 구분(ID) 형식
   body += '<tr><td style="' + LB + '">작성자</td>';
-  body += '<td style="' + VL + '">' + userName + ' <span style="color:var(--text-muted);font-size:11px">(' + userRole + ')</span></td></tr>';
-
-  // 구분
-  body += '<tr><td style="' + LB + '">구분</td>';
-  body += '<td style="' + VL + '">';
-  if (canSelect) {
-    // admin/director: 전체 선택 가능
-    body += '<div style="display:flex;gap:12px;align-items:center">';
-    body += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="sn-type" value="관리" checked> 관리</label>';
-    body += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="sn-type" value="상담"> 상담</label>';
-    body += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="sn-type" value="매칭"> 매칭</label>';
-    body += '</div>';
-  } else {
-    // 권한에 따라 고정 (readonly)
-    var typeColor = { '관리': '#3b82f6', '상담': '#10b981', '매칭': '#f59e0b' };
-    body += '<span style="font-weight:700;color:' + (typeColor[fixedType] || '#666') + '">' + fixedType + '</span>';
-    body += '<input type="hidden" name="sn-type" value="' + fixedType + '">';
-    body += '<span style="font-size:10px;color:var(--text-muted);margin-left:8px">(권한에 따라 자동 설정)</span>';
-  }
+  body += '<td style="' + VL + ';text-align:left">' + snType + '(' + userName + ')';
+  body += '<input type="hidden" name="sn-type" value="' + snType + '">';
   body += '</td></tr>';
 
   // 내용
   body += '<tr><td style="' + LB + '">내용</td>';
   body += '<td style="' + VL + '"><textarea class="form-input" id="sn-content" rows="4" style="font-size:12px;padding:6px 8px;width:100%;resize:vertical" placeholder="특이사항을 입력하세요"></textarea></td></tr>';
+
+  // 회원유의 설정 (테이블 내 행)
+  body += '<tr><td style="' + LB + '">회원유의</td>';
+  body += '<td style="' + VL + '">';
+  body += '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">';
+  body += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px"><input type="checkbox" id="flag-no-event"' + (m.flagNoEvent ? ' checked' : '') + ' style="margin:0;accent-color:#6366f1"> <span style="color:#333;font-weight:600">이벤트불가</span></label>';
+  body += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px"><input type="checkbox" id="flag-secret"' + (m.flagSecret ? ' checked' : '') + ' style="margin:0;accent-color:#6366f1"> <span style="color:#333;font-weight:600">비밀상담회원</span></label>';
+  body += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px"><input type="checkbox" id="flag-no-rejoin"' + (m.flagNoRejoin ? ' checked' : '') + ' style="margin:0;accent-color:#6366f1"> <span style="color:#333;font-weight:600">재가입불가</span></label>';
+  body += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px"><input type="checkbox" id="flag-difficult"' + (m.flagDifficult ? ' checked' : '') + ' style="margin:0;accent-color:#6366f1"> <span style="color:#333;font-weight:600">난매칭</span></label>';
+  body += '</div></td></tr>';
 
   body += '</tbody></table>';
 
@@ -1595,11 +1589,7 @@ function showSpecialNoteModal(m) {
   body += '<button class="btn btn--primary btn--sm" id="sn-submit" style="font-size:12px;padding:6px 20px">등록</button>';
   body += '</div>';
 
-  Modal.show({
-    title: '특이사항 등록',
-    size: 'md',
-    content: body
-  });
+  Modal.show({ title: '특이사항 등록', size: 'md', content: body });
 
   setTimeout(function() {
     var cancelBtn = document.getElementById('sn-cancel');
@@ -1608,35 +1598,85 @@ function showSpecialNoteModal(m) {
     var submitBtn = document.getElementById('sn-submit');
     if (submitBtn) submitBtn.addEventListener('click', function() {
       var content = document.getElementById('sn-content').value.trim();
-      if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
 
-      // 구분 값 가져오기 (라디오 또는 hidden)
-      var snTypeEl = document.querySelector('input[name="sn-type"]:checked') || document.querySelector('input[name="sn-type"]');
-      var snType = snTypeEl ? snTypeEl.value : '관리';
-      var writer = userName;
-      var now = new Date();
-      var dateStr = now.getFullYear() + '.' + ('0' + (now.getMonth() + 1)).slice(-2) + '.' + ('0' + now.getDate()).slice(-2) + ' ' + ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
-      var typeColor = { '관리': '#3b82f6', '상담': '#10b981', '매칭': '#f59e0b' };
+      // 회원유의 플래그 저장
+      var fe = document.getElementById('flag-no-event');
+      var fs = document.getElementById('flag-secret');
+      var fr = document.getElementById('flag-no-rejoin');
+      var fd = document.getElementById('flag-difficult');
+      m.flagNoEvent = fe ? fe.checked : false;
+      m.flagSecret = fs ? fs.checked : false;
+      m.flagNoRejoin = fr ? fr.checked : false;
+      m.flagDifficult = fd ? fd.checked : false;
 
-      // 테이블에 행 추가
-      var tbl = document.getElementById('tbl-special-notes');
-      if (tbl) {
-        var tbody = tbl.querySelector('tbody');
-        if (tbody) {
-          var rowCount = tbody.querySelectorAll('tr').length;
-          var newRow = document.createElement('tr');
-          newRow.style.background = '#fffbeb';
-          newRow.innerHTML = '<td style="text-align:center">' + (rowCount + 1) + '</td>'
-            + '<td style="text-align:center">' + writer + '</td>'
-            + '<td style="text-align:center;font-weight:600;color:' + (typeColor[snType] || '#666') + '">' + snType + '</td>'
-            + '<td style="text-align:center;white-space:nowrap;font-size:12px;color:#666">' + dateStr + '</td>'
-            + '<td style="line-height:1.5">' + content + '</td>';
-          tbody.insertBefore(newRow, tbody.firstChild);
-        }
+      var tags = [];
+      if (m.flagNoEvent) tags.push('이벤트불가');
+      if (m.flagSecret) tags.push('비밀상담');
+      if (m.flagNoRejoin) tags.push('재가입불가');
+      if (m.flagDifficult) tags.push('난매칭');
+      m.tags = tags;
+
+      // 상세 헤더 뱃지 실시간 갱신
+      var badgeArea = document.querySelector('.detail-header-bar__left');
+      if (badgeArea) {
+        var oldBadges = badgeArea.querySelectorAll('.badge');
+        oldBadges.forEach(function(b) { b.remove(); });
+        var bColors = {'이벤트불가':'badge--red','재가입불가':'badge--red','난매칭':'badge--orange','비밀상담':'badge--yellow'};
+        tags.forEach(function(t) {
+          var span = document.createElement('span');
+          span.className = 'badge ' + (bColors[t] || 'badge--gray');
+          span.textContent = t;
+          badgeArea.appendChild(span);
+        });
       }
 
-      Modal.hide();
-      Toast.show('특이사항이 등록되었습니다.', 'success');
+      if (content) {
+        var now = new Date();
+        var dateStr = now.getFullYear() + '.' + ('0' + (now.getMonth() + 1)).slice(-2) + '.' + ('0' + now.getDate()).slice(-2) + ' ' + ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+
+        // 매칭정보 특이사항 테이블
+        var tbl = document.getElementById('tbl-special-notes');
+        if (tbl) {
+          var tbody = tbl.querySelector('tbody');
+          if (tbody) {
+            var rc = tbody.querySelectorAll('tr').length;
+            var nr = document.createElement('tr');
+            nr.style.background = '#fffbeb';
+            nr.innerHTML = '<td style="text-align:center">' + (rc + 1) + '</td>'
+              + '<td style="text-align:center">' + userName + '</td>'
+              + '<td style="text-align:center;font-weight:600;color:' + (typeColor[snType] || '#666') + '">' + snType + '</td>'
+              + '<td style="text-align:center;white-space:nowrap;font-size:12px;color:#666">' + dateStr + '</td>'
+              + '<td style="line-height:1.5">' + content + '</td>';
+            tbody.insertBefore(nr, tbody.firstChild);
+          }
+        }
+
+        // 기본정보 특이사항 테이블
+        var tbl2 = document.getElementById('tbl-sn-basic');
+        if (tbl2) {
+          var tbody2 = tbl2.querySelector('tbody');
+          if (tbody2) {
+            var rc2 = tbody2.querySelectorAll('tr').length;
+            var nr2 = document.createElement('tr');
+            nr2.className = 'sn-basic-row';
+            nr2.setAttribute('data-sn-type', snType);
+            nr2.style.background = '#fffbeb';
+            nr2.innerHTML = '<td style="text-align:center;vertical-align:middle">' + (rc2 + 1) + '</td>'
+              + '<td style="text-align:center;vertical-align:middle">' + userName + '</td>'
+              + '<td style="text-align:center;vertical-align:middle;font-weight:600;color:' + (typeColor[snType] || '#666') + '">' + snType + '</td>'
+              + '<td style="text-align:center;vertical-align:middle;white-space:nowrap;font-size:12px;color:#666">' + dateStr + '</td>'
+              + '<td style="line-height:1.5;vertical-align:middle">' + content + '</td>';
+            tbody2.insertBefore(nr2, tbody2.firstChild);
+          }
+        }
+
+        Modal.hide();
+        Toast.show('특이사항이 등록되었습니다.', 'success');
+      } else {
+        Modal.hide();
+        Toast.show('회원유의 설정이 저장되었습니다.', 'success');
+      }
     });
   }, 100);
 }
+

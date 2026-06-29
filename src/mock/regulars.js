@@ -186,6 +186,8 @@ if (useMock()) {
       memberId: memberId,
       name: randomPick(names),
       phone: randomPhone(),
+      fatherPhone: Math.random() > 0.4 ? randomPhone() : '',
+      motherPhone: Math.random() > 0.4 ? randomPhone() : '',
       email: randomPick(['user','member','info','hello','contact']) + (i+1) + '@' + randomPick(['gmail.com','naver.com','kakao.com','hanmail.net']),
       gender: gender,
       birthDate: birth.toISOString(),

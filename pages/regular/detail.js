@@ -13,6 +13,7 @@ import { renderBasicInfo } from './detail-tab-basic.js';
 import { renderExtraInfo } from './detail-tab-extra.js';
 import { renderPayment } from './detail-tab-payment.js';
 import { renderMatchingInfo } from './detail-tab-matching.js';
+import { renderConsultInfo, bindConsultEvents } from './detail-tab-consult.js';
 
 // 분리된 모듈
 import { renderDetailPage } from './detail-header.js';
@@ -115,6 +116,7 @@ var tabs = {
   extra: safeRender('추가정보', function(){ return renderExtraInfo(m); }),
   payment: safeRender('결제정보', function(){ return renderPayment(m); }),
   matching: safeRender('매칭관리', function(){ return renderMatchingInfo(m); }),
+  consult: safeRender('상담관리', function(){ return renderConsultInfo(m); }),
 };
 
 
@@ -138,3 +140,4 @@ bindEvents(m);
 bindModals(m);
 bindHistoryPopup(m);
 bindDocAuth(m);
+bindConsultEvents(m);

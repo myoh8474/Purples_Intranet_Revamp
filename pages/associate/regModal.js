@@ -15,7 +15,7 @@ const STYLE = `<style>
 .rr-t td{padding:5px 8px;border:1px solid var(--border-light,#ddd);vertical-align:middle}
 .rr-t .lb{background:var(--bg-secondary,#f8f9fa);font-weight:600;white-space:nowrap;text-align:center;color:var(--text-secondary,#555);width:90px}
 .rr-t input,.rr-t select{width:100%;padding:3px 5px;border:1px solid #ccc;font-size:11px;box-sizing:border-box;font-family:inherit}
-.rr-t table td{border:none;padding:5px 0}
+.rr-t > tbody > tr > td > table td{border:none}
 .rr-t table input[type="number"],.rr-t table input[type="text"]{width:auto}
 .rr-sec{font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light,#ddd)}
 .rr-photo-box{width:90px;height:110px;border:2px dashed #ccc;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#999;gap:4px;background:#fafafa}
@@ -113,22 +113,23 @@ function buildContent(m) {
   <tr><td class="lb">가입일</td><td><input type="date" id="rr-join-date" value="${today}" /></td><td class="lb">재가입일</td><td><input type="date" id="rr-rejoin-date" value="${reDay}" /></td></tr>
   <tr><td class="lb" style="vertical-align:middle">서비스선택</td><td colspan="3" style="padding:6px 8px">
     <div id="rr-svc-cert-notice" style="display:none;font-size:10px;color:#1565c0;margin-bottom:4px">* 인증제 / 단일인증제는 준전문직·전문직·파타상품 선택 시 활성화됩니다.</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px">
+    <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
+      <colgroup><col style="width:100px"><col></colgroup>
       <tr>
-        <td style="padding:5px 0;width:120px;white-space:nowrap"><label style="cursor:pointer"><input type="radio" name="rr-svc" value="기간제" checked /> 기간제</label></td>
-        <td style="padding:5px 0;padding-left:12px;white-space:nowrap">미팅횟수 <input type="number" id="rr-svc-meeting" value="1" min="1" style="width:60px;text-align:center" /> 회 + 보너스기간 <input type="number" id="rr-svc-bonus-month" value="0" min="0" style="width:60px;text-align:center" /> 개월</td>
+        <td style="padding:5px 8px 5px 0 !important;white-space:nowrap;vertical-align:middle"><label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="radio" name="rr-svc" value="기간제" checked /> 기간제</label></td>
+        <td style="padding:5px 0 5px 16px !important;white-space:nowrap;vertical-align:middle">미팅횟수 <input type="number" id="rr-svc-meeting" value="1" min="1" style="width:50px;text-align:center" /> 회 &nbsp;+ 보너스기간 <input type="number" id="rr-svc-bonus-month" value="0" min="0" style="width:50px;text-align:center" /> 개월</td>
       </tr>
       <tr>
-        <td style="padding:5px 0;white-space:nowrap"><label style="cursor:pointer"><input type="radio" name="rr-svc" value="횟수제" /> 횟수제</label></td>
-        <td style="padding:5px 0;padding-left:12px;white-space:nowrap">미팅횟수 <input type="number" id="rr-svc-meeting2" value="1" min="1" style="width:60px;text-align:center" /> 회 + 보너스횟수 <input type="number" id="rr-svc-bonus-count" value="0" min="0" style="width:60px;text-align:center" /> 개월</td>
+        <td style="padding:5px 8px 5px 0 !important;white-space:nowrap;vertical-align:middle"><label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="radio" name="rr-svc" value="횟수제" /> 횟수제</label></td>
+        <td style="padding:5px 0 5px 16px !important;white-space:nowrap;vertical-align:middle">미팅횟수 <input type="number" id="rr-svc-meeting2" value="1" min="1" style="width:50px;text-align:center" /> 회 &nbsp;+ 보너스횟수 <input type="number" id="rr-svc-bonus-count" value="0" min="0" style="width:50px;text-align:center" /> 회</td>
       </tr>
       <tr>
-        <td style="padding:5px 0;white-space:nowrap"><label style="cursor:pointer;opacity:0.4" id="lbl-svc-cert"><input type="radio" name="rr-svc" value="인증제" disabled /> 인증제</label></td>
-        <td style="padding:5px 0;padding-left:12px;white-space:nowrap">미팅기간 <input type="number" id="rr-cert-period1" value="12" min="1" style="width:60px;text-align:center" /> 개월 + 미팅기간 <input type="number" id="rr-cert-period2" value="12" min="0" style="width:60px;text-align:center" /> 개월</td>
+        <td style="padding:5px 8px 5px 0 !important;white-space:nowrap;vertical-align:middle"><label style="cursor:pointer;opacity:0.4;display:flex;align-items:center;gap:4px" id="lbl-svc-cert"><input type="radio" name="rr-svc" value="인증제" disabled /> 인증제</label></td>
+        <td style="padding:5px 0 5px 16px !important;white-space:nowrap;vertical-align:middle">1차기간 <input type="number" id="rr-cert-period1" value="12" min="1" style="width:50px;text-align:center" /> 개월 &nbsp;+ 2차기간 <input type="number" id="rr-cert-period2" value="12" min="0" style="width:50px;text-align:center" /> 개월</td>
       </tr>
       <tr>
-        <td style="padding:5px 0;white-space:nowrap"><label style="cursor:pointer;opacity:0.4" id="lbl-svc-single"><input type="radio" name="rr-svc" value="단일인증제" disabled /> 단일인증제</label></td>
-        <td style="padding:5px 0;padding-left:12px;white-space:nowrap">미팅기간 <input type="number" id="rr-single-period" value="24" min="1" style="width:60px;text-align:center" /> 개월</td>
+        <td style="padding:5px 8px 5px 0 !important;white-space:nowrap;vertical-align:middle"><label style="cursor:pointer;opacity:0.4;display:flex;align-items:center;gap:4px" id="lbl-svc-single"><input type="radio" name="rr-svc" value="단일인증제" disabled /> 단일인증제</label></td>
+        <td style="padding:5px 0 5px 16px !important;white-space:nowrap;vertical-align:middle">미팅기간 <input type="number" id="rr-single-period" value="24" min="1" style="width:50px;text-align:center" /> 개월</td>
       </tr>
     </table>
   </td></tr>
@@ -159,7 +160,7 @@ function buildContent(m) {
     <td class="lb">카드사</td>
     <td><input id="rr-card" placeholder="카드사 입력" disabled style="opacity:0.4" /></td>
     <td class="lb">분할납부</td>
-    <td><select id="rr-installment"><option>일시불</option><option>2개월</option><option>3개월</option><option>6개월</option><option>12개월</option></select></td>
+    <td><select id="rr-installment"><option>일시불</option><option>2개월</option><option>3개월</option><option>6개월</option><option>12개월</option><option>무이자 2개월</option><option>무이자 3개월</option><option>무이자 6개월</option><option>무이자 12개월</option></select></td>
   </tr>
   <tr style="background:#f0f7ff">
     <td class="lb" style="font-weight:700">입금액 <span style="color:#e53e3e">*</span></td>

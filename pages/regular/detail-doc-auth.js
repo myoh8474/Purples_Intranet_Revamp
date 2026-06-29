@@ -222,6 +222,16 @@ function bindModalEvents(m) {
         if (badge) badge.outerHTML = Formatters.statusBadge('인증중', 'regular');
       }
 
+      // edit 페이지 서비스개시일 표시 갱신
+      var svcStartSpans = document.querySelectorAll('td');
+      svcStartSpans.forEach(function(td) {
+        var prev = td.previousElementSibling;
+        if (prev && prev.textContent.trim() === '서비스개시일') {
+          var span = td.querySelector('span');
+          if (span) span.textContent = Formatters.date(serviceStart);
+        }
+      });
+
       Toast.show('매칭매니저 및 활동개시일이 저장되었습니다.', 'success');
     });
   }
