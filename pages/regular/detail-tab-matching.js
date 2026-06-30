@@ -5,30 +5,30 @@ import { Toast } from '@components/Toast.js';
 import { Modal } from '@components/Modal.js';
 import { PlaceSearch } from '@components/PlaceSearch.js';
 import { Auth } from '@core/auth.js';
+import { showMeetingManageModal } from './detail-tab-meeting.js';
 
 var CS = 'text-align:center;white-space:nowrap;vertical-align:middle';
 var LBL = 'background:var(--bg-secondary);font-weight:600;color:#888;text-align:center';
 
 /* ── 소개장 뱃지 ── */
 function resultBadge(r) {
-  if (!r || r === '대기중') return '<span style="color:#94a3b8;font-weight:600">대기중</span>';
-  var colors = { '수락': '#10b981', '거절': '#ef4444', '보류': '#f59e0b' };
-  return '<span style="color:' + (colors[r] || '#94a3b8') + ';font-weight:600">' + r + '</span>';
+  if (!r || r === '대기중') return '<span style="font-weight:600">대기중</span>';
+  if (r === '수락') return '<span style="font-weight:600;color:#ef4444">' + r + '</span>';
+  return '<span style="font-weight:600">' + r + '</span>';
 }
-function profileBadge(status, date, resend, result) {
-  if (!status || status === '프로필발송') return '<button class="btn btn--primary btn--xs btn-profile-send" style="padding:2px 8px;font-size:12px">✉ 프로필발송</button>';
+function profileBadge(status, date, resend, result, sender) {
+  var ICON_ACTIVE = '<span class="btn-profile-send" style="cursor:pointer" title="프로필 발송"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" style="vertical-align:middle"><rect x="2" y="5" width="20" height="14" rx="2" fill="#f59e0b" stroke="#d97706" stroke-width="0.8"/><path d="M2 7l10 6 10-6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M2 7l10 6 10-6" fill="#fbbf24" opacity="0.5"/></svg></span>';
+  var ICON_DISABLED = '<span style="cursor:default" title="발송완료"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" style="vertical-align:middle"><rect x="2" y="5" width="20" height="14" rx="2" fill="#d1d5db" stroke="#9ca3af" stroke-width="0.8"/><path d="M2 7l10 6 10-6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M2 7l10 6 10-6" fill="#e5e7eb" opacity="0.5"/></svg></span>';
+  var ICON_RESEND = '<span class="btn-profile-resend" style="cursor:pointer" title="재발송 (1회)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" style="vertical-align:middle"><rect x="2" y="5" width="20" height="14" rx="2" fill="#fb923c" stroke="#ea580c" stroke-width="0.8"/><path d="M2 7l10 6 10-6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M2 7l10 6 10-6" fill="#fdba74" opacity="0.5"/></svg></span>';
+  if (!status || status === '프로필발송') return ICON_ACTIVE;
   if (status === '발송완료') {
-    // 재발송 안 함 + 7일 경과 + 결과 대기중 → 재발송 버튼
-    if (resend !== 'Y' && result === '대기중' && date) {
-      var sent = new Date(date);
-      var now = new Date();
-      var diff = (now - sent) / (1000 * 60 * 60 * 24);
-      if (diff >= 7) return '<button class="btn btn--outline btn--xs btn-profile-resend" style="padding:2px 8px;font-size:12px">✉ 프로필재발송</button>';
+    if (resend !== 'Y' && result === '응답지연') {
+      return ICON_RESEND + '<span style="display:inline-block;margin-left:4px;font-size:11px;color:var(--text-muted);vertical-align:middle;cursor:default"' + (sender ? ' title="매칭매니져: ' + sender + '"' : '') + '>' + (date || '') + '</span>';
     }
-    return '<span style="color:#10b981;font-weight:600">발송완료</span>' + (date ? '<span style="display:block;font-size:12px;color:var(--text-muted)">' + date + '</span>' : '');
+    return ICON_DISABLED + '<span style="display:inline-block;margin-left:4px;font-size:11px;color:var(--text-muted);vertical-align:middle;cursor:default"' + (sender ? ' title="매칭매니져: ' + sender + '"' : '') + '>' + (date || '') + '</span>';
   }
-  if (status === '재발송완료') return '<span style="color:#f59e0b;font-weight:600">재발송완료</span>' + (date ? '<span style="display:block;font-size:12px;color:var(--text-muted)">' + date + '</span>' : '');
-  return '<button class="btn btn--primary btn--xs btn-profile-send" style="padding:2px 8px;font-size:12px">✉ ' + status + '</button>';
+  if (status === '재발송완료') return ICON_DISABLED + '<span style="display:inline-block;margin-left:4px;font-size:11px;color:var(--text-muted);vertical-align:middle">' + (date || '') + '</span>';
+  return ICON_ACTIVE;
 }
 
 /* ── 메모 카테고리 정의 ── */
@@ -73,10 +73,10 @@ function genMemos(m) {
 
 /* ── 소개장 더미 ── */
 function genIntros(m) {
-  var femNames = ['김영희','박서연','이지은','한소희','윤지아','최민아','정다은','오수진','임하윤','송예린'];
-  var malNames = ['이영수','임지호','정우진','김도윤','오태현','박민수','최성준','한재원','강현우','윤시우'];
+  var partnerNames = ['이영수','임지호','정우진','김도윤','오태현','박민수','최성준','한재원','강현우','윤시우'];
   var profiles = ['프로필발송','발송완료','발송완료','재발송완료','발송완료','프로필발송','발송완료','발송완료','프로필발송','발송완료'];
-  var resultPool = ['대기중','수락','거절','대기중','수락','대기중','보류','수락','대기중','거절'];
+  var senders = ['오영수','이혜영','서다현','강보라','오영수','이혜영','서다현','강보라','오영수','이혜영'];
+  var resultPool = ['대기중','수락','거절','대기중','수락','대기중','응답지연','수락','대기중','거절'];
   var list = [];
   for (var i = 1; i <= 20; i++) {
     var d = new Date(2026, 0, 15 + i);
@@ -89,11 +89,13 @@ function genIntros(m) {
     var rs2 = p2 === '재발송완료' ? 'Y' : 'N';
     var rd1 = r1 !== '대기중' ? '2026.0' + (2 + i%3) + '.' + ('0'+(5+i%20)).slice(-2) : '';
     var rd2 = r2 !== '대기중' ? '2026.0' + (2 + i%3) + '.' + ('0'+(7+i%20)).slice(-2) : '';
-    // 3건은 양측 수락으로 설정
+    // 3건은 양측 수락 (미팅등록 가능 상태)
     if (i === 1 || i === 8 || i === 15) { r1 = '수락'; r2 = '수락'; p1 = '발송완료'; p2 = '발송완료'; pd1 = '2026.02.01'; pd2 = '2026.02.01'; rd1 = '2026.02.10'; rd2 = '2026.02.12'; }
+    // 2건은 응답지연 (재발송 가능 상태)
+    if (i === 3 || i === 10) { r1 = '응답지연'; r2 = '대기중'; p1 = '발송완료'; p2 = '발송완료'; pd1 = '2026.01.20'; pd2 = '2026.01.20'; rd1 = ''; rd2 = ''; rs1 = 'N'; rs2 = 'N'; }
     list.push({ id: i, regDate: ds, rows: [
-      { name: femNames[i % 10], profile: p1, profileDate: pd1, resend: rs1, result: r1, resultDate: rd1 },
-      { name: malNames[i % 10], profile: p2, profileDate: pd2, resend: rs2, result: r2, resultDate: rd2 }
+      { name: m.name, profile: p1, profileDate: pd1, resend: rs1, result: r1, resultDate: rd1, sender: (p1 === '발송완료' || p1 === '재발송완료') ? senders[i % 10] : '' },
+      { name: partnerNames[i % 10], profile: p2, profileDate: pd2, resend: rs2, result: r2, resultDate: rd2, sender: (p2 === '발송완료' || p2 === '재발송완료') ? senders[(i+3) % 10] : '' }
     ]});
   }
   return list;
@@ -108,8 +110,9 @@ function genSpecialNotes(m) {
 /* ── 미팅 리스트 더미 ── */
 function genMeetings(m) {
   var names = ['김미봉','최서연','박하은','이지아','정수민','한예진','오다은','윤서영','장민지','송지우'];
+  var MID_MAP = {'김미봉':'1f00801','최서연':'2f00904','박하은':'2f00705','이지아':'1f00803','정수민':'1m00905','한예진':'2f00806','오다은':'1f00807','윤서영':'2f00702','장민지':'1f00809','송지우':'2f00810'};
   var places = ['롯데호텔 부산','하얏트 서울','신라호텔 라운지','JW메리어트 카페','힐튼 로비','인터컨티넨탈 라운지','그랜드 워커힐','포시즌스 카페','웨스틴 조선 라운지','반얀트리 서울'];
-  var results = ['호감','비호감','호감','보류','호감','비호감','호감','호감','보류','호감'];
+  var results = ['확인','확인','펑크','확인','취소','확인','확인','펑크','확인','취소'];
   var reviews = [
     '성격도 매너도 너무 좋아요~^^','생각보다 소극적이셨어요','대화가 잘 통해서 좋았습니다','조금 더 생각해보겠습니다',
     '밝고 유머감각이 좋으세요','스타일이 안 맞는 것 같아요','다시 만나고 싶어요','매우 인상이 좋았습니다',
@@ -121,15 +124,15 @@ function genMeetings(m) {
   for (var i = 1; i <= 30; i++) {
     var d = new Date(2025, 11, 30 - i);
     var ds = d.getFullYear().toString().slice(2) + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
-    var n1 = names[i % 10], n2 = names[(i + 3) % 10];
+    var n2 = names[(i + 3) % 10];
     var rd = d.toISOString().slice(0,10);
     var seq = 1;
     for (var si = 0; si < seqRanges.length; si++) { if (i <= seqRanges[si].max) { seq = seqRanges[si].seq; break; } }
     list.push({ id: i, enrollmentSeq: seq, registrant: ['이다솜','서다현','강보라','정유리','최은별'][i%5], regDate: rd,
       dateTime: ds + ' 오후 ' + (1 + i%4) + '시', place: places[i%10],
       members: [
-        { name: n1, result: results[i%10], review: reviews[i%10], reviewDate: rd },
-        { name: n2, result: results[(i+1)%10], review: reviews[(i+1)%10], reviewDate: rd }
+        { name: m.name, memberId: m.memberId || MID_MAP[m.name] || '-', result: results[i%10], review: reviews[i%10], reviewDate: rd },
+        { name: n2, memberId: MID_MAP[n2] || '-', result: results[(i+1)%10], review: reviews[(i+1)%10], reviewDate: rd }
       ]
     });
   }
@@ -287,13 +290,14 @@ export function renderMatchingInfo(m) {
   html += '</div>';
   // 필터 행 (메모장과 동일 형태)
   html += '<div class="mcard__filter">';
-  html += '<select class="form-input" id="sn-filter-select" style="padding:3px 6px;width:100px;font-size:12px">';
+  html += '<select class="form-input" id="sn-filter-select" style="padding:3px 6px;width:90px;font-size:11px">';
   html += '<option value="전체">구분: 전체</option>';
   ['관리','상담','매칭'].forEach(function(t) { html += '<option value="' + t + '">' + t + '</option>'; });
   html += '</select>';
-  html += '<input type="date" class="form-input" id="sn-date-from" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<input type="date" class="form-input" id="sn-date-from" style="padding:3px 4px;width:105px;font-size:11px">';
   html += '<span style="color:var(--text-muted);font-size:11px">~</span>';
-  html += '<input type="date" class="form-input" id="sn-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<input type="date" class="form-input" id="sn-date-to" style="padding:3px 4px;width:105px;font-size:11px">';
+  html += '<input type="text" class="form-input" id="sn-keyword" placeholder="키워드" style="padding:3px 6px;width:80px;font-size:11px">';
   html += '<button class="btn btn--primary btn--sm" id="btn-sn-search" style="padding:2px 8px;font-size:11px">검색</button>';
   html += '</div>';
   html += '<div class="' + CARD_BODY + '">';
@@ -319,14 +323,15 @@ export function renderMatchingInfo(m) {
   html += '<span class="mcard__title">미팅 리스트</span>';
   html += '</div>';
   // 필터 행
-  html += '<div class="mcard__filter" style="display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border-light);flex-wrap:wrap">';
-  html += '<select class="form-input" id="meeting-seq-filter" style="padding:3px 6px;width:100px;font-size:12px">';
+  html += '<div class="mcard__filter" style="display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border-light)">';
+  html += '<select class="form-input" id="meeting-seq-filter" style="padding:3px 6px;width:90px;font-size:11px">';
   html += '<option value="전체">차수: 전체</option>';
   for (var sq = 1; sq <= 5; sq++) html += '<option value="' + sq + '">' + sq + '가입</option>';
   html += '</select>';
-  html += '<input type="date" class="form-input" id="meeting-date-from" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<input type="date" class="form-input" id="meeting-date-from" style="padding:3px 4px;width:105px;font-size:11px">';
   html += '<span style="color:var(--text-muted);font-size:11px">~</span>';
-  html += '<input type="date" class="form-input" id="meeting-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<input type="date" class="form-input" id="meeting-date-to" style="padding:3px 4px;width:105px;font-size:11px">';
+  html += '<input type="text" class="form-input" id="meeting-keyword" placeholder="키워드" style="padding:3px 6px;width:80px;font-size:11px">';
   html += '<button class="btn btn--primary btn--sm" id="btn-meeting-search" style="padding:2px 8px;font-size:11px">검색</button>';
   html += '</div>';
   html += '<div class="' + CARD_BODY + '" style="overflow-x:auto">';
@@ -347,13 +352,13 @@ export function renderMatchingInfo(m) {
     html += '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted)">등록된 미팅이 없습니다.</td></tr>';
   } else {
     var curSeq = 5;
-    meetings.forEach(function(mt) {
+    meetings.forEach(function(mt, mtIdx) {
       var rowspan = mt.members.length;
       var seqText = mt.enrollmentSeq + '가입';
       var seqColors = {1:'#94a3b8', 2:'#8b5cf6', 3:'#f59e0b', 4:'#10b981', 5:'#3b82f6'};
       var seqColor = seqColors[mt.enrollmentSeq] || '#64748b';
       mt.members.forEach(function(mem, mi) {
-        html += '<tr>';
+        html += '<tr style="' + (mtIdx % 2 === 1 ? 'background:#f8fafc' : '') + '">';
         if (mi === 0) {
           html += '<td rowspan="' + rowspan + '" style="' + CS + ';font-weight:700">' + mt.id + '</td>';
           html += '<td rowspan="' + rowspan + '" style="' + CS + ';font-size:11px;font-weight:600;color:' + seqColor + '">' + seqText + '</td>';
@@ -386,47 +391,49 @@ export function renderMatchingInfo(m) {
   html += '<div class="' + CARD_HDR + '">';
   html += '<span class="mcard__title">소개장 <span style="font-weight:400;font-size:11px;color:#888">(등록 ' + totalIntros + '건 / 발송 ' + totalSent + '건)</span></span>';
   html += '<div style="display:flex;gap:4px;align-items:center">';
-  html += '<button class="btn btn--outline btn--sm" id="btn-intro-delete" style="font-size:11px;padding:2px 10px" disabled>삭제</button>';
   html += '<button class="btn btn--outline btn--sm" id="btn-add-intro" style="font-size:11px;padding:2px 10px">소개등록</button>';
   html += '</div>';
   html += '</div>';
   // 소개장 필터 행
   html += '<div class="mcard__filter" style="display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border-light)">';
-  html += '<input type="date" class="form-input" id="intro-date-from" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<input type="date" class="form-input" id="intro-date-from" style="padding:3px 4px;width:105px;font-size:11px">';
   html += '<span style="color:var(--text-muted);font-size:11px">~</span>';
-  html += '<input type="date" class="form-input" id="intro-date-to" style="padding:3px 4px;width:120px;font-size:11px">';
+  html += '<input type="date" class="form-input" id="intro-date-to" style="padding:3px 4px;width:105px;font-size:11px">';
+  html += '<input type="text" class="form-input" id="intro-keyword" placeholder="키워드" style="padding:3px 6px;width:80px;font-size:11px">';
   html += '<button class="btn btn--primary btn--sm" id="btn-intro-search" style="padding:2px 8px;font-size:11px">검색</button>';
   html += '</div>';
   html += '<div class="' + CARD_BODY + '">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-intro" style="table-layout:fixed;width:100%">';
-  html += '<colgroup><col style="width:5%"><col style="width:8%"><col style="width:14%"><col style="width:12%"><col style="width:22%"><col style="width:23%"><col style="width:16%"></colgroup>';
+  html += '<colgroup><col style="width:9%"><col style="width:15%"><col style="width:15%"><col style="width:20%"><col style="width:13%"><col style="width:16%"><col style="width:12%"></colgroup>';
   html += '<thead><tr>';
-  html += '<th style="' + LBL + '"><input type="checkbox" id="intro-chk-all"></th>';
   html += sortableHeader('번호', 'tbl-intro', 1, 'num');
   html += sortableHeader('등록일', 'tbl-intro', 2, 'date');
-  ['회원명','프로필발송','결과','관리'].forEach(function(t) {
+  ['회원명','소개','결과','결과등록일','관리'].forEach(function(t) {
     html += '<th style="' + LBL + '">' + t + '</th>';
   });
   html += '</tr></thead><tbody>';
 
-  intros.forEach(function(intro) {
+  intros.forEach(function(intro, introIdx) {
     var allAccepted = intro.rows.every(function(r) { return r.result === '수락'; });
-    var rowBg = allAccepted ? 'background:#eff6ff;' : '';
+    var rowBg = allAccepted ? 'background:#fefce8;' : (introIdx % 2 === 1 ? 'background:#f8fafc;' : '');
     intro.rows.forEach(function(row, ri) {
-      html += '<tr style="' + rowBg + (ri === intro.rows.length - 1 ? 'border-bottom:2px solid var(--border-color)' : '') + '">';
+      var lastBdr = ri === intro.rows.length - 1 ? '' : '';
+      html += '<tr style="' + rowBg + '">';
       if (ri === 0) {
-        html += '<td rowspan="' + intro.rows.length + '" style="text-align:center;vertical-align:middle;padding:0;border-bottom:2px solid var(--border-color)"><input type="checkbox" class="intro-chk" data-intro-id="' + intro.id + '" style="margin:0"></td>';
-        html += '<td rowspan="' + intro.rows.length + '" style="' + CS + ';font-weight:700;vertical-align:middle;border-bottom:2px solid var(--border-color)">' + intro.id + '</td>';
-        html += '<td rowspan="' + intro.rows.length + '" style="' + CS + ';vertical-align:middle;border-bottom:2px solid var(--border-color)"><span style="font-size:12px">' + intro.regDate + '</span></td>';
+        html += '<td rowspan="' + intro.rows.length + '" style="' + CS + ';font-weight:700;vertical-align:middle">' + intro.id + '</td>';
+        html += '<td rowspan="' + intro.rows.length + '" style="' + CS + ';vertical-align:middle"><span style="font-size:12px">' + intro.regDate + '</span></td>';
       }
-      html += '<td style="' + CS + ';font-weight:600">' + row.name + '</td>';
-      html += '<td style="' + CS + '">' + profileBadge(row.profile, row.profileDate, row.resend, row.result) + '</td>';
-      // 결과 + 날짜
-      var resultHtml = resultBadge(row.result);
-      if (row.resultDate) resultHtml += '<span style="display:block;font-size:12px;color:var(--text-muted)">' + row.resultDate + '</span>';
-      html += '<td style="' + CS + '">' + resultHtml + '</td>';
+      html += '<td style="' + CS + ';font-weight:600' + '">' + row.name + '</td>';
+      var pbHtml = profileBadge(row.profile, row.profileDate, row.resend, row.result, row.sender);
+      pbHtml = pbHtml.replace('btn-profile-send"', 'btn-profile-send" data-intro-id="' + intro.id + '" data-row="' + ri + '"');
+      pbHtml = pbHtml.replace('btn-profile-resend"', 'btn-profile-resend" data-intro-id="' + intro.id + '" data-row="' + ri + '"');
+      html += '<td style="' + CS + ';text-align:left' + '">' + pbHtml + '</td>';
+      // 결과
+      html += '<td style="' + CS + '">'  + resultBadge(row.result) + '</td>';
+      // 결과등록일
+      html += '<td style="' + CS + ';font-size:11px;color:var(--text-muted)' + '">' + (row.resultDate || '-') + '</td>';
       if (ri === 0) {
-        html += '<td rowspan="' + intro.rows.length + '" style="text-align:center;vertical-align:middle;border-bottom:2px solid var(--border-color)"><button class="btn btn--outline btn--xs btn-intro-manage" data-intro-id="' + intro.id + '" style="padding:2px 8px;font-size:11px">관리</button></td>';
+        html += '<td rowspan="' + intro.rows.length + '" style="text-align:center;vertical-align:middle"><button class="btn btn--outline btn--xs btn-intro-manage" data-intro-id="' + intro.id + '" style="padding:2px 8px;font-size:11px">관리</button></td>';
       }
       html += '</tr>';
     });
@@ -486,6 +493,8 @@ function bindEvents(m) {
     var catVal = (document.getElementById('sn-filter-select') || {}).value || '전체';
     var fromVal = (document.getElementById('sn-date-from') || {}).value || '';
     var toVal = (document.getElementById('sn-date-to') || {}).value || '';
+    var keyword = (document.getElementById('sn-keyword') || {}).value || '';
+    keyword = keyword.trim().toLowerCase();
     var rows = document.querySelectorAll('.sn-row');
     var num = 0;
     rows.forEach(function(row) {
@@ -502,6 +511,10 @@ function bindEvents(m) {
         var d2 = dateStr.replace(/\./g, '-');
         if (d2.length === 8) d2 = '20' + d2;
         if (d2 > toVal) show = false;
+      }
+      if (show && keyword) {
+        var rowText = row.textContent.toLowerCase();
+        if (rowText.indexOf(keyword) === -1) show = false;
       }
       row.style.display = show ? '' : 'none';
       if (show) num++;
@@ -563,25 +576,29 @@ function bindEvents(m) {
     var seqVal = (document.getElementById('meeting-seq-filter') || {}).value || '전체';
     var fromVal = (document.getElementById('meeting-date-from') || {}).value || '';
     var toVal = (document.getElementById('meeting-date-to') || {}).value || '';
+    var keyword = (document.getElementById('meeting-keyword') || {}).value || '';
+    keyword = keyword.trim().toLowerCase();
     var tbody = document.querySelector('#tbl-meeting tbody');
     if (!tbody) return;
     var rows = Array.from(tbody.querySelectorAll('tr'));
-    // rowspan 그룹화
     var i = 0;
     while (i < rows.length) {
       var firstTd = rows[i].querySelector('td');
       var span = firstTd ? parseInt(firstTd.getAttribute('rowspan')) || 1 : 1;
-      // 차수: 2번째 td
       var seqTd = rows[i].querySelectorAll('td')[1];
       var seqText = seqTd ? seqTd.textContent.trim() : '';
       var seqNum = parseInt(seqText) || 0;
-      // 등록일: 3번째 td의 data-sort-val
       var regTd = rows[i].querySelectorAll('td')[2];
       var regDate = regTd ? (regTd.getAttribute('data-sort-val') || '') : '';
       var show = true;
       if (seqVal !== '전체' && seqNum !== parseInt(seqVal)) show = false;
       if (show && fromVal && regDate && regDate < fromVal) show = false;
       if (show && toVal && regDate && regDate > toVal) show = false;
+      if (show && keyword) {
+        var groupText = '';
+        for (var k = 0; k < span && (i + k) < rows.length; k++) groupText += rows[i + k].textContent;
+        if (groupText.toLowerCase().indexOf(keyword) === -1) show = false;
+      }
       for (var j = 0; j < span && (i + j) < rows.length; j++) {
         rows[i + j].style.display = show ? '' : 'none';
       }
@@ -597,6 +614,8 @@ function bindEvents(m) {
   function applyIntroFilter() {
     var fromVal = (document.getElementById('intro-date-from') || {}).value || '';
     var toVal = (document.getElementById('intro-date-to') || {}).value || '';
+    var keyword = (document.getElementById('intro-keyword') || {}).value || '';
+    keyword = keyword.trim().toLowerCase();
     var tbody = document.querySelector('#tbl-intro tbody');
     if (!tbody) return;
     var rows = Array.from(tbody.querySelectorAll('tr'));
@@ -604,14 +623,17 @@ function bindEvents(m) {
     while (i < rows.length) {
       var firstTd = rows[i].querySelector('td');
       var span = firstTd ? parseInt(firstTd.getAttribute('rowspan')) || 1 : 1;
-      // 등록일: 3번째 td (체크, 번호, 등록일)
       var regTd = rows[i].querySelectorAll('td')[2];
       var regText = regTd ? regTd.textContent.trim() : '';
-      // 날짜 변환: 2026.01.16 → 2026-01-16
       var regDate = regText.replace(/\./g, '-');
       var show = true;
       if (fromVal && regDate && regDate < fromVal) show = false;
       if (toVal && regDate && regDate > toVal) show = false;
+      if (show && keyword) {
+        var groupText = '';
+        for (var k = 0; k < span && (i + k) < rows.length; k++) groupText += rows[i + k].textContent;
+        if (groupText.toLowerCase().indexOf(keyword) === -1) show = false;
+      }
       for (var j = 0; j < span && (i + j) < rows.length; j++) {
         rows[i + j].style.display = show ? '' : 'none';
       }
@@ -630,28 +652,6 @@ function bindEvents(m) {
     showSpecialNoteModal(m);
   });
 
-  // ── 소개장 체크박스 & 삭제 ──
-  var introDelBtn = document.getElementById('btn-intro-delete');
-  var introChkAll = document.getElementById('intro-chk-all');
-  function updateIntroDeleteBtn() {
-    var cnt = document.querySelectorAll('.intro-chk:checked').length;
-    if (introDelBtn) introDelBtn.disabled = cnt === 0;
-  }
-  if (introChkAll) introChkAll.addEventListener('change', function() {
-    document.querySelectorAll('.intro-chk').forEach(function(c) { c.checked = introChkAll.checked; });
-    updateIntroDeleteBtn();
-  });
-  document.querySelectorAll('.intro-chk').forEach(function(chk) {
-    chk.addEventListener('change', updateIntroDeleteBtn);
-  });
-  if (introDelBtn) introDelBtn.addEventListener('click', function() {
-    var ids = [];
-    document.querySelectorAll('.intro-chk:checked').forEach(function(c) { ids.push(c.dataset.introId); });
-    if (ids.length === 0) return;
-    if (!confirm(ids.length + '건의 소개장을 삭제하시겠습니까?')) return;
-    Toast.show(ids.length + '건의 소개장이 삭제되었습니다.', 'success');
-  });
-
   // ── 소개장 관리 버튼 ──
   document.querySelectorAll('.btn-intro-manage').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -662,25 +662,71 @@ function bindEvents(m) {
     });
   });
 
+  // ── 프로필 발송 아이콘 ──
+  document.querySelectorAll('.btn-profile-send').forEach(function(icon) {
+    icon.addEventListener('click', function() {
+      var introId = parseInt(icon.dataset.introId);
+      var rowIdx = parseInt(icon.dataset.row);
+      var intros = genIntros(m);
+      var intro = intros.find(function(x) { return x.id === introId; });
+      if (!intro) return;
+      // 프로필 발송 가능 상태: 활동, 임시보류, 장기보류
+      var allowedStatus = ['활동', '임시보류', '장기보류'];
+      var targetRow = intro.rows[rowIdx];
+      if (targetRow && targetRow.status && allowedStatus.indexOf(targetRow.status) === -1) {
+        Toast.show(targetRow.name + ' 회원은 현재 \'' + targetRow.status + '\' 상태로 프로필 발송이 불가합니다.\n발송 가능 상태: 활동, 임시보류, 장기보류', 'error');
+        return;
+      }
+      showProfilePreviewModal(intro, rowIdx, m);
+    });
+  });
+
+  // ── 프로필 재발송 아이콘 ──
+  document.querySelectorAll('.btn-profile-resend').forEach(function(icon) {
+    icon.addEventListener('click', function() {
+      if (!confirm('프로필을 재발송하시겠습니까? (재발송은 1회만 가능합니다)')) return;
+      Toast.show('프로필이 재발송되었습니다.', 'success');
+      var td = icon.closest('td');
+      if (td) {
+        var today = new Date();
+        var ds = today.getFullYear() + '.' + ('0'+(today.getMonth()+1)).slice(-2) + '.' + ('0'+today.getDate()).slice(-2);
+        td.innerHTML = '<span style="cursor:default" title="재발송완료"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" style="vertical-align:middle"><rect x="2" y="5" width="20" height="14" rx="2" fill="#d1d5db" stroke="#9ca3af" stroke-width="0.8"/><path d="M2 7l10 6 10-6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M2 7l10 6 10-6" fill="#e5e7eb" opacity="0.5"/></svg></span><span style="display:inline-block;margin-left:4px;font-size:11px;color:#8b5cf6;vertical-align:middle">' + ds + '</span>';
+      }
+    });
+  });
+
   // ── 소개등록 ──
   var introBtn = document.getElementById('btn-add-intro');
   if (introBtn) introBtn.addEventListener('click', function() {
-    // 검색 가능한 더미 회원 목록
+    // 등급 순서: 실버(1) < 골드(2) < 브론즈(3) < 시크릿(4) < 블랙(5)
+    var GRADE_ORDER = { '실버':1, '골드':2, '브론즈':3, '시크릿':4, '블랙':5 };
+    var myGrade = m.grade || '골드';
+    var myGradeLevel = GRADE_ORDER[myGrade] || 2;
+    var isVVIP = myGrade === '시크릿' || myGrade === '블랙';
+
     var searchPool = [
-      { id: 101, name: '박서연', manager: '서다현', status: '활동', gender: 'F', age: 28 },
-      { id: 102, name: '최민수', manager: '정유리', status: '활동', gender: 'M', age: 33 },
-      { id: 103, name: '이지은', manager: '강보라', status: '활동대기', gender: 'F', age: 30 },
-      { id: 104, name: '정우진', manager: '서다현', status: '활동', gender: 'M', age: 35 },
-      { id: 105, name: '한소희', manager: '최은별', status: '임시보류', gender: 'F', age: 27 },
-      { id: 106, name: '김도윤', manager: '정유리', status: '활동', gender: 'M', age: 31 },
-      { id: 107, name: '윤지아', manager: '강보라', status: '활동', gender: 'F', age: 29 },
-      { id: 108, name: '오태현', manager: '서다현', status: '활동', gender: 'M', age: 34 },
+      { id: 101, memberId: 'PS2024-0101', name: '박서연', manager: '서다현', status: '활동', gender: 'F', age: 28, grade: '골드', job: '디자이너', dating: '', program: '골드', birth: '1998.03.15', region: '서울 강남' },
+      { id: 102, memberId: 'PS2024-0102', name: '최민수', manager: '정유리', status: '활동', gender: 'M', age: 33, grade: '골드', job: '전문직', dating: '', program: '골드', birth: '1993.07.22', region: '서울 서초' },
+      { id: 103, memberId: 'PS2024-0103', name: '이지은', manager: '강보라', status: '활동대기', gender: 'F', age: 30, grade: '실버', job: '회사원', dating: '', program: '실버', birth: '1996.01.10', region: '서울 마포' },
+      { id: 104, memberId: 'PS2024-0104', name: '정우진', manager: '서다현', status: '활동', gender: 'M', age: 35, grade: '브론즈', job: '전문직', dating: '', program: '브론즈', birth: '1991.11.05', region: '서울 송파' },
+      { id: 105, memberId: 'PS2024-0105', name: '한소희', manager: '최은별', status: '활동', gender: 'F', age: 27, grade: '시크릿', job: '기타 자산가', dating: '', program: '시크릿', birth: '1999.05.20', region: '서울 용산' },
+      { id: 106, memberId: 'PS2024-0106', name: '김도윤', manager: '정유리', status: '활동', gender: 'M', age: 31, grade: '실버', job: '공무원', dating: '', program: '실버', birth: '1995.09.18', region: '경기 성남' },
+      { id: 107, memberId: 'PS2024-0107', name: '윤지아', manager: '강보라', status: '활동', gender: 'F', age: 29, grade: '블랙', job: '사업가', dating: '', program: '블랙', birth: '1997.12.03', region: '서울 강남' },
+      { id: 108, memberId: 'PS2024-0108', name: '오태현', manager: '서다현', status: '활동', gender: 'M', age: 34, grade: '골드', job: '회사원', dating: '교제', program: '골드', birth: '1992.06.14', region: '서울 영등포' },
     ];
 
+    var gradeLabel = { '실버':'#94a3b8','골드':'#f59e0b','브론즈':'#cd7c2f','시크릿':'#8b5cf6','블랙':'#1e293b' };
     var modalContent = '<div style="display:flex;flex-direction:column;gap:12px">'
+      + '<div style="padding:8px 10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;font-size:11px;display:flex;align-items:center;gap:6px">'
+      + '<span style="font-weight:600">내 등급:</span>'
+      + '<span style="font-weight:700;color:' + (gradeLabel[myGrade] || '#666') + '">' + myGrade + '</span>'
+      + '<span style="color:#64748b">|</span>'
+      + '<span style="color:#64748b">검색 가능 범위: ' + (isVVIP ? '전체 등급' : myGrade + ' ~ +1단계') + '</span>'
+      + '</div>'
       + '<div style="display:flex;gap:6px;align-items:center">'
-      + '<input type="text" class="form-input" id="intro-search-input" placeholder="회원명 검색" style="flex:1;padding:5px 8px">'
+      + '<input type="text" class="form-input" id="intro-search-input" placeholder="회원명 또는 아이디 검색" style="flex:1;padding:5px 8px">'
       + '<button class="btn btn--primary btn--sm" id="intro-search-btn" style="padding:4px 12px;white-space:nowrap">검색</button>'
+      + '<label style="display:flex;align-items:center;gap:3px;font-size:11px;white-space:nowrap;cursor:pointer"><input type="checkbox" id="intro-hide-blocked" style="margin:0"> 불가회원제외</label>'
       + '</div>'
       + '<div id="intro-search-result" style="max-height:280px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:4px">'
       + '<div style="padding:20px;text-align:center;color:#94a3b8">회원명을 입력하고 검색하세요.</div>'
@@ -691,7 +737,7 @@ function bindEvents(m) {
       + '</div>'
       + '</div>';
 
-    Modal.show({ title: '소개 회원 검색', size: 'md', content: modalContent });
+    Modal.show({ title: '소개 회원 검색', size: 'lg', content: modalContent });
 
     var selectedMember = null;
 
@@ -704,25 +750,69 @@ function bindEvents(m) {
         var resultDiv = document.getElementById('intro-search-result');
         if (!resultDiv) return;
 
-        var results = keyword ? searchPool.filter(function(p) { return p.name.indexOf(keyword) >= 0; }) : searchPool;
-        if (results.length === 0) {
+        // ── 매칭대상 운영정책 필터 ──
+        var nameFiltered = keyword ? searchPool.filter(function(p) { return p.name.indexOf(keyword) >= 0 || p.memberId.toLowerCase().indexOf(keyword.toLowerCase()) >= 0; }) : searchPool;
+        var results = [];
+        var blocked = [];
+        nameFiltered.forEach(function(p) {
+          var pLevel = GRADE_ORDER[p.grade] || 1;
+          var reason = '';
+          // 규칙1: 교제 중 회원 이중 매칭 차단
+          if (p.dating === '교제' || p.dating === '약정교제' || p.dating === '외부교제') {
+            reason = '교제 상태 회원 (매칭 불가)';
+          }
+          // 규칙2: VVIP 무제한 오픈 → 필터 통과
+          else if (isVVIP) {
+            // 제한 없음
+          }
+          // 규칙3: 전문직 남성 매칭 제한 (브론즈/실버 여성 → 전문직 남성 검색 차단)
+          else if (p.gender === 'M' && p.job === '전문직' && myGradeLevel < 2) {
+            reason = '전문직 남성 매칭 제한 (골드 이상 필요)';
+          }
+          // 규칙4: 본인 등급 +1단계 검색 제한
+          else if (pLevel > myGradeLevel + 1) {
+            reason = p.grade + ' 등급 (본인 등급 +1 초과)';
+          }
+          if (reason) { blocked.push({ p: p, reason: reason }); }
+          else { results.push(p); }
+        });
+        // 전체 목록 (등록가능 + 등록불가 통합)
+        var allItems = [];
+        results.forEach(function(p) { allItems.push({ p: p, ok: true, reason: '' }); });
+        blocked.forEach(function(b) { allItems.push({ p: b.p, ok: false, reason: b.reason }); });
+        if (allItems.length === 0) {
           resultDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">검색 결과가 없습니다.</div>';
           return;
         }
 
-        var html = '<table style="width:100%;border-collapse:collapse">';
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:12px">';
         html += '<thead><tr style="background:#f8fafc">';
-        html += '<th style="padding:6px 10px;text-align:center;border-bottom:1px solid #e2e8f0;width:30px"></th>';
-        html += '<th style="padding:6px 10px;text-align:left;border-bottom:1px solid #e2e8f0">회원명</th>';
-        html += '<th style="padding:6px 10px;text-align:center;border-bottom:1px solid #e2e8f0">담당매니저</th>';
-        html += '<th style="padding:6px 10px;text-align:center;border-bottom:1px solid #e2e8f0">상태</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0;width:40px">선택</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">회원명(아이디)</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">프로그램</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">회원상태</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">담당매니져</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">생년월일</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">직업</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">지역</th>';
+        html += '<th style="padding:6px 8px;text-align:center;border:1px solid #e2e8f0">매칭</th>';
         html += '</tr></thead><tbody>';
-        results.forEach(function(p) {
-          html += '<tr class="intro-search-row" data-id="' + p.id + '" style="cursor:pointer">';
-          html += '<td style="padding:5px 10px;text-align:center;border-bottom:1px solid #f1f5f9"><input type="radio" name="intro-select" value="' + p.id + '" class="intro-radio"></td>';
-          html += '<td style="padding:5px 10px;border-bottom:1px solid #f1f5f9"><a href="#" class="intro-member-link" data-id="' + p.id + '" style="color:#3b82f6;font-weight:600;text-decoration:none">' + p.name + '</a></td>';
-          html += '<td style="padding:5px 10px;text-align:center;border-bottom:1px solid #f1f5f9">' + p.manager + '</td>';
-          html += '<td style="padding:5px 10px;text-align:center;border-bottom:1px solid #f1f5f9">' + Formatters.statusBadge(p.status, 'regular') + '</td>';
+        allItems.forEach(function(item) {
+          var p = item.p;
+          var rowStyle = item.ok ? 'cursor:pointer' : 'cursor:default;opacity:0.5;background:#fafafa';
+          html += '<tr class="intro-search-row" data-id="' + p.id + '" style="' + rowStyle + '">';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9"><input type="radio" name="intro-select" value="' + p.id + '" class="intro-radio"' + (item.ok ? '' : ' disabled') + '></td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9"><a href="#" class="intro-member-link" data-id="' + p.id + '" style="font-weight:600;text-decoration:none;color:inherit">' + p.name + '</a><span style="font-size:10px;color:#94a3b8;margin-left:4px">(' + p.memberId + ')</span></td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + (p.program || '-') + '</td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + p.status + '</td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + p.manager + '</td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + (p.birth || '-') + '</td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + (p.job || '-') + '</td>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + (p.region || '-') + '</td>';
+          var badge = item.ok
+            ? '등록가능'
+            : '<span title="' + item.reason + '">등록불가</span>';
+          html += '<td style="padding:5px 8px;text-align:center;border:1px solid #f1f5f9">' + badge + '</td>';
           html += '</tr>';
         });
         html += '</tbody></table>';
@@ -759,6 +849,19 @@ function bindEvents(m) {
       if (searchBtnEl) searchBtnEl.addEventListener('click', doSearch);
       var searchInput = document.getElementById('intro-search-input');
       if (searchInput) searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
+
+      // 불가회원제외 체크박스
+      var hideBlockedCb = document.getElementById('intro-hide-blocked');
+      if (hideBlockedCb) hideBlockedCb.addEventListener('change', function() {
+        var resultDiv = document.getElementById('intro-search-result');
+        if (!resultDiv) return;
+        resultDiv.querySelectorAll('tr.intro-search-row').forEach(function(row) {
+          var radio = row.querySelector('.intro-radio');
+          if (radio && radio.disabled) {
+            row.style.display = hideBlockedCb.checked ? 'none' : '';
+          }
+        });
+      });
 
       // 소개등록 처리
       var submitBtn = document.getElementById('intro-submit-btn');
@@ -1064,6 +1167,72 @@ function showMeetingRegisterModal(introId, name1, name2, tgtMgr, m) {
 }
 
 /* ═══════════════════════════════════════════
+   프로필 미리보기 모달
+   ═══════════════════════════════════════════ */
+function showProfilePreviewModal(intro, rowIndex, m) {
+  var row = intro.rows[rowIndex];
+  var partnerRow = intro.rows[rowIndex === 0 ? 1 : 0];
+  var targetName = row.name;
+  var profileName = partnerRow.name;
+  var dummyProfiles = {
+    '이영수': { age: 34, job: '대기업 과장', edu: '서울대 경영학과', height: '178cm', bodyType: '보통', religion: '무교', drink: '가끔', smoke: '비흡연', region: '서울 강남구', family: '2남 중 장남', intro: '성격이 차분하고 책임감이 강합니다. 주말에는 등산이나 독서를 즐기며, 요리하는 것을 좋아합니다.' },
+    '임지호': { age: 32, job: '스타트업 대표', edu: '연세대 컴퓨터공학과', height: '182cm', bodyType: '근육질', religion: '기독교', drink: '가끔', smoke: '비흡연', region: '서울 서초구', family: '1남 1녀 중 장남', intro: '활발하고 긍정적인 성격입니다. IT업계에서 일하고 있으며, 새로운 경험을 좋아합니다.' },
+    '정우진': { age: 36, job: '변호사', edu: '고려대 법학과', height: '175cm', bodyType: '슬림', religion: '불교', drink: '안함', smoke: '비흡연', region: '서울 송파구', family: '2남 중 차남', intro: '논리적이면서도 따뜻한 성격입니다. 클래식 음악과 와인을 좋아합니다.' },
+    '김도윤': { age: 33, job: '외과의사', edu: '서울대 의학과', height: '180cm', bodyType: '보통', religion: '무교', drink: '가끔', smoke: '비흡연', region: '서울 용산구', family: '1남 중 외아들', intro: '성실하고 꼼꼼한 성격입니다. 환자를 대하듯 상대방을 존중합니다.' },
+    '오태현': { age: 35, job: '금융 애널리스트', edu: '서강대 경제학과', height: '176cm', bodyType: '슬림', religion: '천주교', drink: '가끔', smoke: '비흡연', region: '서울 마포구', family: '3남 중 막내', intro: '유머감각이 좋고 사교적인 성격입니다. 여행과 맛집 탐방을 좋아합니다.' },
+    '박민수': { age: 31, job: '공무원', edu: '성균관대 행정학과', height: '174cm', bodyType: '보통', religion: '무교', drink: '안함', smoke: '비흡연', region: '서울 노원구', family: '1남 1녀 중 장남', intro: '안정적이고 계획적인 성격입니다. 가족을 소중히 여깁니다.' },
+    '최성준': { age: 37, job: '건축사', edu: '한양대 건축학과', height: '181cm', bodyType: '보통', religion: '기독교', drink: '가끔', smoke: '비흡연', region: '서울 성동구', family: '2남 중 차남', intro: '창의적이고 섬세한 성격입니다. 공간 디자인과 인테리어에 관심이 많습니다.' },
+    '한재원': { age: 34, job: '대학교수', edu: '카이스트 물리학과', height: '177cm', bodyType: '슬림', religion: '무교', drink: '가끔', smoke: '비흡연', region: '대전 유성구', family: '1남 중 외아들', intro: '지적 호기심이 강하고 대화를 즐깁니다.' },
+    '강현우': { age: 33, job: '마케팅 팀장', edu: '이화여대 경영학과', height: '179cm', bodyType: '근육질', religion: '천주교', drink: '가끔', smoke: '비흡연', region: '서울 강서구', family: '2남 1녀 중 장남', intro: '리더십이 강하고 사람들과 어울리기를 좋아합니다.' },
+    '윤시우': { age: 30, job: '디자이너', edu: '홍익대 시각디자인과', height: '173cm', bodyType: '슬림', religion: '무교', drink: '가끔', smoke: '비흡연', region: '서울 합정', family: '1남 1녀 중 막내', intro: '감성적이고 예술적인 성격입니다. 미술관과 카페를 좋아합니다.' }
+  };
+  var defaultProfile = { age: 30, job: '회사원', edu: '대졸', height: '175cm', bodyType: '보통', religion: '무교', drink: '가끔', smoke: '비흡연', region: '서울', family: '-', intro: '밝고 긍정적인 성격입니다.' };
+  var profile = dummyProfiles[profileName] || defaultProfile;
+  var LB = 'background:var(--bg-secondary);font-weight:600;text-align:center;white-space:nowrap;width:80px';
+  var VL = 'padding:6px 10px';
+  var body = '';
+  body += '<div style="padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);margin-bottom:12px;font-size:12px;color:#1e40af">';
+  body += '<strong>' + targetName + '</strong>님에게 발송될 <strong>' + profileName + '</strong>님의 프로필입니다.</div>';
+  body += '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;table-layout:fixed">';
+  body += '<colgroup><col style="width:80px"><col><col style="width:80px"><col></colgroup><tbody>';
+  body += '<tr><td style="' + LB + '">이름</td><td style="' + VL + ';font-weight:700;color:var(--primary)">' + profileName + '</td>';
+  body += '<td style="' + LB + '">나이</td><td style="' + VL + '">' + profile.age + '세</td></tr>';
+  body += '<tr><td style="' + LB + '">직업</td><td style="' + VL + '">' + profile.job + '</td>';
+  body += '<td style="' + LB + '">학력</td><td style="' + VL + '">' + profile.edu + '</td></tr>';
+  body += '<tr><td style="' + LB + '">키</td><td style="' + VL + '">' + profile.height + '</td>';
+  body += '<td style="' + LB + '">체형</td><td style="' + VL + '">' + profile.bodyType + '</td></tr>';
+  body += '<tr><td style="' + LB + '">종교</td><td style="' + VL + '">' + profile.religion + '</td>';
+  body += '<td style="' + LB + '">거주지</td><td style="' + VL + '">' + profile.region + '</td></tr>';
+  body += '<tr><td style="' + LB + '">음주</td><td style="' + VL + '">' + profile.drink + '</td>';
+  body += '<td style="' + LB + '">흡연</td><td style="' + VL + '">' + profile.smoke + '</td></tr>';
+  body += '<tr><td style="' + LB + '">가족관계</td><td colspan="3" style="' + VL + '">' + profile.family + '</td></tr>';
+  body += '<tr><td style="' + LB + '">자기소개</td><td colspan="3" style="' + VL + ';line-height:1.6">' + profile.intro + '</td></tr>';
+  body += '</tbody></table>';
+  body += '<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px">';
+  body += '<button class="btn btn--ghost btn--sm" id="profile-preview-cancel" style="font-size:12px">취소</button>';
+  body += '<button class="btn btn--primary btn--sm" id="profile-preview-send" style="font-size:12px;padding:6px 20px">프로필 발송</button></div>';
+  Modal.show({ title: '프로필 미리보기', size: 'lg', content: body });
+  setTimeout(function() {
+    var cancelBtn = document.getElementById('profile-preview-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
+    var sendBtn = document.getElementById('profile-preview-send');
+    if (sendBtn) sendBtn.addEventListener('click', function() {
+      Modal.hide();
+      Toast.show(targetName + '님에게 ' + profileName + '님의 프로필이 발송되었습니다.', 'success');
+      var btn = document.querySelector('.btn-profile-send[data-intro-id="' + intro.id + '"][data-row="' + rowIndex + '"]');
+      if (btn) {
+        var td = btn.closest('td');
+        if (td) {
+          var today = new Date();
+          var ds = today.getFullYear() + '.' + ('0'+(today.getMonth()+1)).slice(-2) + '.' + ('0'+today.getDate()).slice(-2);
+          td.innerHTML = '<span style="cursor:default" title="발송완료"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" style="vertical-align:middle"><rect x="2" y="5" width="20" height="14" rx="2" fill="#d1d5db" stroke="#9ca3af" stroke-width="0.8"/><path d="M2 7l10 6 10-6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M2 7l10 6 10-6" fill="#e5e7eb" opacity="0.5"/></svg></span><span style="display:inline-block;margin-left:4px;font-size:11px;color:var(--text-muted);vertical-align:middle">' + ds + '</span>';
+        }
+      }
+    });
+  }, 100);
+}
+
+/* ═══════════════════════════════════════════
    소개관리 모달 (소개장 → 관리)
    ═══════════════════════════════════════════ */
 function showIntroManageModal(intro, m) {
@@ -1073,7 +1242,7 @@ function showIntroManageModal(intro, m) {
 
   var body = '';
   body += '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;table-layout:fixed">';
-  body += '<colgroup><col style="width:70px"><col style="width:80px"><col style="width:100px"><col style="width:100px"><col style="width:110px"><col></colgroup>';
+  body += '<colgroup><col style="width:85px"><col style="width:80px"><col style="width:100px"><col style="width:100px"><col style="width:110px"><col></colgroup>';
   body += '<thead><tr>';
   body += '<th style="' + LB + '">회원구분</th>';
   body += '<th style="' + LB + '">회원명</th>';
@@ -1085,11 +1254,9 @@ function showIntroManageModal(intro, m) {
 
   intro.rows.forEach(function(row, ri) {
     var memberType = ri === 0 ? '회원당사자' : '상대회원';
-    // 소개일 = 프로필 발송일로 자동 저장
     var introDate = row.profileDate || intro.regDate || '-';
     var resultDate = row.resultDate || '';
     var curResult = row.result || '';
-    // 답변선택 매핑: 수락→일정조율, 거절→미소개, 보류→보류, 대기중→빈값
     var answerMap = { '수락': '일정조율', '거절': '미소개', '보류': '보류', '대기중': '' };
     var selAnswer = answerMap[curResult] || '';
 
@@ -1097,7 +1264,7 @@ function showIntroManageModal(intro, m) {
     body += '<td style="' + VL + ';text-align:center;font-weight:600;color:' + (ri === 0 ? 'var(--primary)' : '#ef4444') + '">' + memberType + '</td>';
     body += '<td style="' + VL + ';text-align:center;font-weight:600">' + row.name + '</td>';
     body += '<td style="' + VL + ';text-align:center;font-size:11px;color:var(--text-secondary)">' + introDate + '</td>';
-    body += '<td style="' + VL + ';text-align:center"><input type="date" class="form-input intro-mg-answer-date" data-row="' + ri + '" value="' + (resultDate ? resultDate.replace(/\./g, '-') : '') + '" style="font-size:11px;padding:3px 6px;width:100%"></td>';
+    body += '<td style="' + VL + ';text-align:center"><input type="date" class="form-input intro-mg-answer-date" data-row="' + ri + '" value="' + (resultDate ? resultDate.replace(/\\./g, '-') : '') + '" style="font-size:11px;padding:3px 6px;width:100%"></td>';
     body += '<td style="' + VL + ';text-align:center"><select class="form-input intro-mg-answer-sel" data-row="' + ri + '" style="font-size:11px;padding:3px 6px;width:100%">' + ANSWER_OPTS.replace('value="' + selAnswer + '"', 'value="' + selAnswer + '" selected') + '</select></td>';
     body += '<td style="' + VL + '"><input type="text" class="form-input intro-mg-note" data-row="' + ri + '" placeholder="비고 입력" style="font-size:11px;padding:3px 6px;width:100%"></td>';
     body += '</tr>';
@@ -1105,22 +1272,53 @@ function showIntroManageModal(intro, m) {
 
   body += '</tbody></table>';
 
-  // 하단 버튼
-  body += '<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px">';
-  body += '<button class="btn btn--ghost btn--sm" id="intro-mg-cancel" style="font-size:12px">취소</button>';
+  body += '<div style="display:flex;justify-content:center;gap:8px;padding-top:12px">';
+  body += '<button class="btn btn--ghost btn--sm" id="intro-mg-cancel" style="font-size:12px;border-radius:20px;padding:6px 20px">취소</button>';
   body += '<button class="btn btn--primary btn--sm" id="intro-mg-save" style="font-size:12px;padding:6px 20px">저장</button>';
   body += '</div>';
 
-  Modal.show({
-    title: '소개관리 (' + intro.id + '번)',
-    size: 'lg',
-    content: body
+
+  // ── 결과등록 이력 ──
+  var historyData = [];
+  intro.rows.forEach(function(row) {
+    if (row.result && row.result !== '대기중' && row.resultDate) {
+      historyData.push({ name: row.name, result: row.result, date: row.resultDate, note: row.note || '' });
+    }
   });
+
+  body += '<div style="margin-top:16px;border-top:1px solid var(--border-color);padding-top:12px">';
+  body += '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">결과등록 이력</div>';
+  body += '<table class="data-table data-table--bordered" style="font-size:11px;width:100%;table-layout:fixed">';
+  body += '<colgroup><col style="width:40px"><col style="width:90px"><col style="width:70px"><col style="width:70px"><col></colgroup>';
+  body += '<thead><tr>';
+  body += '<th style="' + LB + ';font-size:11px">No</th>';
+  body += '<th style="' + LB + ';font-size:11px">등록일시</th>';
+  body += '<th style="' + LB + ';font-size:11px">회원명</th>';
+  body += '<th style="' + LB + ';font-size:11px">결과</th>';
+  body += '<th style="' + LB + ';font-size:11px">비고</th>';
+  body += '</tr></thead><tbody>';
+
+  if (historyData.length === 0) {
+    body += '<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text-muted)">등록된 이력이 없습니다.</td></tr>';
+  } else {
+    historyData.forEach(function(h, idx) {
+      body += '<tr>';
+      body += '<td style="text-align:center;padding:4px 6px">' + (idx + 1) + '</td>';
+      body += '<td style="text-align:center;padding:4px 6px">' + h.date + '</td>';
+      body += '<td style="text-align:center;padding:4px 6px;font-weight:600">' + h.name + '</td>';
+      body += '<td style="text-align:center;padding:4px 6px;font-weight:600;color:' + (h.result === '수락' ? '#ef4444' : 'inherit') + '">' + h.result + '</td>';
+      body += '<td style="padding:4px 6px">' + (h.note || '-') + '</td>';
+      body += '</tr>';
+    });
+  }
+  body += '</tbody></table>';
+  body += '</div>';
+
+  Modal.show({ title: '소개관리 (' + intro.id + '번)', size: 'lg', content: body });
 
   setTimeout(function() {
     var cancelBtn = document.getElementById('intro-mg-cancel');
     if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
-
     var saveBtn = document.getElementById('intro-mg-save');
     if (saveBtn) saveBtn.addEventListener('click', function() {
       Modal.hide();
@@ -1129,389 +1327,6 @@ function showIntroManageModal(intro, m) {
   }, 100);
 }
 
-/* ═══════════════════════════════════════════
-   미팅관리 모달 (미팅리스트 → 관리)
-   약속관리 + 미팅등록 2탭
-   ═══════════════════════════════════════════ */
-var MGR_MAP = {'김영희':'서다현','박서연':'정유리','이지은':'강보라','한소희':'최은별','윤지아':'서다현','최민아':'정유리','정다은':'강보라','오수진':'최은별','임하윤':'서다현','송예린':'정유리','이영수':'박지영','임지호':'서다현','정우진':'정유리','김도윤':'강보라','오태현':'최은별','박민수':'서다현','최성준':'정유리','한재원':'강보라','강현우':'최은별','윤시우':'서다현','김미봉':'서다현','최서연':'정유리','박하은':'강보라','이지아':'최은별','정수민':'서다현','한예진':'정유리','오다은':'강보라','윤서영':'최은별','장민지':'서다현','송지우':'정유리'};
-
-function showMeetingManageModal(mt, m) {
-  var LB = 'background:var(--bg-secondary);font-weight:600;width:90px;text-align:center;white-space:nowrap';
-  var VL = 'padding:6px 12px';
-  var name1 = mt.members[0].name;
-  var name2 = mt.members[1].name;
-  var tgtMgr = MGR_MAP[name2] || '-';
-
-  var body = '';
-
-  // ── 탭 네비게이션 ──
-  body += '<div style="display:flex;border-bottom:2px solid var(--border-color);margin-bottom:16px">';
-  body += '<button class="mm-tab active" data-target="mm-tab-appt" style="flex:1;padding:10px 0;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--primary);margin-bottom:-2px;color:var(--primary)">미팅전 약속확인</button>';
-  body += '<button class="mm-tab" data-target="mm-tab-reg" style="flex:1;padding:10px 0;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted)">미팅등록</button>';
-  body += '</div>';
-
-  // ══════ 탭1: 미팅전 약속확인 ══════
-  body += '<div id="mm-tab-appt" class="mm-tab-panel">';
-
-  // 회원 정보 헤더
-  body += '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;table-layout:fixed;margin-bottom:12px">';
-  body += '<colgroup><col style="width:70px"><col><col style="width:70px"><col></colgroup>';
-  body += '<tbody>';
-  body += '<tr><td style="' + LB + '">본인</td><td style="' + VL + ';font-weight:700;color:var(--primary)">' + name1 + '</td>';
-  body += '<td style="' + LB + '">상대회원</td><td style="' + VL + ';font-weight:700;color:#ef4444">' + name2 + '</td></tr>';
-  body += '</tbody></table>';
-
-  // 통신 유형 라디오
-  body += '<div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;padding:8px 12px;background:var(--bg-secondary);border-radius:var(--radius-sm)">';
-  body += '<label style="font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="radio" name="mm-comm-type" value="tel" checked> 전화 확인</label>';
-  body += '<label style="font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="radio" name="mm-comm-type" value="sms"> SMS 발송</label>';
-  body += '<label style="font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="radio" name="mm-comm-type" value="etc"> 비고</label>';
-  body += '</div>';
-
-  // 입력 폼 (테이블)
-  var myPhone = m.phone || '010-0000-0000';
-  body += '<table class="data-table data-table--bordered" id="mm-appt-form" style="font-size:12px;width:100%;table-layout:fixed">';
-  body += '<colgroup><col style="width:80px"><col></colgroup>';
-  body += '<tbody>';
-
-  // 받는이
-  body += '<tr><td style="' + LB + '">받는이</td>';
-  body += '<td style="' + VL + '">';
-  body += '<div style="display:flex;gap:8px;align-items:center">';
-  body += '<input type="text" class="form-input" id="mm-recv-phone" value="' + myPhone + '" style="font-size:12px;padding:4px 8px;width:160px" readonly>';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-recv-type" value="본인" checked> 본인</label>';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-recv-type" value="기타"> 기타</label>';
-  body += '</div></td></tr>';
-
-  // CallBack 번호
-  body += '<tr class="mm-sms-row"><td style="' + LB + '">CallBack</td>';
-  body += '<td style="' + VL + '">';
-  body += '<div style="display:flex;gap:8px;align-items:center">';
-  body += '<input type="text" class="form-input" id="mm-callback" value="02-518-9160" style="font-size:12px;padding:4px 8px;width:160px" readonly>';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-cb-type" value="사무실" checked> 사무실</label>';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-cb-type" value="법인폰"> 법인폰</label>';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-cb-type" value="전국대표"> 전국대표</label>';
-  body += '</div></td></tr>';
-
-  // 전송방법
-  body += '<tr class="mm-sms-row"><td style="' + LB + '">전송방법</td>';
-  body += '<td style="' + VL + '">';
-  body += '<div style="display:flex;gap:8px;align-items:center">';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-send-method" value="즉시" checked> 즉시</label>';
-  body += '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="mm-send-method" value="예약"> 예약</label>';
-  body += '<input type="datetime-local" class="form-input" id="mm-send-reserve" style="font-size:11px;padding:3px 6px;width:180px;display:none">';
-  body += '</div></td></tr>';
-
-  // 내용
-  body += '<tr><td style="' + LB + '">내 용</td>';
-  body += '<td style="' + VL + '"><textarea class="form-input" id="mm-appt-content" rows="3" style="font-size:12px;padding:6px 8px;width:100%;resize:vertical" placeholder="내용을 입력하세요"></textarea></td></tr>';
-
-  body += '</tbody></table>';
-
-  // 등록 버튼
-  body += '<div style="display:flex;justify-content:center;padding:12px 0">';
-  body += '<button class="btn btn--primary btn--sm" id="mm-appt-register" style="font-size:12px;padding:6px 24px">등 록 하 기</button>';
-  body += '</div>';
-
-  // ── 발송이력 히스토리 ──
-  body += '<div style="border-top:2px solid var(--border-color);padding-top:12px">';
-  body += '<table class="data-table data-table--bordered" id="mm-appt-history" style="font-size:11px;width:100%;table-layout:fixed">';
-  body += '<colgroup><col style="width:30px"><col style="width:40px"><col style="width:55px"><col><col style="width:95px"></colgroup>';
-  body += '<thead><tr>';
-  body += '<th style="' + LB + ';font-size:11px">No</th>';
-  body += '<th style="' + LB + ';font-size:11px">구분</th>';
-  body += '<th style="' + LB + ';font-size:11px">등록자</th>';
-  body += '<th style="' + LB + ';font-size:11px">내용</th>';
-  body += '<th style="' + LB + ';font-size:11px">등록일</th>';
-  body += '</tr></thead><tbody id="mm-appt-history-body">';
-
-  // 더미 이력 데이터
-  var dummyHistory = [
-    { no: 6, type: 'etc', writer: m.matchingManager || '조성의', content: '사진보다 괜찮은분은 처음', date: '05.27 10:42' },
-    { no: 5, type: 'sms', writer: m.matchingManager || '조성의', content: '[퍼플스] ' + name2 + '님 안심번호:070-4501-3015 / ' + mt.dateTime + ' ' + mt.place, date: '05.26 11:03' },
-    { no: 4, type: 'tel', writer: m.matchingManager || '조성의', content: '미팅 컨펌 완료, 일정 확정', date: '05.26 11:03' },
-    { no: 3, type: 'sms', writer: m.matchingManager || '조성의', content: '[퍼플스] ' + name2 + '님 안심번호:070-4501-3015 / ' + mt.dateTime + ' ' + mt.place, date: '05.21 11:25' },
-    { no: 2, type: 'sms', writer: m.matchingManager || '조성의', content: '[퍼플스] ' + name2 + '님 안심번호:070-4501-3015 / ' + mt.dateTime + ' ' + mt.place, date: '05.21 11:25' },
-    { no: 1, type: 'tel', writer: m.matchingManager || '조성의', content: '미팅 일정 확인 통화 완료', date: '05.21 11:25' },
-  ];
-  var typeMap = { tel: '전화', sms: 'SMS', etc: '비고' };
-  var typeColor = { tel: '#3b82f6', sms: '#10b981', etc: '#f59e0b' };
-  dummyHistory.forEach(function(h) {
-    body += '<tr>';
-    body += '<td style="text-align:center">' + h.no + '</td>';
-    body += '<td style="text-align:center;font-weight:600;color:' + (typeColor[h.type] || '#666') + '">' + (typeMap[h.type] || h.type) + '</td>';
-    body += '<td style="text-align:center">' + h.writer + '</td>';
-    body += '<td style="padding:4px 8px;line-height:1.4;word-break:break-all">' + h.content + '</td>';
-    body += '<td style="text-align:center;white-space:nowrap;color:var(--text-muted)">' + h.date + '</td>';
-    body += '</tr>';
-  });
-
-  body += '</tbody></table>';
-  body += '</div>';
-  body += '</div>';
-
-  // ══════ 탭2: 미팅등록 ══════
-  body += '<div id="mm-tab-reg" class="mm-tab-panel" style="display:none">';
-
-  body += '<table class="data-table data-table--bordered" style="font-size:12px;width:100%;table-layout:fixed">';
-  body += '<colgroup><col style="width:90px"><col><col style="width:90px"><col></colgroup>';
-  body += '<tbody>';
-
-  // 회원 정보
-  body += '<tr><td style="' + LB + '">회원당사자</td>';
-  body += '<td style="' + VL + ';font-weight:700;color:var(--primary)">' + name1 + '</td>';
-  body += '<td style="' + LB + '">담당매니저</td>';
-  body += '<td style="' + VL + '">' + (m.matchingManager || '-') + '</td></tr>';
-  body += '<tr><td style="' + LB + '">상대회원</td>';
-  body += '<td style="' + VL + ';font-weight:700;color:#ef4444">' + name2 + '</td>';
-  body += '<td style="' + LB + '">담당매니저</td>';
-  body += '<td style="' + VL + '">' + tgtMgr + '</td></tr>';
-
-  // 미팅일시
-  body += '<tr><td style="' + LB + '">미팅일</td>';
-  body += '<td style="' + VL + '"><input type="date" class="form-input" id="mm-date" style="font-size:12px;padding:4px 8px;width:100%"></td>';
-  body += '<td style="' + LB + '">미팅시간</td>';
-  body += '<td style="' + VL + '"><div style="display:flex;gap:4px;align-items:center">';
-  body += '<input type="number" class="form-input" id="mm-hour" value="14" min="0" max="23" style="font-size:12px;padding:4px 6px;width:50px;text-align:center">';
-  body += '<span style="color:var(--text-muted)">시</span>';
-  body += '<input type="number" class="form-input" id="mm-min" value="00" min="0" max="59" step="10" style="font-size:12px;padding:4px 6px;width:50px;text-align:center">';
-  body += '<span style="color:var(--text-muted)">분</span>';
-  body += '</div></td></tr>';
-
-  // 장소
-  body += '<tr><td style="' + LB + '">미팅장소</td>';
-  body += '<td colspan="3" style="' + VL + '"><div style="display:flex;gap:6px;align-items:center">';
-  body += '<input type="text" class="form-input" id="mm-place-name" placeholder="장소명 (검색 후 자동입력)" style="font-size:12px;padding:4px 8px;flex:1" readonly>';
-  body += '<button type="button" class="btn btn--outline btn--sm" id="mm-place-search" style="font-size:11px;white-space:nowrap">장소검색</button>';
-  body += '</div></td></tr>';
-  body += '<tr><td style="' + LB + '">주소</td>';
-  body += '<td colspan="3" style="' + VL + '">';
-  body += '<input type="text" class="form-input" id="mm-place-addr" placeholder="장소 검색 시 자동 입력" style="font-size:11px;padding:4px 8px;width:100%;color:var(--text-muted)" readonly>';
-  body += '</td></tr>';
-
-  // 안심번호
-  body += '<tr><td style="' + LB + '">안심번호</td>';
-  body += '<td style="' + VL + '"><label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="mm-safe-num" checked> 안심번호 사용</label></td>';
-  body += '<td style="' + LB + '">자동발송</td>';
-  body += '<td style="' + VL + '"><label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="mm-exclude-auto"> 자동발송 제외</label></td></tr>';
-
-  body += '</tbody></table>';
-
-  // 발송 예정일 안내
-  body += '<div id="mm-send-info" style="padding:10px 12px;background:var(--bg-secondary);border-radius:var(--radius-sm);font-size:11px;line-height:1.6;color:var(--text-secondary);margin-top:12px">';
-  body += '<span style="color:var(--text-muted)">미팅일을 선택하면 문자 발송 예정일이 표시됩니다.</span>';
-  body += '</div>';
-
-  // SMS 미리보기
-  body += '<div id="mm-sms-preview" style="margin-top:10px;display:none">';
-  body += '<div style="font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:4px">문자 미리보기</div>';
-  body += '<div id="mm-sms-text" style="padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius-sm);font-size:11px;line-height:1.6;color:#0c4a6e;word-break:break-all"></div>';
-  body += '</div>';
-
-  // 미팅등록 하단 버튼
-  body += '<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px">';
-  body += '<button class="btn btn--ghost btn--sm" id="mm-reg-cancel" style="font-size:12px">취소</button>';
-  body += '<button class="btn btn--primary btn--sm" id="mm-reg-submit" style="font-size:12px;padding:6px 20px">미팅 등록</button>';
-  body += '</div>';
-  body += '</div>';
-
-  Modal.show({
-    title: '미팅관리 — ' + name1 + ' / ' + name2,
-    size: 'lg',
-    content: body
-  });
-
-  // ── 이벤트 바인딩 ──
-  setTimeout(function() {
-    // 탭 전환
-    document.querySelectorAll('.mm-tab').forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('.mm-tab').forEach(function(t) {
-          t.style.borderBottomColor = 'transparent'; t.style.color = 'var(--text-muted)'; t.classList.remove('active');
-        });
-        this.style.borderBottomColor = 'var(--primary)'; this.style.color = 'var(--primary)'; this.classList.add('active');
-        document.querySelectorAll('.mm-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-        document.getElementById(this.dataset.target).style.display = 'block';
-      });
-    });
-
-    // 닫기
-    var cancelBtn = document.getElementById('mm-reg-cancel');
-    if (cancelBtn) cancelBtn.addEventListener('click', function() { Modal.hide(); });
-
-    // ── 미팅전 약속확인 탭 이벤트 ──
-    var CB_MAP = { '사무실': '02-518-9160', '법인폰': '010-8888-9160', '전국대표': '1588-9160' };
-    var apptHistoryNo = 7; // 더미 이력 다음 번호
-
-    // 통신유형 변경 → SMS 전용 행 표시/숨김
-    document.querySelectorAll('input[name="mm-comm-type"]').forEach(function(r) {
-      r.addEventListener('change', function() {
-        var isSms = this.value === 'sms';
-        document.querySelectorAll('.mm-sms-row').forEach(function(row) {
-          row.style.display = isSms ? '' : 'none';
-        });
-      });
-    });
-    // 초기: 전화확인이 기본 → SMS 행 숨기기
-    document.querySelectorAll('.mm-sms-row').forEach(function(row) { row.style.display = 'none'; });
-
-    // 받는이 본인/기타 전환
-    document.querySelectorAll('input[name="mm-recv-type"]').forEach(function(r) {
-      r.addEventListener('change', function() {
-        var phoneInput = document.getElementById('mm-recv-phone');
-        if (this.value === '본인') {
-          phoneInput.value = myPhone;
-          phoneInput.readOnly = true;
-        } else {
-          phoneInput.value = '';
-          phoneInput.readOnly = false;
-          phoneInput.placeholder = '번호 입력';
-          phoneInput.focus();
-        }
-      });
-    });
-
-    // CallBack 번호 전환
-    document.querySelectorAll('input[name="mm-cb-type"]').forEach(function(r) {
-      r.addEventListener('change', function() {
-        document.getElementById('mm-callback').value = CB_MAP[this.value] || '';
-      });
-    });
-
-    // 전송방법 즉시/예약 전환
-    document.querySelectorAll('input[name="mm-send-method"]').forEach(function(r) {
-      r.addEventListener('change', function() {
-        document.getElementById('mm-send-reserve').style.display = this.value === '예약' ? '' : 'none';
-      });
-    });
-
-    // 등록하기
-    var apptRegBtn = document.getElementById('mm-appt-register');
-    if (apptRegBtn) apptRegBtn.addEventListener('click', function() {
-      var commType = document.querySelector('input[name="mm-comm-type"]:checked').value;
-      var content = document.getElementById('mm-appt-content').value.trim();
-      if (!content) { Toast.show('내용을 입력해주세요.', 'warning'); return; }
-
-      var typeMap = { tel: '전화', sms: 'SMS', etc: '비고' };
-      var typeColor = { tel: '#3b82f6', sms: '#10b981', etc: '#f59e0b' };
-      var now = new Date();
-      var dateStr = (now.getMonth() + 1).toString().padStart(2, '0') + '.' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-      var writer = m.matchingManager || '매니저';
-
-      // 이력 테이블에 행 추가
-      var tbody = document.getElementById('mm-appt-history-body');
-      if (tbody) {
-        var newRow = document.createElement('tr');
-        newRow.style.background = '#fffbeb';
-        newRow.innerHTML = '<td style="text-align:center">' + apptHistoryNo + '</td>'
-          + '<td style="text-align:center;font-weight:600;color:' + (typeColor[commType] || '#666') + '">' + (typeMap[commType] || commType) + '</td>'
-          + '<td style="text-align:center">' + writer + '</td>'
-          + '<td style="padding:4px 8px;line-height:1.4;word-break:break-all">' + content + '</td>'
-          + '<td style="text-align:center;white-space:nowrap;color:var(--text-muted)">' + dateStr + '</td>';
-        tbody.insertBefore(newRow, tbody.firstChild);
-        apptHistoryNo++;
-      }
-
-      document.getElementById('mm-appt-content').value = '';
-
-      if (commType === 'sms') {
-        Toast.show('SMS가 발송되었습니다.', 'success');
-      } else if (commType === 'tel') {
-        Toast.show('전화 확인 이력이 등록되었습니다.', 'success');
-      } else {
-        Toast.show('비고가 등록되었습니다.', 'success');
-      }
-    });
-
-    // 장소 검색
-    var selectedPlace = null;
-    var placeBtn = document.getElementById('mm-place-search');
-    if (placeBtn) placeBtn.addEventListener('click', function() {
-      PlaceSearch.open(function(sel) {
-        selectedPlace = sel;
-        document.getElementById('mm-place-name').value = sel.name;
-        document.getElementById('mm-place-addr').value = sel.addr;
-        updateMmSendInfo();
-      }, document.getElementById('mm-place-name').value || '');
-    });
-
-    // 발송 예정일 업데이트
-    function updateMmSendInfo() {
-      var dateVal = document.getElementById('mm-date').value;
-      var infoEl = document.getElementById('mm-send-info');
-      var previewWrap = document.getElementById('mm-sms-preview');
-      var smsTextEl = document.getElementById('mm-sms-text');
-      var excludeAuto = document.getElementById('mm-exclude-auto').checked;
-      var useSafe = document.getElementById('mm-safe-num').checked;
-
-      if (!dateVal) {
-        infoEl.innerHTML = '<span style="color:var(--text-muted)">미팅일을 선택하면 문자 발송 예정일이 표시됩니다.</span>';
-        previewWrap.style.display = 'none';
-        return;
-      }
-      if (excludeAuto) {
-        infoEl.innerHTML = '<span style="color:var(--status-amber);font-weight:600">자동발송 제외</span> — 수동으로 문자를 발송해야 합니다.';
-        previewWrap.style.display = 'none';
-        return;
-      }
-      var sendDate = calcSmsSendDate(dateVal);
-      var d1 = new Date(dateVal); d1.setDate(d1.getDate() - 1);
-      var isHolidayD1 = !isBusinessDay(d1);
-
-      var html = '';
-      if (useSafe) {
-        html += '<div style="margin-bottom:4px"><span style="color:var(--primary);font-weight:700">발송 예정일: ' + sendDate.toISOString().slice(0, 10) + ' (' + formatDateKr(sendDate) + ')</span></div>';
-        html += '<div style="color:var(--text-muted);font-size:10px">미팅일 D-1 기준 자동 발송 (안심번호 포함)</div>';
-        if (isHolidayD1) {
-          html += '<div style="margin-top:4px;padding:4px 8px;background:#fef3c7;border-radius:4px;color:#92400e;font-size:10px;font-weight:600">';
-          html += '미팅일 전날이 휴일이므로 직전 영업일(' + formatDateKr(sendDate) + ')에 발송됩니다.</div>';
-        }
-      } else {
-        html += '<span style="color:var(--text-muted)">안심번호 미사용 — 일반 안내문자만 발송됩니다.</span>';
-      }
-      infoEl.innerHTML = html;
-
-      if (useSafe && !excludeAuto) {
-        var hourVal = document.getElementById('mm-hour').value;
-        var minVal = document.getElementById('mm-min').value;
-        var pName = selectedPlace ? selectedPlace.name : '';
-        var pAddr = selectedPlace ? selectedPlace.addr : '';
-        smsTextEl.textContent = buildSmsPreview(name2, null, dateVal, hourVal, minVal, pName, pAddr);
-        previewWrap.style.display = 'block';
-      } else {
-        previewWrap.style.display = 'none';
-      }
-    }
-
-    // 이벤트 연결
-    ['mm-date', 'mm-hour', 'mm-min', 'mm-safe-num', 'mm-exclude-auto'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.addEventListener('change', updateMmSendInfo);
-    });
-
-    // 미팅 등록 처리
-    var submitBtn = document.getElementById('mm-reg-submit');
-    if (submitBtn) submitBtn.addEventListener('click', function() {
-      var dateVal = document.getElementById('mm-date').value;
-      var placeName = document.getElementById('mm-place-name').value.trim();
-      if (!dateVal) { Toast.show('미팅일을 선택해주세요.', 'warning'); return; }
-      if (!placeName) { Toast.show('미팅 장소를 선택해주세요.', 'warning'); return; }
-
-      var useSafe = document.getElementById('mm-safe-num').checked;
-      var excludeAuto = document.getElementById('mm-exclude-auto').checked;
-      var sendDate = calcSmsSendDate(dateVal);
-
-      Modal.hide();
-      Toast.show('미팅이 등록되었습니다.', 'success');
-
-      if (useSafe && !excludeAuto) {
-        setTimeout(function() {
-          Toast.show('안심번호 문자가 ' + formatDateKr(sendDate) + '에 자동 발송됩니다.', 'info');
-        }, 800);
-      }
-    });
-  }, 120);
-}
 
 /* ═══════════════════════════════════════════
    특이사항 등록 모달

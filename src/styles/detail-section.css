@@ -160,3 +160,8 @@ td[data-history] .badge {
   margin-bottom: 0 !important;
 }
 
+/* 모달 내부 탭 — 헤더와 10px 간격 */
+.modal__body .tabs__nav {
+  margin-bottom: 10px !important;
+}
+

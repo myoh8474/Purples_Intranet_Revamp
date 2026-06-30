@@ -227,6 +227,19 @@ body.detail-popup {
   display: block;
 }
 
+/* 모달 내부 탭 패널 — 박스 제거, 탭만 유지 */
+.detail-popup .modal__body .tab-panel {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+/* 모달 내부 탭 네비 — 간격 조절 */
+.detail-popup .modal__body .tabs__nav {
+  margin-bottom: 10px;
+}
+
+
 /* ── 모달 (새 탭 전용) ── */
 .detail-popup .modal-overlay {
   display: none;
