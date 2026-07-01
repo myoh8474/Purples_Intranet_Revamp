@@ -277,7 +277,7 @@ export function renderMatchingInfo(m) {
   var pinnedMemos = memos.filter(function(x) { return x.pinned; });
   var normalMemos = memos.filter(function(x) { return !x.pinned; });
 
-  html += '<div class="' + CARD_BODY + '" id="memo-timeline">';
+  html += '<div class="' + CARD_BODY + '" id="memo-timeline" style="max-height:350px;overflow-y:auto">';
   html += buildMemoTable(pinnedMemos, normalMemos, 10);
   html += '</div>';
   html += '</div>';
@@ -300,7 +300,7 @@ export function renderMatchingInfo(m) {
   html += '<input type="text" class="form-input" id="sn-keyword" placeholder="키워드" style="padding:3px 6px;width:80px;font-size:11px">';
   html += '<button class="btn btn--primary btn--sm" id="btn-sn-search" style="padding:2px 8px;font-size:11px">검색</button>';
   html += '</div>';
-  html += '<div class="' + CARD_BODY + '">';
+  html += '<div class="' + CARD_BODY + '" style="max-height:350px;overflow-y:auto">';
   html += '<table class="data-table data-table--bordered data-table--no-outer data-table--keep-bottom" id="tbl-special-notes" style="table-layout:fixed;width:100%">';
   html += '<colgroup><col style="width:8%"><col style="width:12%"><col style="width:8%"><col style="width:16%"><col style="width:56%"></colgroup>';
   html += '<thead><tr>' + sortableHeader('번호', 'tbl-special-notes', 0, 'num') + '<th style="' + LBL + '">작성자</th><th style="' + LBL + '">구분</th>' + sortableHeader('일시', 'tbl-special-notes', 3, 'date') + '<th style="' + LBL + '">내용</th></tr></thead><tbody>';

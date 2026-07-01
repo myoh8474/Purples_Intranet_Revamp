@@ -387,6 +387,8 @@ if (useMock()) {
         });
       })(),
       // ── 기타 플래그 ──
+      claimDate: Math.random() > 0.8 ? randomDate(new Date(2026,3,1), new Date(2026,5,30)).toISOString().substring(0,10) : null,
+      leaveDate: status === '탈회진행' || status === '탈회' ? randomDate(new Date(2026,3,1), new Date(2026,5,30)).toISOString().substring(0,10) : (Math.random() > 0.9 ? randomDate(new Date(2026,3,1), new Date(2026,5,30)).toISOString().substring(0,10) : null),
       noEvent: Math.random() > 0.8,
       noRejoin: Math.random() > 0.85,
       specialMember: Math.random() > 0.9,

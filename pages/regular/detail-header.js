@@ -43,6 +43,9 @@ export function renderDetailPage(m, tabs) {
         var colors = {'이벤트불가':'badge--red','재가입불가':'badge--red','난매칭':'badge--orange','미팅중':'badge--red','미소개':'badge--purple','탈회CS관리중':'badge--orange','소송중':'badge--red','소보원진행':'badge--orange','비밀상담':'badge--yellow'};
         return tags.map(function(t) { return '    <span class="badge '+(colors[t]||'badge--gray')+'">' + t + '</span>'; }).join('');
       })()
+    // 클레접수 / 탈회접수 상태 태그
+    + (m.claimDate ? '    <span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5">클레접수(' + m.claimDate.replace(/-/g,'.') + ')</span>' : '')
+    + (m.leaveDate ? '    <span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#fff7ed;color:#ea580c;border:1px solid #fdba74">탈회접수(' + m.leaveDate.replace(/-/g,'.') + ')</span>' : '')
     + '  </div>'
     + '  <div class="detail-header-bar__actions">'
 
@@ -79,7 +82,7 @@ export function renderDetailPage(m, tabs) {
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">서비스개시일</td><td class="val" style="text-align:left">' + (m.serviceStartDate ? Formatters.date(m.serviceStartDate) : '-') + '</td>'
-    + '  <td class="lbl" style="padding:2px 4px !important">회원상태</td><td class="val hist-link" data-history="상태변경" colspan="3" style="text-align:left;cursor:pointer;color:#1565c0">' + (m.status || '-') + recallBtnHtml + '</td>'
+    + '  <td class="lbl" style="padding:2px 4px !important">회원상태</td><td class="val hist-link" data-history="상태변경" colspan="3" style="text-align:left;cursor:pointer;color:#1565c0">' + (m.status || '-') + recallBtnHtml + ' <button class="btn btn--sm" id="btn-leave-detail" style="margin-left:6px;background:#6b7280;border-color:#6b7280;color:#fff;font-size:10px;padding:1px 8px;font-weight:700;vertical-align:middle;border-radius:3px">탈회상세</button></td>'
     + '</tr>'
     + '<tr>'
     + '  <td class="lbl" style="padding:2px 4px !important">생년월일</td><td class="val" style="text-align:left">' + Formatters.date(m.birthDate) + '</td>'

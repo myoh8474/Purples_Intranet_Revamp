@@ -168,6 +168,8 @@ content.innerHTML = `
           <th>아이디</th>
           <th>지역</th>
           <th>생년월일</th>
+          <th>결혼여부</th>
+          <th>가입차수</th>
           <th>직업</th>
           <th>회원종류</th>
           <th>회원상태</th>
@@ -422,6 +424,8 @@ function applyFilters(resetPage) {
     <td class="tc" style="font-size:11px;color:var(--text-muted)">${m.memberId}</td>
     <td class="tc">${m.region || '-'}</td>
     <td class="tc">${m.birthDate ? new Date(m.birthDate).getFullYear() + '.' + String(new Date(m.birthDate).getMonth()+1).padStart(2,'0') + '.' + String(new Date(m.birthDate).getDate()).padStart(2,'0') : '-'}</td>
+    <td class="tc">${m.maritalHistory || '-'}</td>
+    <td class="tc">${m.rejoinCount ? m.rejoinCount + '가입' : '-'}</td>
     <td class="tc">${m.job || '-'}</td>
     <td class="tc">${m.program}</td>
     <td class="tc">${['임시교제','교제','외부교제'].includes(m.status) ? `<a href="${detailUrl(m.id)}" target="_blank" style="color:#6366f1;text-decoration:underline;font-weight:600;cursor:pointer">${m.status}</a>` : m.status}</td>

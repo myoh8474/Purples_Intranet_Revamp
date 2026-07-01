@@ -1116,4 +1116,53 @@ export function bindModals(m) {
       });
     }, 100);
   });
+
+  /* ── 탈회상세 조회 모달 ── */
+  var leaveDetailBtn = document.getElementById('btn-leave-detail');
+  if (leaveDetailBtn) {
+    leaveDetailBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      // 탈회 데이터 (탈회접수 시 저장된 데이터 또는 더미)
+      var ld = m._leaveData || {};
+      var leaveDate = m._leaveDate ? m._leaveDate.substring(0, 10) : (m.leaveDate || '-');
+      var contractMeetings = m.totalMeetingCount || m.contractCount || 12;
+      var meetingCount = m.meetingCount || 0;
+      var remainMeetings = ld.remainMeetings || Math.max(0, contractMeetings - meetingCount);
+      var refundAmount = ld.refundAmount || '0';
+      var note = ld.calcDetail || ld.reason || '-';
+
+      Modal.show({
+        title: '탈회 상세정보 — ' + m.name,
+        size: 'md',
+        content: ''
+          + '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+          + '<tr>'
+          + '<td style="padding:10px 14px;background:#f8f9fa;font-weight:700;border:1px solid var(--border-light);width:120px;white-space:nowrap">탈회일</td>'
+          + '<td style="padding:10px 14px;border:1px solid var(--border-light);font-weight:600">' + leaveDate + '</td>'
+          + '</tr>'
+          + '<tr>'
+          + '<td style="padding:10px 14px;background:#f8f9fa;font-weight:700;border:1px solid var(--border-light);white-space:nowrap">남은횟수</td>'
+          + '<td style="padding:10px 14px;border:1px solid var(--border-light)">' + remainMeetings + '회 <span style="font-size:11px;color:#888">(계약 ' + contractMeetings + '회 - 진행 ' + meetingCount + '회)</span></td>'
+          + '</tr>'
+          + '<tr>'
+          + '<td style="padding:10px 14px;background:#f8f9fa;font-weight:700;border:1px solid var(--border-light);white-space:nowrap">환불금액</td>'
+          + '<td style="padding:10px 14px;border:1px solid var(--border-light);font-weight:700;color:#dc2626">' + (refundAmount && refundAmount !== '0' ? Number(refundAmount).toLocaleString() + '원' : '-') + '</td>'
+          + '</tr>'
+          + '<tr>'
+          + '<td style="padding:10px 14px;background:#f8f9fa;font-weight:700;border:1px solid var(--border-light);white-space:nowrap">비고</td>'
+          + '<td style="padding:10px 14px;border:1px solid var(--border-light);white-space:pre-wrap">' + note + '</td>'
+          + '</tr>'
+          + '</table>'
+          + '<div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">'
+          + '<button class="btn btn--ghost btn--sm" id="leave-detail-close" style="font-size:12px;padding:4px 14px">닫기</button>'
+          + '</div>',
+      });
+
+      setTimeout(function() {
+        var closeBtn = document.getElementById('leave-detail-close');
+        if (closeBtn) closeBtn.addEventListener('click', function() { Modal.hide(); });
+      }, 100);
+    });
+  }
 }
