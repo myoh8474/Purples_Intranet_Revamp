@@ -102,17 +102,21 @@ export const MockAssociates = [];
 
 if (useMock()) {
   const ASSOC_STATUSES = ['부재중(미컨텍)','장기상담(컨텍)','낮음(컨텍)','보통(컨텍)','높음(컨텍)','가입보류(컨텍)','방문상담','가입중'];
+  // 불가/변경 상태 (통계에서 포기/변경 건수로 집계)
+  const NEGATIVE_STATUSES = ['결번(불가)','기혼(불가)','기타(불가)','변경'];
   let idSeq = 1;
 
   // ========================================
-  // 1. 분배 완료 회원 (30명) — 각 매니저에 3명씩 배정
+  // 1. 분배 완료 회원 (70명) — 각 매니저에 7명씩 배정
+  //    다양한 분배일(최근 3개월)과 상태 분포 포함
   // ========================================
   CONSULTANTS.forEach((mgr, mIdx) => {
-    for (let j = 0; j < 3; j++) {
+    for (let j = 0; j < 7; j++) {
       const gender = Math.random() > 0.45 ? '여' : '남';
       const names = gender === '남' ? NAMES_M : NAMES_F;
       const birth = randomDate(new Date(1985,0,1), new Date(2000,11,31));
-      const regDate = randomDate(new Date(2025,10,1), new Date(2026,3,15));
+      // 분배일을 최근 3개월에 걸쳐 분산
+      const regDate = randomDate(new Date(2026,3,1), new Date(2026,6,1));
       const distDate = new Date(regDate.getTime() + Math.random() * 3 * 86400000);
       const lastContact = new Date(distDate.getTime() + Math.random() * 30 * 86400000);
       const region = randomPick(REGIONS);
@@ -121,6 +125,21 @@ if (useMock()) {
       const periodMonths = [6,8,10,12][Math.floor(Math.random()*4)];
       const joinDt = new Date(distDate.getTime() + Math.random() * 5 * 86400000);
       const expDt = new Date(joinDt.getTime() + periodMonths * 30 * 86400000);
+
+      // 상태 분포: 70% 정상, 20% 불가, 10% 변경
+      let status;
+      const statusRoll = Math.random();
+      if (statusRoll < 0.2) {
+        status = randomPick(['결번(불가)','기혼(불가)','기타(불가)']);
+      } else if (statusRoll < 0.3) {
+        status = '변경';
+      } else {
+        status = randomPick(ASSOC_STATUSES);
+      }
+
+      // 분배방식 분포: 55% 자동, 45% 수동
+      const distMethod = Math.random() > 0.45 ? '자동분배' : '수동분배';
+
       MockAssociates.push({
         id: idSeq++,
         name: randomPick(names),
@@ -136,8 +155,8 @@ if (useMock()) {
         branch: regionToBranch(region),
         brand: randomPick(BRANDS),
         maritalStatus: Math.random() > 0.15 ? '초혼' : '재혼',
-        status: randomPick(ASSOC_STATUSES),
-        channel: randomPick(CHANNELS.slice(0, 10)),
+        status,
+        channel: randomPick(CHANNELS.slice(0, 14)),
         consultant: mgr,
         matchingManager: randomPick(MATCHING_MANAGERS),
         program: prog,
@@ -156,7 +175,7 @@ if (useMock()) {
         selfAware: Math.random() > 0.3 ? '인지' : '비인지',
         contactMethod: randomPick(CONTACT_METHODS),
         address: randomPick(['서울시 강남구','서울시 마포구','부산시 해운대구','대전시 유성구','경기도 성남시','서울시 서초구']),
-        distMethod: Math.random() > 0.4 ? '자동분배' : '수동분배',
+        distMethod,
         registeredAt: regDate.toISOString(),
         distributedAt: distDate.toISOString(),
         lastContactAt: lastContact.toISOString(),

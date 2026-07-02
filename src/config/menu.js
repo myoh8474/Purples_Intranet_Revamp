@@ -45,6 +45,7 @@ export function getMenuItems(basePath = '/') {
       children: [
         { id: 'member-distribute-main', text: '회원분배', href: `${basePath}pages/management/distribute.html` },
         { id: 'member-distribute-history', text: '회원분배내역조회', href: `${basePath}pages/management/distribute-history.html` },
+        { id: 'distribute-stats', text: 'DB분배 통계', href: `${basePath}pages/management/distribute-stats.html` },
       ],
     },
     {

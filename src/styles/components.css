@@ -786,7 +786,9 @@ select.form-select{appearance:none;-webkit-appearance:none;cursor:pointer;paddin
 }
 .kpi-stat-grid--4 { grid-template-columns: repeat(4, 1fr); }
 .kpi-stat-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-stat-grid--5 { grid-template-columns: repeat(5, 1fr); }
 .kpi-stat-grid--6 { grid-template-columns: repeat(6, 1fr); }
+.kpi-stat-grid--7 { grid-template-columns: repeat(7, 1fr); }
 .kpi-stat-card {
   padding: 12px 14px; background: #fff;
   border: 1px solid var(--border-light);
@@ -798,7 +800,7 @@ select.form-select{appearance:none;-webkit-appearance:none;cursor:pointer;paddin
 }
 .kpi-stat-card__value--sm { font-size: 16px; }
 .kpi-stat-card__label {
-  font-size: 11px; color: var(--text-muted); margin-top: 4px;
+  font-size: 11px; color: var(--text-primary); margin-top: 4px; font-weight: 700;
 }
 
 /* ── 기간 퀵 버튼 ── */
