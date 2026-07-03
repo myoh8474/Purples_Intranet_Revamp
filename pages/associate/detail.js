@@ -7,9 +7,8 @@ import { Modal } from '@components/Modal.js';
 import { Toast } from '@components/Toast.js';
 import { Formatters } from '@utils/formatters.js';
 import { AssociateService } from '@services/associate.service.js';
-
+import { DocService, DOC_TYPES } from '@services/doc.service.js';
 import { CONSULTANTS, PROGRAMS, PROGRAM_GRADES } from '@config/constants.js';
-import { showRegModal } from './regModal.js';
 
 const params = new URLSearchParams(window.location.search);
 const memberId = parseInt(params.get('id'));
@@ -17,12 +16,13 @@ document.body.style.cssText = 'background:#f5f5f5;margin:0';
 document.getElementById('app').style.cssText = 'max-width:1400px;margin:0 auto;padding:16px 20px;min-height:100vh';
 const content = document.getElementById('app');
 const CALL_RESULTS = ['부재중','낮음(컨텍)','중간(컨텍)','높음(컨텍)','장기상담','방문상담'];
-
+let selectedProgram = '골드(사파이어)', selectedGrade = '', regIdOk = false;
 
 function getCallHist(id){ try{ return JSON.parse(localStorage.getItem('purples_call_history_'+id)||'[]'); }catch(e){ return []; } }
 function saveCallHist(id,r){ const h=getCallHist(id); h.unshift(r); localStorage.setItem('purples_call_history_'+id, JSON.stringify(h)); }
 function getMeetHist(id){ try{ return JSON.parse(localStorage.getItem('purples_meeting_history_'+id)||'[]'); }catch(e){ return []; } }
 function saveMeetHist(id,r){ const h=getMeetHist(id); h.unshift(r); localStorage.setItem('purples_meeting_history_'+id, JSON.stringify(h)); }
+// 서류인증은 DocService API를 사용 (Mock/Supabase 자동 전환)
 
 function renderCallTable(m){
   const all=[...getCallHist(m.id),...(m.contactHistory||[]).filter(h=>!getCallHist(m.id).find(s=>s.id===h.id))].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -41,6 +41,15 @@ function renderMeetTable(m){
   }).join('');
 }
 
+async function renderDocTable(m){
+  const docs = await DocService.getList(m.id);
+  if(!docs.length) return '<tr><td colspan="7" style="text-align:center;padding:12px;color:#888">등록된 서류인증 내역이 없습니다.</td></tr>';
+  return docs.map((d,i)=>{
+    const stMap = {'대기':'background:#fef3c7;color:#92400e','완료':'background:#dcfce7;color:#166534','반려':'background:#fee2e2;color:#991b1b','미제출':'background:#f3f4f6;color:#6b7280'};
+    const stStyle = stMap[d.status] || 'background:#f3f4f6;color:#374151';
+    return `<tr><td style="text-align:center">${i+1}</td><td>${d.docType||'-'}</td><td style="text-align:center"><span style="padding:1px 6px;font-size:10px;font-weight:600;${stStyle}">${d.status}</span></td><td>${d.submitDate?d.submitDate.slice(2,10).replace(/-/g,'-'):'-'}</td><td>${d.confirmDate?d.confirmDate.slice(2,10).replace(/-/g,'-'):'-'}</td><td>${d.confirmer||'-'}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${d.memo||'-'}</td></tr>`;
+  }).join('');
+}
 
 async function render(){
   const m = await AssociateService.getDetail(memberId);
@@ -76,69 +85,79 @@ async function render(){
 <!-- 상단 헤더 바 -->
 <div class="crm-hdr">
   <span style="font-size:20px;font-weight:900;color:#1a1a1a">${m.name}</span>
-  <span style="display:inline-block;margin-left:6px;padding:2px 8px;font-size:11px;font-weight:700;background:#fff3e0;color:#e65100;border:1px solid #ff9800;vertical-align:middle">비밀상담</span>
   <span style="font-size:11px;color:#555">등록일 <strong>${Formatters.date(m.registeredAt)}</strong></span>
   <span style="font-size:11px;color:#ccc">|</span>
   <span style="font-size:11px;color:#555">분배일 <strong>${Formatters.date(m.distributedAt)}</strong></span>
+  <!-- REQ-046: 비밀 상담 표시 -->
+  ${m.isSecret ? '<div style="background:#fff3e0;border:2px solid #ff9800;padding:6px 12px;font-size:12px;font-weight:700;color:#e65100;text-align:center;margin-bottom:2px">🔒 비밀 상담 회원 (본인 모르게 진행)</div>' : ''}
   <button style="margin-left:auto;padding:3px 10px;border:1px solid #1565c0;background:#fff;color:#1565c0;font-weight:700;font-size:11px;cursor:pointer" id="btn-payment-info">결제정보</button>
   <button style="padding:3px 10px;border:1px solid #c00;background:#fff;color:#c00;font-weight:700;font-size:11px;cursor:pointer" id="btn-withdraw">탈회 접수</button>
   <button style="padding:3px 10px;border:1px solid #e65100;background:#fff;color:#e65100;font-weight:700;font-size:11px;cursor:pointer" id="btn-claim">클레임</button>
-  <button style="padding:3px 10px;border:1px solid #333;background:#333;color:#fff;font-weight:700;font-size:11px;cursor:pointer" id="btn-status">회원정보 수정</button>
+  <button style="padding:3px 10px;border:1px solid #333;background:#333;color:#fff;font-weight:700;font-size:11px;cursor:pointer" id="btn-status">회원상태 수정</button>
   <button style="padding:3px 10px;border:1px solid #2e7d32;background:#2e7d32;color:#fff;font-weight:700;font-size:11px;cursor:pointer" id="btn-register-regular">정회원 등록</button>
 </div>
 
-<!-- 상담 기본정보 섹션 -->
+<!-- 회원 기본정보 섹션 -->
 <div class="crm-sec" style="margin-top:8px">
   <div style="display:flex;align-items:center;gap:6px">
-    <span>상담 기본정보</span>
+    <span>회원 기본정보</span>
     <div class="sb">
-      <button id="btn-memo-add">메모등록</button>
     </div>
   </div>
 </div>
 
-<!-- 상담 기본정보 테이블 (사진 + 밀집 테이블) -->
+<!-- 기본정보 테이블 -->
 <table class="ct">
-  <colgroup>
-    <col style="width:90px">
-    <col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%">
-    <col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%"><col style="width:6%"><col style="width:9%">
-  </colgroup>
+  <colgroup><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:17%"></colgroup>
   <tbody>
     <tr>
-      <td rowspan="4" style="width:90px;padding:4px;text-align:center;vertical-align:middle;background:#f9f9f9;cursor:pointer" id="btn-photo-more">
-        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&size=200&background=dde1e6&color=555&bold=true&font-size=0.38" 
-             style="width:80px;height:100px;object-fit:cover;border:1px solid #bbb" id="header-photo">
-        <div style="font-size:10px;color:#888;margin-top:3px">사진</div>
-      </td>
-      <th>상담매니저</th><td style="font-weight:700"><a href="#" id="btn-change-history" style="color:#1565c0;text-decoration:underline;cursor:pointer" title="변경이력 조회">${m.consultant||''}</a></td>
-      <th>매칭매니저</th><td style="font-weight:700">${m.matchingManager||''}</td>
-      <th>프로그램</th><td style="font-weight:700">${m.program||''}</td>
-      <th style="color:#1565c0;font-weight:900">가입비</th><td style="font-weight:700;color:#c62828">${m.joinFee ? Number(m.joinFee).toLocaleString()+'원' : ''}</td>
-      <th>가입기간</th><td style="font-weight:700">${m.joinPeriod||''}</td>
-      <th>무이자</th><td>${m.interestFree||''}</td>
+      <th style="color:#c62828">컨설턴트</th><td style="font-weight:700">${m.consultant||''}</td>
+      <th style="color:#c62828">상 태</th><td style="font-weight:700">${m.status}</td>
+      <th style="color:#c62828">경로</th><td style="font-weight:700">[${m.channel?m.channel.charAt(0):''}]</td>
+      <th style="color:#c62828">생년월일</th><td style="font-weight:700">${m.birthDate ? Formatters.date(m.birthDate) : ''}</td>
     </tr>
     <tr>
-      <th>회원상태</th><td style="font-weight:700">${m.status}</td>
-      <th>지사</th><td>${m.branch||'본사'}</td>
-      <th>가입일/만료일</th><td>${m.joinDate||''} ${m.expireDate ? '~ '+m.expireDate : ''}</td>
-      <th>재가입비</th><td>${m.rejoinFee ? Number(m.rejoinFee).toLocaleString()+'원' : ''}</td>
-      <th>결제방법</th><td>${m.paymentMethod||''}</td>
-      <th>할인명</th><td>${m.discountName||''}</td>
+      <th style="color:#c62828">회 원 명</th><td style="font-weight:700">${m.name} (${m.gender})</td>
+      <th>결혼여부</th><td>${m.maritalStatus||'초혼'}</td>
+      <th>지 역</th><td>${m.region||''}</td>
+      <th>최종학력</th><td>${m.education||''}</td>
     </tr>
     <tr>
-      <th>생년월일</th><td style="font-weight:700">${m.birthDate ? Formatters.date(m.birthDate) : ''}</td>
-      <th>주민번호</th><td>${m.ssn||''}</td>
-      <th>결혼경력</th><td>${m.maritalStatus||'초혼'}</td>
-      <th>기입횟수</th><td style="font-weight:700">${m.joinCount||''}</td>
-      <th>성혼비</th><td>${m.successFee ? Number(m.successFee).toLocaleString()+'원' : ''}</td>
-      <th>업그레이드</th><td>${m.upgrade||''}</td>
+      <th>직 업</th><td>${m.job||''}</td>
+      <th>학 교</th><td>${m.school||''}</td>
+      <th>신 장</th><td>${m.height?m.height+'cm':''}</td>
+      <th>체 중</th><td>${m.weight?m.weight+'kg':''}</td>
     </tr>
     <tr>
-      <th>본인가입사실</th><td>${m.selfAware||''}</td>
-      <th>연락처</th><td style="font-weight:700">${Formatters.phone(m.phone)} <button class="mb" id="btn-call-direct">통화</button></td>
-      <th>소통방법</th><td>${m.contactMethod||''}</td>
-      <th>비고</th><td colspan="5" style="font-size:11px">${m.memo||''}</td>
+      <th>집 주 소</th><td colspan="3">${m.address||''}</td>
+      <th>이 메 일</th><td colspan="3">${m.email||''}</td>
+    </tr>
+    <!-- REQ-045: 연락처 5개 지원 -->
+    <tr>
+      <th>자택연락처</th><td colspan="3">${m.telHome||''}</td>
+      <th>직장연락처</th><td colspan="3">${m.telOffice||''}</td>
+    </tr>
+    <tr>
+      <th>핸드폰1</th><td colspan="3">${m.phoneRelation1||'본인'} : <strong>${Formatters.phone(m.phone)}</strong> <button class="mb" id="btn-call-direct">통화</button></td>
+      <th>핸드폰2</th><td colspan="3">${m.phone2?(m.phone2Relation||'모친')+' : '+Formatters.phone(m.phone2):''}</td>
+    </tr>
+    <tr>
+      <th>핸드폰3</th><td colspan="3">${m.phone3?(m.phone3Relation||'본인')+' : '+Formatters.phone(m.phone3):''}</td>
+      <th>수신여부</th><td colspan="3" style="font-size:11px">핸드폰1 Sms:수신 / 핸드폰2 Sms:수신 / Mail:수신 리텐션:O</td>
+    </tr>
+    <tr>
+      <th>자 녀</th><td>${m.children||''}</td>
+      <th>혈액형</th><td>${m.bloodType||''}</td>
+      <th>취미</th><td>${m.hobby||''}</td>
+      <th>종교</th><td>${m.religion||''}
+    </tr>
+    <tr>
+      <th>기타사항</th><td colspan="3">${m.memo||''}</td>
+      <th>매니저 지정</th><td>${m.consultant||''}</td>
+      <th>희망 상대</th><td style="font-size:11px;line-height:1.5">${m.hope||''}
+    </tr>
+    <tr>
+      <th style="color:#c62828">메모</th><td colspan="7" style="font-weight:700">${m.memo||''} <button class="mb" id="btn-memo-add">메모등록</button></td>
     </tr>
   </tbody>
 </table>
@@ -189,7 +208,23 @@ async function render(){
   <tbody id="call-area">${renderCallTable(m)}</tbody>
 </table>
 
-
+<!-- 서류인증 -->
+<div class="crm-sec">
+  <div style="display:flex;align-items:center;gap:6px">
+    <span>서류인증</span>
+    <div class="sb">
+      <button id="btn-doc-remind">서류독촉 SMS</button>
+    </div>
+  </div>
+  <div class="sb">
+    <button class="pr" id="btn-doc-add">인증등록</button>
+    <button id="btn-doc-all">일괄인증</button>
+  </div>
+</div>
+<table class="ct" style="margin-top:4px">
+  <thead><tr><th style="width:40px">No</th><th>서류종류</th><th>인증상태</th><th>제출일</th><th>확인일</th><th>확인자</th><th>비고</th></tr></thead>
+  <tbody id="doc-area">${await renderDocTable(m)}</tbody>
+</table>
 `;
 
   window.Toast = Toast;
@@ -263,10 +298,9 @@ www.purples.co.kr</textarea>
   document.getElementById('btn-sms-call')?.addEventListener('click',()=>showSmsModal(['연락전송','SMS전송','SMS전송결과','주소안내']));
 
   document.getElementById('btn-call-direct')?.addEventListener('click',()=>Toast.show('전화 연결 (기능 준비중)','info'));
-  document.getElementById('btn-status')?.addEventListener('click',()=>{ window.location.href=`edit.html?id=${m.id}`; });
+  document.getElementById('btn-status')?.addEventListener('click',()=>Toast.show('회원상태 수정 (기능 준비중)','info'));
   document.getElementById('btn-register-regular')?.addEventListener('click',()=>showRegModal(m));
   document.getElementById('btn-reg')?.addEventListener('click',()=>showRegModal(m));
-  document.getElementById('btn-change-history')?.addEventListener('click',(e)=>{e.preventDefault();showChangeHistoryModal(m);});
   document.getElementById('btn-call')?.addEventListener('click',()=>showCallModal(m));
 
   // 미팅약속일 클릭 → 미팅결과 등록 모달
@@ -300,7 +334,19 @@ www.purples.co.kr</textarea>
       });
     },100);
   });
-
+  document.getElementById('btn-doc-add')?.addEventListener('click',()=>showDocModal(m));
+  document.getElementById('btn-doc-all')?.addEventListener('click',async ()=>{
+    const docs = await DocService.getList(m.id);
+    if(!docs.length){ Toast.show('등록된 서류가 없습니다.','warning'); return; }
+    const pending = docs.filter(d=>d.status==='대기');
+    if(!pending.length){ Toast.show('대기 중인 서류가 없습니다.','info'); return; }
+    if(confirm(`대기 중인 서류 ${pending.length}건을 모두 인증 완료 처리하시겠습니까?`)){
+      const count = await DocService.bulkApprove(m.id, m.consultant||'-');
+      document.getElementById('doc-area').innerHTML = await renderDocTable(m);
+      Toast.show(`${count}건의 서류가 인증 완료되었습니다.`,'success');
+    }
+  });
+  document.getElementById('btn-doc-remind')?.addEventListener('click',()=>Toast.show('서류독촉 SMS가 발송되었습니다.','success'));
 }
 
 function getMemos(memberId){
@@ -485,109 +531,92 @@ function showCallModal(m){
     });
   },100);
 }
-
-/* ── 담당자 변경이력 조회 모달 ── */
-function getChangeHistory(memberId) {
-  const key = `purples_change_history_${memberId}`;
-  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+function showRegModal(m){
+  selectedProgram='골드(사파이어)';selectedGrade='';regIdOk=false;
+  Modal.show({title:'정회원 등록',size:'xl',
+    content:`<style>.rr-chip{padding:6px 14px;border:1px solid var(--border-light);background:var(--bg-primary);font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--font-family)}.rr-chip:hover{border-color:var(--accent)}.rr-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}.rr-gc{display:none;padding:10px;background:var(--bg-secondary);border:1px solid var(--border-light);margin-top:8px}.rr-gc.show{display:block}.rr-t{width:100%;border-collapse:collapse;font-size:12px}.rr-t td{padding:5px 8px;border:1px solid var(--border-light);vertical-align:middle}.rr-t .lb{background:var(--bg-secondary);font-weight:600;white-space:nowrap;text-align:center;color:var(--text-secondary);width:90px}.rr-t input,.rr-t select{width:100%;padding:3px 5px;border:1px solid #ccc;font-size:11px;box-sizing:border-box}</style>
+      <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">기본정보</div>
+        <table class="rr-t"><tbody><tr><td class="lb">회원명</td><td><input value="${m.name}" disabled /></td><td class="lb">주민번호</td><td><div style="display:flex;gap:3px"><input maxlength="6" style="width:70px" /> - <input type="password" maxlength="7" style="width:80px" /></div></td></tr>
+        <tr><td class="lb">아이디 <span style="color:#e53e3e;font-size:10px">*</span></td><td colspan="3"><div style="max-width:400px"><div style="display:flex;gap:4px"><input id="rr-id" placeholder="영문, 숫자 조합 4~20자" style="flex:1" /><button class="btn btn--sm" id="btn-rr-id" style="font-size:10px;white-space:nowrap">중복확인</button></div><div id="rr-id-msg" style="min-height:18px;font-size:11px;padding:2px 0"></div></div></td></tr>
+        <tr><td class="lb">결혼형태</td><td><div style="display:flex;gap:12px;font-size:11px"><label><input type="radio" name="rr-m" checked /> 미혼</label><label><input type="radio" name="rr-m" /> 재혼</label><label><input type="radio" name="rr-m" /> 사별</label></div></td><td class="lb">지사코드</td><td><select><option>지사선택</option><option>서울</option><option>부산</option><option>대구</option></select></td></tr></tbody></table></div>
+      <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">프로그램 선택</div>
+        <table class="rr-t"><tbody><tr><td class="lb">프로그램</td><td colspan="3"><div style="display:flex;flex-wrap:wrap;gap:6px" id="rr-pgm"></div><div class="rr-gc" id="rr-ga"><div style="font-size:11px;font-weight:600;margin-bottom:6px">등급 선택 *</div><div style="display:flex;flex-wrap:wrap;gap:6px" id="rr-gc"></div></div></td></tr></tbody></table></div>
+      <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">서비스 / 결제</div>
+        <div style="display:flex;gap:16px"><div style="flex:1"><table class="rr-t"><tbody>
+          <tr><td class="lb">가입일</td><td><input type="date" value="${new Date().toISOString().slice(0,10)}" /></td></tr>
+          <tr><td class="lb">계약구분</td><td><select><option>1가입</option><option>2가입</option><option>3가입</option></select></td></tr>
+          <tr><td class="lb">서비스</td><td><div style="display:flex;gap:12px;font-size:11px;margin-bottom:6px"><label><input type="radio" name="rr-svc" value="기간제" checked /> 기간제</label><label><input type="radio" name="rr-svc" value="횟수제" /> 횟수제</label></div><div>개월: <select><option>12</option><option selected>24</option><option>36</option></select> 개월</div></td></tr>
+        </tbody></table></div><div style="flex:1"><table class="rr-t"><tbody>
+          <tr><td class="lb">주가입</td><td><input type="text" placeholder="0" style="text-align:right" /> 원</td></tr>
+          <tr><td class="lb">성혼비</td><td><input type="text" placeholder="0" style="text-align:right" /> 원</td></tr>
+          <tr><td class="lb">무이자</td><td><select><option>없음</option><option>3개월</option><option>6개월</option><option>12개월</option></select></td></tr>
+        </tbody></table></div></div></div>
+      <div><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">연락처</div>
+        <table class="rr-t"><tbody><tr><td class="lb">컨설턴트</td><td><input value="${m.consultant}" /></td><td class="lb">핸드폰</td><td><input value="${Formatters.phone(m.phone)}" /></td></tr><tr><td class="lb">이메일</td><td><input type="email" /></td><td class="lb">본적지</td><td><input /></td></tr></tbody></table></div>`,
+    footer:'<button class="btn btn--secondary" onclick="document.getElementById(\'modal-root\').innerHTML=\'\'">취소</button><button class="btn btn--primary" id="btn-rr-ok">정회원 등록</button>'
+  });
+  setTimeout(()=>{
+    const pc=document.getElementById('rr-pgm');
+    if(pc) pc.innerHTML=PROGRAMS.map(p=>`<button type="button" class="rr-chip ${p===selectedProgram?'active':''}" data-p="${p}">${p}${PROGRAM_GRADES[p]?' ▾':''}</button>`).join('');
+    function updGrade(){
+      const ga=document.getElementById('rr-ga'),gc=document.getElementById('rr-gc');
+      const gr=PROGRAM_GRADES[selectedProgram];
+      if(!gr){ga.classList.remove('show');gc.innerHTML='';return;}
+      ga.classList.add('show');
+      gc.innerHTML=gr.map(g=>`<button type="button" class="rr-chip ${selectedGrade===g?'active':''}" data-g="${g}">${g}</button>`).join('');
+      gc.querySelectorAll('.rr-chip').forEach(c=>c.onclick=()=>{selectedGrade=c.dataset.g;gc.querySelectorAll('.rr-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');});
+    }
+    pc?.querySelectorAll('.rr-chip').forEach(c=>c.onclick=()=>{selectedProgram=c.dataset.p;selectedGrade='';pc.querySelectorAll('.rr-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');updGrade();});
+    updGrade();
+    document.getElementById('btn-rr-id')?.addEventListener('click',()=>{
+      const v=document.getElementById('rr-id').value.trim(),msg=document.getElementById('rr-id-msg');
+      if(v.length<4){msg.textContent='4자 이상 입력';msg.style.color='#dc2626';return;}
+      regIdOk=true;msg.textContent='사용 가능';msg.style.color='#16a34a';Toast.show('사용 가능한 아이디입니다.','success');
+    });
+    document.getElementById('btn-rr-ok')?.addEventListener('click',()=>{
+      if(!regIdOk){Toast.show('아이디 중복확인을 진행해 주세요.','warning');return;}
+      if(PROGRAM_GRADES[selectedProgram]&&!selectedGrade){Toast.show('등급을 선택해 주세요.','warning');return;}
+      const pt=selectedGrade||selectedProgram;
+      if(confirm(`${m.name}님을 [${pt}] 프로그램으로 정회원 등록하시겠습니까?`)){Toast.show('정회원 등록이 완료되었습니다.','success');document.getElementById('modal-root').innerHTML='';}
+    });
+  },100);
 }
 
-function showChangeHistoryModal(m) {
-  // Mock 변경이력 데이터 (localStorage에 없으면 기본 데이터 생성)
-  let history = getChangeHistory(m.id);
-  if (history.length === 0) {
-    // 기본 Mock 데이터 시딩
-    const consultants = ['김지은','박서연','이하나','정민수','최유리','한소희','강다연','윤채영'];
-    const randomConsultant = () => consultants[Math.floor(Math.random() * consultants.length)];
-    const processors = ['최팀장','관리자','박부장','이팀장'];
-    const randomProcessor = () => processors[Math.floor(Math.random() * processors.length)];
+async function showDocModal(m){
+  const today=new Date().toISOString().slice(0,10);
+  const existDocs = await DocService.getList(m.id);
+  const usedTypes = existDocs.map(d=>d.docType);
+  const availTypes = DOC_TYPES.filter(t=>!usedTypes.includes(t));
 
-    // 최초 분배 기록
-    const distDate = m.distributedAt || m.registeredAt || '2026-01-15';
-    const distProcessor = randomProcessor();
-    const firstConsultant = m.consultant || randomConsultant();
-
-    history.push({
-      no: 1,
-      firstDistDate: typeof distDate === 'string' ? distDate.slice(0,10) : new Date(distDate).toISOString().slice(0,10),
-      distProcessor: distProcessor,
-      prevConsultant: '-',
-      newConsultant: firstConsultant,
-      processDate: typeof distDate === 'string' ? distDate.slice(0,10) : new Date(distDate).toISOString().slice(0,10),
-    });
-
-    // 변경 이력 1~2건 추가 (현재 컨설턴트와 연결)
-    if (m.consultant) {
-      const prevC = randomConsultant();
-      if (prevC !== m.consultant) {
-        const chgDate = new Date(new Date(distDate).getTime() + 30*86400000);
-        history.push({
-          no: 2,
-          firstDistDate: typeof distDate === 'string' ? distDate.slice(0,10) : new Date(distDate).toISOString().slice(0,10),
-          distProcessor: distProcessor,
-          prevConsultant: firstConsultant,
-          newConsultant: prevC !== firstConsultant ? prevC : m.consultant,
-          processDate: chgDate.toISOString().slice(0,10),
-        });
-        if (history[history.length-1].newConsultant !== m.consultant) {
-          const chgDate2 = new Date(chgDate.getTime() + 20*86400000);
-          history.push({
-            no: 3,
-            firstDistDate: typeof distDate === 'string' ? distDate.slice(0,10) : new Date(distDate).toISOString().slice(0,10),
-            distProcessor: randomProcessor(),
-            prevConsultant: history[history.length-1].newConsultant,
-            newConsultant: m.consultant,
-            processDate: chgDate2.toISOString().slice(0,10),
-          });
-        }
-      }
-    }
-
-    localStorage.setItem(`purples_change_history_${m.id}`, JSON.stringify(history));
-  }
-
-  const rows = history.map((h, i) => `
-    <tr>
-      <td style="text-align:center">${i + 1}</td>
-      <td style="text-align:center">${Formatters.date(h.firstDistDate)}</td>
-      <td style="text-align:center">${h.distProcessor}</td>
-      <td style="text-align:center">${h.prevConsultant === '-' ? '<span style="color:#aaa">-</span>' : h.prevConsultant}</td>
-      <td style="text-align:center;font-weight:700;color:#1565c0">${h.newConsultant}</td>
-      <td style="text-align:center">${Formatters.date(h.processDate)}</td>
-    </tr>
-  `).join('');
-
-  Modal.show({
-    title: `담당자 변경이력 - ${m.name}`,
-    size: 'lg',
-    content: `
-      <div style="font-size:12px;color:#555;margin-bottom:12px;padding:8px 12px;background:#f8f9fa;border:1px solid #e0e0e0">
-        <div style="display:flex;gap:20px;flex-wrap:wrap">
-          <span>회원명: <strong style="color:#1a1a1a">${m.name}</strong></span>
-          <span>현재 담당: <strong style="color:#1565c0">${m.consultant || '-'}</strong></span>
-          <span>최초 등록일: <strong>${Formatters.date(m.registeredAt)}</strong></span>
-          <span>최초 분배일: <strong>${Formatters.date(m.distributedAt)}</strong></span>
-        </div>
-      </div>
-      <table class="ct" style="margin-top:0">
-        <thead>
-          <tr>
-            <th style="width:50px">No</th>
-            <th>최초 DB 분배일시</th>
-            <th>분배 담당자</th>
-            <th>변경전 담당자</th>
-            <th>변경후 담당자</th>
-            <th>처리일자</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.length ? rows : '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">변경이력이 없습니다.</td></tr>'}
-        </tbody>
-      </table>
-      <div style="margin-top:8px;font-size:11px;color:#888;text-align:right">총 ${history.length}건</div>
-    `,
-    footer: '<button class="btn btn--secondary" onclick="document.getElementById(\'modal-root\').innerHTML=\'\'" >닫기</button>'
+  Modal.show({ title:'서류인증 등록', size:'md',
+    content:`<div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">서류종류 *</label><select id="dc-type" class="form-select">${availTypes.length?availTypes.map(t=>`<option>${t}</option>`).join(''):'<option value="">모든 서류 등록완료</option>'}</select></div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">제출일 *</label><input type="date" id="dc-date" value="${today}" class="form-input"></div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">인증상태</label><select id="dc-status" class="form-select"><option>대기</option><option>완료</option><option>반려</option><option>미제출</option></select></div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center"><label style="font-size:12px;font-weight:600">비고</label><textarea id="dc-memo" class="form-input" rows="2" placeholder="특이사항을 입력하세요"></textarea></div>
+    </div>`,
+    footer:'<button class="btn btn--secondary" onclick="document.getElementById(\'modal-root\').innerHTML=\'\'">취소</button><button class="btn btn--primary" id="btn-dc-ok">등록</button>'
   });
+  setTimeout(()=>{
+    document.getElementById('btn-dc-ok')?.addEventListener('click',async ()=>{
+      const docType = document.getElementById('dc-type')?.value;
+      const submitDate = document.getElementById('dc-date')?.value;
+      const status = document.getElementById('dc-status')?.value || '대기';
+      const memo = document.getElementById('dc-memo')?.value?.trim() || '';
+      if(!docType){ Toast.show('서류종류를 선택해 주세요.','warning'); return; }
+      if(!submitDate){ Toast.show('제출일을 입력해 주세요.','warning'); return; }
+      const confirmDate = status==='완료' ? today : '';
+      const confirmer = status==='완료' ? (m.consultant||'-') : '';
+      const result = await DocService.add(m.id, { docType, submitDate, status, confirmDate, confirmer, memo });
+      if(result){
+        document.getElementById('doc-area').innerHTML = await renderDocTable(m);
+        Toast.show(`[${docType}] 서류가 등록되었습니다.`,'success');
+        document.getElementById('modal-root').innerHTML='';
+      } else {
+        Toast.show('서류 등록에 실패했습니다.','error');
+      }
+    });
+  },100);
 }
 
 render();
