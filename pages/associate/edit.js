@@ -50,12 +50,13 @@ if (!m) {
 .ef{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
 .ef+.ef{border-top:none}
 .ef+.ef tr:first-child th,.ef+.ef tr:first-child td{border-top:none}
-.ef th{background:#dde1e6;font-weight:900;font-size:12px;color:#000;text-align:center;white-space:nowrap;padding:6px 8px;border:1px solid #bbb;line-height:1.6}
-.ef td{font-size:12px;padding:6px 8px;color:#333;border:1px solid #bbb;line-height:1.6;font-weight:400;background:#fff}
-.ef .rth{color:#c62828;background:#dde1e6;font-weight:900;text-align:center;white-space:nowrap}
-.ef input[type="text"],.ef input[type="number"],.ef input[type="email"],.ef select{border:1px solid #aaa;padding:3px 6px;font-size:12px;font-family:inherit;box-sizing:border-box}
-.ef textarea{border:1px solid #aaa;padding:5px 8px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;width:100%}
-.ef input:focus,.ef select:focus,.ef textarea:focus{outline:none;border-color:#1565c0;box-shadow:0 0 0 1px rgba(21,101,192,0.2)}
+.ef th{background:#f8f9fa;font-weight:600;font-size:12px;color:#888;text-align:center;white-space:nowrap;padding:6px 8px;border:1px solid #ddd;line-height:1.6}
+.ef td{font-size:12px;padding:6px 8px;color:#333;border:1px solid #ddd;line-height:1.6;font-weight:400;background:#fff}
+.ef .rth{color:#c62828;background:#f8f9fa;font-weight:600;text-align:center;white-space:nowrap}
+.ef input[type="text"],.ef input[type="number"],.ef input[type="email"],.ef input[type="date"],.ef select{border:1px solid var(--border-medium);padding:3px 8px;font-size:12px;font-family:inherit;box-sizing:border-box;height:30px;border-radius:2px;background:#fff;color:var(--text-primary);transition:border-color 0.1s,box-shadow 0.1s}
+.ef textarea{border:1px solid var(--border-medium);padding:4px 8px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;width:100%;border-radius:2px;background:#fff;color:var(--text-primary);line-height:1.5;transition:border-color 0.1s,box-shadow 0.1s}
+.ef input:focus,.ef select:focus,.ef textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px #d1dce8}
+.ef input[readonly]{background:#f8f9fa;color:var(--text-secondary);cursor:default}
 .ph-cell{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .ph-cell input[type="text"]{width:58px;text-align:center}
 .ph-cell span{font-size:11px;color:#666}
@@ -69,6 +70,7 @@ if (!m) {
 </style>`;
 
   content.innerHTML = S + `
+<div style="background:#fff;border:1px solid #e0e0e0;padding:12px 16px;margin-top:2px">
 <!-- 페이지 헤더 -->
 <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;margin-bottom:2px">
   <div style="display:flex;align-items:center;gap:10px">
@@ -244,6 +246,7 @@ if (!m) {
 <div class="btn-bar">
   <button class="pr" id="btn-save">수 정</button>
   <button id="btn-cancel">취 소</button>
+</div>
 </div>
 `;
 

@@ -60,8 +60,16 @@ export function renderDetailPage(m, tabs) {
     + '  </div>'
     + '</div>'
 
-    // ── 상단: 기본정보(좌) + 결제정보(우) 좌우 분리 ──
-    + '<div style="display:grid;grid-template-columns:3fr 2fr;gap:8px;margin-bottom:4px;align-items:stretch">'
+    // ── 탭 구조 (헤더 바 바로 아래) ──
+    + '  <div class="tabs__nav" id="detail-tabs" style="width:100%;margin-bottom:0">'
+    + '    <button class="tabs__btn active" data-tab="basic">회원정보</button>'
+    + '    <button class="tabs__btn" data-tab="payment">결제정보</button>'
+    + '    <button class="tabs__btn" data-tab="matching">매칭관리</button>'
+    + '    <button class="tabs__btn" data-tab="consult">상담관리</button>'
+    + '  </div>'
+
+    + '<div style="padding:8px 0 0">'
+    + '<div style="display:grid;grid-template-columns:3fr 2fr;gap:8px;margin-bottom:0;align-items:stretch">'
 
     // ──── 좌측: 기본정보 ────
     + '<div class="sec" style="margin-bottom:0">'
@@ -138,18 +146,7 @@ export function renderDetailPage(m, tabs) {
     + '</div></div>'
     + '</div>'
 
-    // ── 탭 구조 ──
-    + '<div style="margin-bottom:0">'
-    + '  <div class="tabs__nav" id="detail-tabs" style="width:100%;margin-bottom:0">'
-    + '    <button class="tabs__btn active" data-tab="basic">회원정보</button>'
-    + '    <button class="tabs__btn" data-tab="payment">결제정보</button>'
-    + '    <button class="tabs__btn" data-tab="matching">매칭관리</button>'
-    + '    <button class="tabs__btn" data-tab="consult">상담관리</button>'
-    + '  </div>'
-    + '</div>'
-
     // ── 탭 패널 ──
-    + '<div>'
     + '  <div class="tab-panel active" id="panel-basic">' + tabs.basic + '</div>'
     + '  <div class="tab-panel" id="panel-payment">' + tabs.payment + '</div>'
     + '  <div class="tab-panel" id="panel-matching">' + tabs.matching + '</div>'

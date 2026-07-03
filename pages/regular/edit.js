@@ -28,10 +28,10 @@ if (!m) {
 } else {
 
 /* ── 스타일 상수 ── */
-var L = 'background:#f5f5f5;font-weight:600;font-size:11px;color:#333;text-align:center;white-space:nowrap;vertical-align:middle;border:1px solid #ddd;padding:5px 8px';
+var L = 'background:#eef0f3;font-weight:600;font-size:11px;color:#555;text-align:center;white-space:nowrap;vertical-align:middle;border:1px solid #ddd;padding:5px 8px';
 var V = 'font-size:12px;padding:4px 8px;border:1px solid #ddd;vertical-align:middle';
-var I = 'style="width:100%;font-size:12px;padding:2px 5px;border:1px solid #bbb;box-sizing:border-box"';
-var S = 'style="width:100%;font-size:12px;padding:2px 5px;border:1px solid #bbb;box-sizing:border-box"';
+var I = 'class="form-input form-input--sm" style="width:100%"';
+var S = 'class="form-select form-input--sm" style="width:100%"';
 
 function opts(arr, sel) {
   return arr.map(function(v) {
@@ -40,19 +40,20 @@ function opts(arr, sel) {
 }
 
 function secHdr(title) {
-  return '<div style="font-size:12px;font-weight:700;color:#333;padding:6px 0 4px 2px;margin-top:16px">' + title + '</div>';
+  return '<div class="sec" style="margin-bottom:8px"><div class="sec__header">' + title + '</div><div class="sec__body">';
 }
+var secEnd = '</div></div>';
 
 /* ── 렌더링 ── */
 content.style.padding = '12px 16px';
-content.style.background = '#fff';
+content.style.background = '#f5f5f5';
 content.style.maxWidth = '1400px';
 content.style.margin = '0 auto';
 
 content.innerHTML = ''
 
   /* ===== 상단 타이틀 바 ===== */
-  + '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;margin-bottom:12px;border-bottom:2px solid #333">'
+  + '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;margin-bottom:12px">'
   + '  <div style="display:flex;align-items:center;gap:10px">'
   + '    <span style="font-size:15px;font-weight:700;color:#222">회원정보 수정</span>'
   + '    <span style="font-size:13px;font-weight:600;color:#1a3a5c">' + m.name + '</span>'
@@ -64,6 +65,8 @@ content.innerHTML = ''
   + '    <button class="btn btn--primary btn--sm" id="btn-save" style="font-size:11px;padding:3px 18px;background:#1a3a5c;border-color:#1a3a5c">저장하기</button>'
   + '  </div>'
   + '</div>'
+
+  + '<div style="padding:0">'  
 
   /* ===== 탭 네비게이션 ===== */
   + '<div style="display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #1a3a5c">'
@@ -115,6 +118,7 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
   + '</div>'
 
   /* ── 결제정보 (우측) ── */
@@ -149,6 +153,7 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
   + '</div>'
 
   + '</div>' // end flex row
@@ -197,6 +202,7 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
 
   /* ===== 연락처/ 주소 (단일 12열 테이블) ===== */
   + secHdr('연락처/ 주소')
@@ -220,9 +226,9 @@ content.innerHTML = ''
   + '<tr>'
   + '<td style="' + L + '">회원거주지</td>'
   + '<td style="' + V + '" colspan="7"><div style="display:flex;gap:2px;align-items:center">'
-  +   '<input type="text" id="edit-addr1-1" value="" style="width:15%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
-  +   '<input type="text" id="edit-addr1-2" value="" style="width:35%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
-  +   '<input type="text" id="edit-addr1-3" value="" style="width:25%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-addr1-1" value="" class="form-input form-input--xs" style="width:15%">'
+  +   '<input type="text" id="edit-addr1-2" value="" class="form-input form-input--xs" style="width:35%">'
+  +   '<input type="text" id="edit-addr1-3" value="" class="form-input form-input--xs" style="width:25%">'
   +   '<button type="button" style="font-size:10px;padding:1px 4px;border:1px solid #999;background:#e0e0e0;cursor:pointer;white-space:nowrap">우편번호</button>'
   + '</div></td>'
   + '<td style="' + L + '">연락처1</td>'
@@ -234,12 +240,12 @@ content.innerHTML = ''
   + '<tr>'
   + '<td style="' + L + '">본적지</td>'
   + '<td style="' + V + '" colspan="7"><div style="display:flex;gap:2px;align-items:center">'
-  +   '<input type="text" id="edit-addr2-1" value="" style="width:15%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
-  +   '<input type="text" id="edit-addr2-2" value="" style="width:35%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
-  +   '<input type="text" id="edit-addr2-3" value="" style="width:25%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-addr2-1" value="" class="form-input form-input--xs" style="width:15%">'
+  +   '<input type="text" id="edit-addr2-2" value="" class="form-input form-input--xs" style="width:35%">'
+  +   '<input type="text" id="edit-addr2-3" value="" class="form-input form-input--xs" style="width:25%">'
   +   '<button type="button" style="font-size:10px;padding:1px 4px;border:1px solid #999;background:#e0e0e0;cursor:pointer;white-space:nowrap">우편번호</button>'
   +   '<span style="font-size:11px;padding:0 2px;white-space:nowrap;color:#555">(호주)</span>'
-  +   '<input type="text" id="edit-householder" value="" style="width:10%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-householder" value="" class="form-input form-input--xs" style="width:10%">'
   + '</div></td>'
   + '<td style="' + L + '">연락처2</td>'
   + '<td style="' + V + '"><select id="edit-contact2-who" ' + S + '><option>본인</option><option>부</option><option>모</option><option>기타</option></select></td>'
@@ -250,9 +256,9 @@ content.innerHTML = ''
   + '<tr>'
   + '<td style="' + L + '">직장주소</td>'
   + '<td style="' + V + '" colspan="7"><div style="display:flex;gap:2px;align-items:center">'
-  +   '<input type="text" id="edit-addr3-1" value="" style="width:15%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
-  +   '<input type="text" id="edit-addr3-2" value="" style="width:35%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
-  +   '<input type="text" id="edit-addr3-3" value="" style="width:25%;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-addr3-1" value="" class="form-input form-input--xs" style="width:15%">'
+  +   '<input type="text" id="edit-addr3-2" value="" class="form-input form-input--xs" style="width:35%">'
+  +   '<input type="text" id="edit-addr3-3" value="" class="form-input form-input--xs" style="width:25%">'
   +   '<button type="button" style="font-size:10px;padding:1px 4px;border:1px solid #999;background:#e0e0e0;cursor:pointer;white-space:nowrap">우편번호</button>'
   + '</div></td>'
   + '<td style="' + L + '">연락처3</td>'
@@ -305,6 +311,7 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
 
   /* ===== 자산정보 ===== */
   + secHdr('자산정보')
@@ -318,7 +325,7 @@ content.innerHTML = ''
   + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center">'
   +   '<select id="edit-asset-live-status" ' + S + '><option>선택</option><option>자가</option><option>전세</option><option>월세</option><option>기타</option></select>'
   +   '<span style="font-size:11px;white-space:nowrap">기타:</span>'
-  +   '<input type="text" id="edit-asset-live-etc" value="" style="width:60px;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-asset-live-etc" value="" class="form-input form-input--xs" style="width:60px">'
   +   '<span style="font-size:11px;white-space:nowrap">거주주택:</span>'
   +   '<select id="edit-asset-house-type" ' + S + '><option>선택</option><option>아파트</option><option>주택</option><option>빌라</option><option>오피스텔</option></select>'
   + '</div></td>'
@@ -326,7 +333,7 @@ content.innerHTML = ''
   + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center">'
   +   '<select id="edit-asset-marry-live" ' + S + '><option>선택</option><option>자가</option><option>전세</option><option>월세</option><option>기타</option></select>'
   +   '<span style="font-size:11px;white-space:nowrap">기타:</span>'
-  +   '<input type="text" id="edit-asset-marry-etc" value="" style="width:60px;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-asset-marry-etc" value="" class="form-input form-input--xs" style="width:60px">'
   +   '<span style="font-size:11px;white-space:nowrap">거주주택:</span>'
   +   '<select id="edit-asset-marry-house" ' + S + '><option>선택</option><option>아파트</option><option>주택</option><option>빌라</option><option>오피스텔</option></select>'
   + '</div></td>'
@@ -337,24 +344,24 @@ content.innerHTML = ''
   + '<td style="' + L + '">본인재산</td>'
   + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
   +   '<span style="font-size:11px;white-space:nowrap">금융자산</span>'
-  +   '<input type="text" id="edit-asset-fin" value="0" style="width:40px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-fin" value="0" class="form-input form-input--xs" style="width:40px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">억원</span>'
   +   '<span style="font-size:11px;white-space:nowrap">부동산</span>'
-  +   '<input type="text" id="edit-asset-real" value="0" style="width:40px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-real" value="0" class="form-input form-input--xs" style="width:40px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">억원</span>'
   +   '<span style="font-size:11px;white-space:nowrap">기타</span>'
-  +   '<input type="text" id="edit-asset-etc" value="0" style="width:40px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-etc" value="0" class="form-input form-input--xs" style="width:40px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">억원</span>'
   + '</div></td>'
   + '<td style="' + L + '">본인(구체적)</td>'
   + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
   +   '<select id="edit-asset-own-detail" ' + S + '><option>선택</option></select>'
-  +   '<input type="text" id="edit-asset-own-size" value="0" style="width:35px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-own-size" value="0" class="form-input form-input--xs" style="width:35px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">평</span>'
   +   '<span style="font-size:11px;white-space:nowrap">차량보유</span>'
   +   '<select id="edit-asset-car" ' + S + '><option>선택</option><option>유</option><option>무</option></select>'
   +   '<span style="font-size:11px;white-space:nowrap">차종:</span>'
-  +   '<input type="text" id="edit-asset-car-model" value="" style="width:60px;padding:1px 3px;font-size:11px;border:1px solid #bbb">'
+  +   '<input type="text" id="edit-asset-car-model" value="" class="form-input form-input--xs" style="width:60px">'
   + '</div></td>'
   + '</tr>'
 
@@ -374,13 +381,13 @@ content.innerHTML = ''
   + '<td style="' + L + '">가족재산</td>'
   + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
   +   '<span style="font-size:11px;white-space:nowrap">금융자산</span>'
-  +   '<input type="text" id="edit-asset-fam-fin" value="0" style="width:40px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-fam-fin" value="0" class="form-input form-input--xs" style="width:40px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">억원</span>'
   +   '<span style="font-size:11px;white-space:nowrap">부동산</span>'
-  +   '<input type="text" id="edit-asset-fam-real" value="0" style="width:40px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-fam-real" value="0" class="form-input form-input--xs" style="width:40px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">억원</span>'
   +   '<span style="font-size:11px;white-space:nowrap">기타</span>'
-  +   '<input type="text" id="edit-asset-fam-etc" value="0" style="width:40px;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right">'
+  +   '<input type="text" id="edit-asset-fam-etc" value="0" class="form-input form-input--xs" style="width:40px;text-align:right">'
   +   '<span style="font-size:11px;white-space:nowrap">억원</span>'
   + '</div></td>'
   + '<td style="' + L + '">가족재산(구체적)</td>'
@@ -394,12 +401,10 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
 
   /* ===== 학력 ===== */
-  + '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px 2px;margin-top:16px">'
-  + '  <div style="font-size:12px;font-weight:700;color:#333">학력</div>'
-  + '  <button type="button" id="btn-add-edu" style="font-size:11px;padding:2px 12px;border:1px solid #1a3a5c;background:#1a3a5c;color:#fff;cursor:pointer;border-radius:2px">+ 추가하기</button>'
-  + '</div>'
+  + '<div class="sec" style="margin-bottom:8px"><div class="sec__header sec__header--flex"><span>학력</span><button type="button" id="btn-add-edu" style="font-size:11px;padding:2px 12px;border:1px solid #1a3a5c;background:#1a3a5c;color:#fff;cursor:pointer;border-radius:2px">+ 추가하기</button></div><div class="sec__body">'
 
   // ── 학력 테이블
   + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:2px">'
@@ -456,8 +461,8 @@ content.innerHTML = ''
   + '</tr>'
   + '</thead>'
   + '<tbody id="lang-table-body">'
-  + '</tbody>'
   + '</table>'
+  + secEnd
 
   /* ===== 직장 ===== */
   + secHdr('직장')
@@ -469,14 +474,14 @@ content.innerHTML = ''
   + '<tr>'
   + '<td style="' + L + '">소득종류</td>'
   + '<td style="' + V + '"><div style="display:flex;gap:6px;align-items:center">'
-  +   '<select id="edit-income-type" style="font-size:11px;padding:1px 3px;border:1px solid #bbb;width:90px"><option>급여소득자</option><option>사업소득자</option><option>기타소득</option><option>무소득</option></select>'
+  +   '<select id="edit-income-type" class="form-select form-input--xs" style="width:90px"><option>급여소득자</option><option>사업소득자</option><option>기타소득</option><option>무소득</option></select>'
   +   '<label style="font-size:11px;white-space:nowrap;margin-left:8px"><input type="radio" name="edit-employ-type" value="정규직"> 정규직</label>'
   +   '<label style="font-size:11px;white-space:nowrap"><input type="radio" name="edit-employ-type" value="비정규직"> 비정규직</label>'
   + '</div></td>'
   + '<td style="' + L + '">연수입</td>'
-  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-annual-income" value="0" style="flex:1;padding:1px 3px;font-size:11px;border:1px solid #bbb;text-align:right"><span style="font-size:11px;white-space:nowrap">만원</span></div></td>'
+  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-annual-income" value="0" class="form-input form-input--xs" style="flex:1;text-align:right"><span style="font-size:11px;white-space:nowrap">만원</span></div></td>'
   + '<td style="' + L + '">기타수입</td>'
-  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-other-income" value="" style="flex:1;padding:1px 3px;font-size:11px;border:1px solid #bbb"><span style="font-size:11px;white-space:nowrap">원</span></div></td>'
+  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-other-income" value="" class="form-input form-input--xs" style="flex:1"><span style="font-size:11px;white-space:nowrap">원</span></div></td>'
   + '</tr>'
   + '</tbody></table>'
 
@@ -516,6 +521,7 @@ content.innerHTML = ''
   + '<tbody id="job-table-body">'
   + '</tbody>'
   + '</table>'
+  + secEnd
 
   /* ===== 신체정보 ===== */
   + secHdr('신체정보')
@@ -527,8 +533,8 @@ content.innerHTML = ''
   + '<tr>'
   + '<td style="' + L + '">시력</td>'
   + '<td style="' + V + '"><div style="display:flex;gap:4px;align-items:center">'
-  +   '<span style="font-size:11px;white-space:nowrap">좌:</span><input type="text" id="edit-sight-l" value="" style="width:30px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
-  +   '<span style="font-size:11px;white-space:nowrap">우:</span><input type="text" id="edit-sight-r" value="" style="width:30px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
+  +   '<span style="font-size:11px;white-space:nowrap">좌:</span><input type="text" id="edit-sight-l" value="" class="form-input form-input--xs" style="width:30px;text-align:center">'
+  +   '<span style="font-size:11px;white-space:nowrap">우:</span><input type="text" id="edit-sight-r" value="" class="form-input form-input--xs" style="width:30px;text-align:center">'
   + '</div></td>'
   + '<td style="' + L + '">안경</td>'
   + '<td style="' + V + '"><select id="edit-glasses" ' + S + '><option>선택</option><option>미착용</option><option>착용</option><option>콘택트</option></select></td>'
@@ -557,12 +563,13 @@ content.innerHTML = ''
   + '<td style="' + L + '">범죄이력</td>'
   + '<td style="' + V + '"><select id="edit-crime" ' + S + '><option>선택</option><option>없다</option><option>있다</option></select></td>'
   + '<td style="' + L + '">신장</td>'
-  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-height" value="" style="flex:1;font-size:11px;padding:1px 3px;border:1px solid #bbb;text-align:right"><span style="font-size:11px">cm</span></div></td>'
+  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-height" value="" class="form-input form-input--xs" style="flex:1;text-align:right"><span style="font-size:11px">cm</span></div></td>'
   + '<td style="' + L + '">체중</td>'
-  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-weight" value="" style="flex:1;font-size:11px;padding:1px 3px;border:1px solid #bbb;text-align:right"><span style="font-size:11px">kg</span></div></td>'
+  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-weight" value="" class="form-input form-input--xs" style="flex:1;text-align:right"><span style="font-size:11px">kg</span></div></td>'
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
 
   /* ===== 기타정보 ===== */
   + secHdr('기타정보')
@@ -635,6 +642,7 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
 
   + '</div>' /* end tab-member */
 
@@ -680,6 +688,7 @@ content.innerHTML = ''
   + '<tbody id="family-table-body">'
   + '</tbody>'
   + '</table>'
+  + secEnd
 
   /* ===== 재혼정보 ===== */
   + secHdr('재혼정보')
@@ -716,6 +725,7 @@ content.innerHTML = ''
   + '<tbody id="remarry-table-body">'
   + '</tbody>'
   + '</table>'
+  + secEnd
 
   /* ===== 자녀정보 ===== */
   + secHdr('자녀정보')
@@ -758,6 +768,7 @@ content.innerHTML = ''
   + '<tbody id="child-table-body">'
   + '</tbody>'
   + '</table>'
+  + secEnd
 
   + '</div>' /* end tab-family */
 
@@ -773,9 +784,9 @@ content.innerHTML = ''
   // Row1: 희망나이 / 희망신장
   + '<tr>'
   + '<td style="' + L + '">희망나이</td>'
-  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-hope-age-min" value="" style="width:35px;font-size:11px;padding:1px 3px;border:1px solid #bbb;text-align:center"><span style="font-size:11px">~</span><input type="text" id="edit-hope-age-max" value="" style="width:35px;font-size:11px;padding:1px 3px;border:1px solid #bbb;text-align:center"><span style="font-size:11px">세</span></div></td>'
+  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-hope-age-min" value="" class="form-input form-input--xs" style="width:35px;text-align:center"><span style="font-size:11px">~</span><input type="text" id="edit-hope-age-max" value="" class="form-input form-input--xs" style="width:35px;text-align:center"><span style="font-size:11px">세</span></div></td>'
   + '<td style="' + L + '">희망신장</td>'
-  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-hope-height-min" value="" style="width:35px;font-size:11px;padding:1px 3px;border:1px solid #bbb;text-align:center"><span style="font-size:11px">~</span><input type="text" id="edit-hope-height-max" value="" style="width:35px;font-size:11px;padding:1px 3px;border:1px solid #bbb;text-align:center"><span style="font-size:11px">cm</span></div></td>'
+  + '<td style="' + V + '"><div style="display:flex;gap:3px;align-items:center"><input type="text" id="edit-hope-height-min" value="" class="form-input form-input--xs" style="width:35px;text-align:center"><span style="font-size:11px">~</span><input type="text" id="edit-hope-height-max" value="" class="form-input form-input--xs" style="width:35px;text-align:center"><span style="font-size:11px">cm</span></div></td>'
   + '<td style="' + L + '">희망체형</td>'
   + '<td style="' + V + '"><select id="edit-hope-body" ' + S + '><option>선택</option><option>마름</option><option>보통</option><option>건장</option><option>통통</option><option>상관없음</option></select></td>'
   + '<td style="' + L + '">희망학력</td>'
@@ -807,6 +818,7 @@ content.innerHTML = ''
   + '</tr>'
 
   + '</tbody></table>'
+  + secEnd
 
   /* ── 희망직업 ── */
   + secHdr('희망 직업')
@@ -835,6 +847,7 @@ content.innerHTML = ''
   + '</div></td>'
   + '</tr>'
   + '</tbody></table>'
+  + secEnd
 
   /* ── 선호하는 비교순 ── */
   + secHdr('선호하는 비교 우선순위')
@@ -845,6 +858,7 @@ content.innerHTML = ''
   + '<tr><td style="' + L + '">2순위</td><td style="' + V + '"><input type="text" id="edit-hope-pri2" value="" placeholder="" ' + I + '></td></tr>'
   + '<tr><td style="' + L + '">3순위</td><td style="' + V + '"><input type="text" id="edit-hope-pri3" value="" placeholder="" ' + I + '></td></tr>'
   + '</tbody></table>'
+  + secEnd
 
   /* ── 자신의 PR ── */
   + secHdr('자신의 PR')
@@ -854,26 +868,27 @@ content.innerHTML = ''
   + '<tr>'
   + '<td style="' + V + ';vertical-align:top">'
   + '<div style="font-size:11px;font-weight:700;color:#333;margin-bottom:4px">본인의 PR · 어필포인트</div>'
-  + '<textarea id="edit-pr-self" rows="5" style="width:100%;font-size:11px;padding:4px;border:1px solid #bbb;resize:vertical" placeholder="본인의 장점, 성격, 매력포인트 등을 자유롭게 작성하세요"></textarea>'
+  + '<textarea id="edit-pr-self" rows="5" class="form-input" style="width:100%;resize:vertical" placeholder="본인의 장점, 성격, 매력포인트 등을 자유롭게 작성하세요"></textarea>'
   + '<div style="font-size:11px;font-weight:700;color:#333;margin:8px 0 4px">본인의 성격 및 스타일</div>'
-  + '<textarea id="edit-pr-personality" rows="3" style="width:100%;font-size:11px;padding:4px;border:1px solid #bbb;resize:vertical" placeholder="성격, 생활 패턴, 연애 스타일 등"></textarea>'
+  + '<textarea id="edit-pr-personality" rows="3" class="form-input" style="width:100%;resize:vertical" placeholder="성격, 생활 패턴, 연애 스타일 등"></textarea>'
   + '<div style="font-size:11px;font-weight:700;color:#333;margin:8px 0 4px">좋아하거나 가장 자신있는 것?</div>'
-  + '<textarea id="edit-pr-best" rows="3" style="width:100%;font-size:11px;padding:4px;border:1px solid #bbb;resize:vertical" placeholder=""></textarea>'
+  + '<textarea id="edit-pr-best" rows="3" class="form-input" style="width:100%;resize:vertical" placeholder=""></textarea>'
   + '<div style="font-size:11px;font-weight:700;color:#333;margin:8px 0 4px">남들이 어기다는 본인의 매력은?</div>'
-  + '<textarea id="edit-pr-charm" rows="3" style="width:100%;font-size:11px;padding:4px;border:1px solid #bbb;resize:vertical" placeholder=""></textarea>'
+  + '<textarea id="edit-pr-charm" rows="3" class="form-input" style="width:100%;resize:vertical" placeholder=""></textarea>'
   + '</td>'
   + '<td style="' + V + ';vertical-align:top">'
   + '<div style="font-size:11px;font-weight:700;color:#333;margin-bottom:4px">커플되는 여건</div>'
   + '<table style="width:100%;border-collapse:collapse">'
-  + '<tr><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd;width:80px;background:#f5f5f5">집</td><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd"><div style="display:flex;gap:6px;align-items:center"><select id="edit-cpl-house-type" style="font-size:11px;padding:1px 3px;border:1px solid #bbb"><option>선택</option><option>매매</option><option>전세</option><option>월세</option></select><input type="text" id="edit-cpl-house" style="flex:1;font-size:11px;padding:1px 3px;border:1px solid #bbb" placeholder="상세"></div></td></tr>'
-  + '<tr><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd;background:#f5f5f5">생활 및 교통비</td><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd"><input type="text" id="edit-cpl-living" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb" placeholder=""></td></tr>'
-  + '<tr><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd;background:#f5f5f5">차량 및 수입차</td><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd"><input type="text" id="edit-cpl-car" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb" placeholder=""></td></tr>'
+  + '<tr><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd;width:80px;background:#f8f9fa">집</td><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd"><div style="display:flex;gap:6px;align-items:center"><select id="edit-cpl-house-type" class="form-select form-input--xs"><option>선택</option><option>매매</option><option>전세</option><option>월세</option></select><input type="text" id="edit-cpl-house" class="form-input form-input--xs" style="flex:1" placeholder="상세"></div></td></tr>'
+  + '<tr><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd;background:#f8f9fa">생활 및 교통비</td><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd"><input type="text" id="edit-cpl-living" class="form-input form-input--xs" style="width:100%" placeholder=""></td></tr>'
+  + '<tr><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd;background:#f8f9fa">차량 및 수입차</td><td style="font-size:11px;padding:3px 4px;border:1px solid #ddd"><input type="text" id="edit-cpl-car" class="form-input form-input--xs" style="width:100%" placeholder=""></td></tr>'
   + '</table>'
   + '<div style="font-size:11px;font-weight:700;color:#333;margin:8px 0 4px">취미사항</div>'
-  + '<textarea id="edit-pr-hobby" rows="3" style="width:100%;font-size:11px;padding:4px;border:1px solid #bbb;resize:vertical" placeholder="취미, 관심사 등"></textarea>'
+  + '<textarea id="edit-pr-hobby" rows="3" class="form-input" style="width:100%;resize:vertical" placeholder="취미, 관심사 등"></textarea>'
   + '</td>'
   + '</tr>'
   + '</tbody></table>'
+  + secEnd
 
   /* ── 매체를 알게된 경위 ── */
   + secHdr('매체를 알게된 경위')
@@ -896,12 +911,14 @@ content.innerHTML = ''
   + '<td style="' + V + '"><input type="text" id="edit-media-etc" value="" ' + I + '></td>'
   + '</tr>'
   + '</tbody></table>'
+  + secEnd
 
   + '</div>' /* end tab-partner */
 
   + '<div style="display:flex;justify-content:center;gap:10px;padding:20px 0;margin-top:24px">'
   + '  <button class="btn btn--ghost" id="btn-cancel-bottom" style="font-size:12px;padding:5px 28px;border:1px solid #aaa">취소</button>'
   + '  <button class="btn btn--primary" id="btn-save-bottom" style="font-size:12px;padding:5px 28px;background:#1a3a5c;border-color:#1a3a5c">저장하기</button>'
+  + '</div>'
   + '</div>';
 
 /* ── 탭 전환 이벤트 ── */
@@ -1091,7 +1108,7 @@ document.getElementById('btn-save-bottom').addEventListener('click', handleSave)
 /* ── 년도 옵션 생성 + 기간 계산 공용 ── */
 var yearOpts = '<option value="">선택</option>';
 for (var yy = 2035; yy >= 1980; yy--) { yearOpts += '<option value="' + yy + '">' + yy + '</option>'; }
-var SEL_Y = 'style="width:100%;font-size:11px;padding:1px 2px;border:1px solid #bbb"';
+var SEL_Y = 'style="width:100%"';
 
 function calcYearPeriod(startEl, endEl, cell) {
   var s = parseInt(startEl.value), e = parseInt(endEl.value);
@@ -1111,19 +1128,19 @@ function calcYearPeriod(startEl, endEl, cell) {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '">'
-      + '<select style="width:100%;font-size:11px;padding:1px 2px;border:1px solid #bbb">'
+      + '<select class="form-select form-input--xs" style="width:100%">'
       + '<option>선택</option><option>고등학교</option><option>전문대학교</option><option>대학교</option>'
       + '<option>대학원(석사)</option><option>대학원(박사)</option><option>기타</option><option>유학</option>'
       + '</select></td>'
-      + '<td style="' + V + '"><input type="text" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
-      + '<td style="' + V + '"><input type="text" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
-      + '<td style="' + V + '"><input type="text" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
+      + '<td style="' + V + '"><input type="text" class="form-input form-input--xs" style="width:100%"></td>'
+      + '<td style="' + V + '"><input type="text" class="form-input form-input--xs" style="width:100%"></td>'
+      + '<td style="' + V + '"><input type="text" class="form-input form-input--xs" style="width:100%"></td>'
       + '<td style="' + V + '">'
-      + '<select style="width:100%;font-size:11px;padding:1px 2px;border:1px solid #bbb">'
+      + '<select class="form-select form-input--xs" style="width:100%">'
       + '<option>선택</option><option>졸업</option><option>재학</option><option>중퇴</option><option>휴학</option><option>수료</option>'
       + '</select></td>'
-      + '<td style="' + V + '"><select class="edu-start" ' + SEL_Y + '>' + yearOpts + '</select></td>'
-      + '<td style="' + V + '"><select class="edu-end" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="edu-start form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="edu-end form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
       + '<td style="' + V + ';text-align:center" class="edu-period">-</td>'
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-edu" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
 
@@ -1148,11 +1165,11 @@ function calcYearPeriod(startEl, endEl, cell) {
   function addLangRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
-      '<td style="' + V + '"><input type="text" placeholder="국가" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
-      + '<td style="' + V + '"><select class="lang-start" ' + SEL_Y + '>' + yearOpts + '</select></td>'
-      + '<td style="' + V + '"><select class="lang-end" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      '<td style="' + V + '"><input type="text" placeholder="국가" class="form-input form-input--xs" style="width:100%"></td>'
+      + '<td style="' + V + '"><select class="lang-start form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="lang-end form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
       + '<td style="' + V + ';text-align:center" class="lang-period">-</td>'
-      + '<td style="' + V + '"><input type="text" placeholder="학교/기관명" style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"></td>'
+      + '<td style="' + V + '"><input type="text" placeholder="학교/기관명" class="form-input form-input--xs" style="width:100%"></td>'
       + '<td style="' + V + ';text-align:center"><button type="button" class="btn-del-lang" style="font-size:10px;padding:1px 8px;border:1px solid #c00;background:#fff;color:#c00;cursor:pointer;border-radius:2px">삭제</button></td>';
     langBody.appendChild(tr);
     var sEl = tr.querySelector('.lang-start'), eEl = tr.querySelector('.lang-end'), pEl = tr.querySelector('.lang-period');
@@ -1168,7 +1185,7 @@ function calcYearPeriod(startEl, endEl, cell) {
 (function() {
   var jobBody = document.getElementById('job-table-body');
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
-  var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
+  var TI = 'class="form-input form-input--xs" style="width:100%"';
 
   function addJobRow() {
     var tr = document.createElement('tr');
@@ -1178,7 +1195,7 @@ function calcYearPeriod(startEl, endEl, cell) {
       + '<td style="' + V + '"><input type="text" placeholder="명" ' + TI + '></td>'
       + '<td style="' + V + '"><input type="text" placeholder="부서" ' + TI + '></td>'
       + '<td style="' + V + '"><input type="text" placeholder="직위" ' + TI + '></td>'
-      + '<td style="' + V + '"><select class="job-year" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="job-year form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
       + '<td style="' + V + '"><input type="text" placeholder="소재지" ' + TI + '></td>'
       + '<td style="' + V + '">'
       + '<select ' + TI + '>'
@@ -1198,7 +1215,7 @@ function calcYearPeriod(startEl, endEl, cell) {
 (function() {
   var famBody = document.getElementById('family-table-body');
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
-  var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
+  var TI = 'class="form-input form-input--xs" style="width:100%"';
 
   function addFamilyRow() {
     var tr = document.createElement('tr');
@@ -1209,12 +1226,12 @@ function calcYearPeriod(startEl, endEl, cell) {
       + '<option>동생</option><option>남동생</option><option>여동생</option><option>조부</option><option>조모</option><option>기타</option>'
       + '</select></td>'
       + '<td style="' + V + '"><input type="text" placeholder="성명" ' + TI + '></td>'
-      + '<td style="' + V + '"><select class="fam-year" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="fam-year form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
       + '<td style="' + V + '">'
       + '<select ' + TI + '>'
       + '<option>선택</option><option>고졸</option><option>전문대졸</option><option>대졸</option><option>석사</option><option>박사</option><option>기타</option>'
       + '</select></td>'
-      + '<td style="' + V + ';overflow:hidden"><div style="display:flex;gap:2px;min-width:0"><input type="text" placeholder="직업" style="flex:1;min-width:0;font-size:11px;padding:1px 3px;border:1px solid #bbb"><select style="flex-shrink:0;font-size:11px;padding:1px 1px;border:1px solid #bbb;width:42px"><option>현직</option><option>전직</option><option>퇴직</option></select></div></td>'
+      + '<td style="' + V + ';overflow:hidden"><div style="display:flex;gap:2px;min-width:0"><input type="text" placeholder="직업" class="form-input form-input--xs" style="flex:1;min-width:0"><select class="form-select form-input--xs" style="flex-shrink:0;width:42px"><option>현직</option><option>전직</option><option>퇴직</option></select></div></td>'
       + '<td style="' + V + '">'
       + '<select ' + TI + '><option>선택</option><option>동거</option><option>비동거</option></select></td>'
       + '<td style="' + V + '">'
@@ -1233,25 +1250,25 @@ function calcYearPeriod(startEl, endEl, cell) {
 (function() {
   var rmBody = document.getElementById('remarry-table-body');
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
-  var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
+  var TI = 'class="form-input form-input--xs" style="width:100%"';
 
   function addRemarryRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '">'
       + '<select ' + TI + '><option>선택</option><option>이혼</option><option>사별</option><option>사실혼</option></select></td>'
-      + '<td style="' + V + '"><select class="rm-year" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="rm-year form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
       + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
-      + '<input type="text" placeholder="0" style="width:25px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
+      + '<input type="text" placeholder="0" class="form-input form-input--xs" style="width:25px;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">년</span>'
-      + '<input type="text" placeholder="0" style="width:25px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
+      + '<input type="text" placeholder="0" class="form-input form-input--xs" style="width:25px;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">개월</span>'
       + '</div></td>'
       + '<td style="' + V + '"><input type="text" placeholder="이혼사유" ' + TI + '></td>'
       + '<td style="' + V + '"><div style="display:flex;gap:2px;align-items:center">'
-      + '<input type="text" placeholder="0" style="width:22px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
+      + '<input type="text" placeholder="0" class="form-input form-input--xs" style="width:22px;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">남</span>'
-      + '<input type="text" placeholder="0" style="width:22px;font-size:11px;padding:1px 2px;border:1px solid #bbb;text-align:center">'
+      + '<input type="text" placeholder="0" class="form-input form-input--xs" style="width:22px;text-align:center">'
       + '<span style="font-size:11px;white-space:nowrap">녀</span>'
       + '</div></td>'
       + '<td style="' + V + '">'
@@ -1269,14 +1286,14 @@ function calcYearPeriod(startEl, endEl, cell) {
 (function() {
   var chBody = document.getElementById('child-table-body');
   var V = 'font-size:11px;padding:3px 4px;border:1px solid #ddd;vertical-align:middle';
-  var TI = 'style="width:100%;font-size:11px;padding:1px 3px;border:1px solid #bbb"';
+  var TI = 'class="form-input form-input--xs" style="width:100%"';
 
   function addChildRow() {
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td style="' + V + '"><select ' + TI + '><option>선택</option><option>남</option><option>녀</option></select></td>'
       + '<td style="' + V + '"><input type="text" placeholder="성명" ' + TI + '></td>'
-      + '<td style="' + V + '"><select class="child-year" ' + SEL_Y + '>' + yearOpts + '</select></td>'
+      + '<td style="' + V + '"><select class="child-year form-select form-input--xs" ' + SEL_Y + '>' + yearOpts + '</select></td>'
       + '<td style="' + V + '"><select ' + TI + '><option>선택</option><option>고졸</option><option>전문대졸</option><option>대졸</option><option>석사</option><option>박사</option><option>기타</option></select></td>'
       + '<td style="' + V + '"><input type="text" placeholder="직업" ' + TI + '></td>'
       + '<td style="' + V + '"><select ' + TI + '><option>선택</option><option>동거</option><option>비동거</option></select></td>'

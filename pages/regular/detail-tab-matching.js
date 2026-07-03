@@ -8,7 +8,7 @@ import { Auth } from '@core/auth.js';
 import { showMeetingManageModal } from './detail-tab-meeting.js';
 
 var CS = 'text-align:center;white-space:nowrap;vertical-align:middle';
-var LBL = 'background:var(--bg-secondary);font-weight:600;color:#888;text-align:center';
+var LBL = 'background:#eef0f3;font-weight:600;color:#555;text-align:center';
 
 /* ── 소개장 뱃지 ── */
 function resultBadge(r) {
@@ -249,7 +249,7 @@ export function renderMatchingInfo(m) {
   var CARD_HDR = 'mcard__header';
   var CARD_BODY = 'mcard__body';
 
-  var html = '<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:stretch">';
+  var html = '<div style="display:grid;grid-template-columns:3fr 2fr;gap:8px;align-items:stretch">';
 
   /* ── 메모장 (좌상) ── */
   html += '<div class="' + CARD + '">';

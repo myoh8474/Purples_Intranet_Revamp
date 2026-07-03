@@ -91,14 +91,237 @@
 .btn--reset{background:#fff;color:#374151;border:1px solid #d1d5db}
 .btn--reset:hover{background:#f1f3f5;border-color:#9ca3af}
 
-/* ── 폼 ── */
+/* ========================================
+   폼 인풋 표준 규정
+   — 사이즈: xs(26px) / sm(30px) / md(34px, 기본)
+   — 상태: readonly / disabled / error / success
+   — 유형: text / date / number / textarea / checkbox / radio
+   ======================================== */
+
+/* ── 폼 그룹 & 라벨 ── */
 .form-group{margin-bottom:var(--spacing-lg)}
 .form-label{display:block;font-size:var(--font-size-sm);font-weight:600;color:var(--text-secondary);margin-bottom:var(--spacing-xs)}
-.form-input,.form-select{width:100%;padding:5px 10px;border:1px solid var(--border-medium);border-radius:2px;font-size:13px;font-family:inherit;background:#fff;color:var(--text-primary);transition:border-color 0.1s}
+.form-label--required::after{content:' *';color:var(--status-red);font-weight:700}
+
+/* ── 기본 인풋 (md — 34px, 기본값) ── */
+.form-input,.form-select{
+  width:100%;height:34px;padding:5px 10px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-size:13px;font-family:inherit;
+  background:#fff;color:var(--text-primary);
+  transition:border-color 0.1s,box-shadow 0.1s;
+  box-sizing:border-box;
+}
+
+/* ── 셀렉트 화살표 ── */
 select.form-select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;background-size:10px 6px}
 .select-wrap{position:relative;display:inline-block;width:100%}
+
+/* ── 포커스 ── */
 .form-input:focus,.form-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px #d1dce8}
-.form-select--sm{padding:3px 6px;font-size:12px;width:auto}
+
+/* ── 사이즈 변형 ── */
+/* sm — 30px : 검색 필터, 상세페이지 인라인 인풋 */
+.form-input--sm,.form-select--sm{height:30px;padding:3px 8px;font-size:12px}
+/* xs — 26px : 테이블 내부 인라인 인풋, 고밀도 필터 */
+.form-input--xs,.form-select--xs{height:26px;padding:2px 6px;font-size:11px}
+
+/* ── 너비 유틸리티 ── */
+.form-input--auto,.form-select--auto{width:auto}
+.form-input--w60{width:60px}
+.form-input--w80{width:80px}
+.form-input--w100{width:100px}
+.form-input--w120{width:120px}
+.form-input--w140{width:140px}
+.form-input--w200{width:200px}
+.form-input--full{width:100%}
+
+/* ── 상태: 읽기전용 ── */
+.form-input[readonly],.form-select[readonly],
+.form-input--readonly{
+  background:#f8f9fa;color:var(--text-secondary);
+  cursor:default;border-color:var(--border-light);
+}
+.form-input[readonly]:focus,.form-select[readonly]:focus,
+.form-input--readonly:focus{
+  border-color:var(--border-light);box-shadow:none;
+}
+
+/* ── 상태: 비활성 ── */
+.form-input:disabled,.form-select:disabled,
+.form-input--disabled{
+  background:#f1f3f5;color:var(--text-muted);
+  cursor:not-allowed;border-color:var(--border-light);opacity:0.7;
+}
+
+/* ── 상태: 에러 ── */
+.form-input--error,.form-input.is-error{
+  border-color:var(--status-red) !important;
+  box-shadow:0 0 0 2px rgba(197,48,48,0.12) !important;
+}
+.form-error{font-size:11px;color:var(--status-red);margin-top:3px}
+
+/* ── 상태: 성공 ── */
+.form-input--success,.form-input.is-success{
+  border-color:var(--status-green) !important;
+  box-shadow:0 0 0 2px rgba(39,103,73,0.12) !important;
+}
+
+/* ── Textarea ── */
+textarea.form-input,.form-textarea{
+  height:auto;min-height:60px;padding:6px 10px;
+  resize:vertical;line-height:1.5;
+}
+textarea.form-input--sm,.form-textarea--sm{
+  min-height:48px;padding:4px 8px;font-size:12px;
+}
+
+/* ── 날짜 인풋 ── */
+.form-input[type="date"],.form-input[type="datetime-local"],
+.form-input--date{
+  font-variant-numeric:tabular-nums;
+}
+.form-input[type="date"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;opacity:0.5;
+}
+.form-input[type="date"]::-webkit-calendar-picker-indicator:hover{
+  opacity:1;
+}
+
+/* ── 숫자 인풋 ── */
+.form-input[type="number"],.form-input--number{
+  text-align:right;font-variant-numeric:tabular-nums;
+}
+/* 스피너 숨기기 (필요시) */
+.form-input--no-spin::-webkit-outer-spin-button,
+.form-input--no-spin::-webkit-inner-spin-button{
+  -webkit-appearance:none;margin:0;
+}
+.form-input--no-spin{-moz-appearance:textfield}
+
+/* ── 금액 인풋 ── */
+.form-input--money{
+  text-align:right;font-variant-numeric:tabular-nums;font-weight:600;
+}
+
+/* ── 체크박스 & 라디오 ── */
+.form-check{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
+.form-check input[type="checkbox"],
+.form-check input[type="radio"]{
+  width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;
+}
+.form-check--sm input[type="checkbox"],
+.form-check--sm input[type="radio"]{width:14px;height:14px}
+.form-check-group{display:flex;gap:12px;flex-wrap:wrap}
+
+/* ── 인풋 그룹 (접두사/접미사) ── */
+.input-group{display:flex;align-items:stretch}
+.input-group .form-input{border-radius:0}
+.input-group .form-input:first-child{border-radius:2px 0 0 2px}
+.input-group .form-input:last-child{border-radius:0 2px 2px 0}
+.input-group__addon{
+  display:flex;align-items:center;padding:0 8px;
+  background:#f3f4f6;border:1px solid var(--border-medium);
+  font-size:12px;color:var(--text-secondary);white-space:nowrap;
+}
+.input-group__addon:first-child{border-right:none;border-radius:2px 0 0 2px}
+.input-group__addon:last-child{border-left:none;border-radius:0 2px 2px 0}
+
+/* ── 기간 검색 (날짜 from ~ to) ── */
+.date-range{display:flex;align-items:center;gap:4px}
+.date-range__sep{color:var(--text-muted);font-size:13px;line-height:30px}
+.date-range .form-input{width:130px}
+
+/* ========================================
+   전역 인풋 통일 (form-input--sm 기준)
+   — 테이블·상세·모달 안의 모든 인풋을 sm 사이즈로 강제
+   — 인라인 style 대신 CSS 클래스로 일원화
+   ======================================== */
+
+/* 테이블 내부 인풋 (dtbl, std-table, data-table, info-table, search-table, ef) */
+.dtbl input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.dtbl select,
+.dtbl textarea,
+.std-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.std-table select,
+.data-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.data-table select,
+.info-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.info-table select,
+.search-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.search-table select,
+.ef input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.ef select {
+  height:30px;padding:3px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;
+  transition:border-color 0.1s,box-shadow 0.1s;
+}
+.dtbl textarea,
+.data-table textarea,
+.info-table textarea,
+.ef textarea {
+  height:auto;min-height:48px;padding:4px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;resize:vertical;line-height:1.5;
+  transition:border-color 0.1s,box-shadow 0.1s;
+}
+
+/* 상세 팝업 내부 인풋 */
+.detail-popup input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.detail-popup select {
+  height:30px;padding:3px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;
+  transition:border-color 0.1s,box-shadow 0.1s;
+}
+.detail-popup textarea {
+  height:auto;min-height:48px;padding:4px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;resize:vertical;line-height:1.5;
+  transition:border-color 0.1s,box-shadow 0.1s;
+}
+
+/* 모달 내부 인풋 */
+.modal input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.modal select {
+  height:30px;padding:3px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;
+  transition:border-color 0.1s,box-shadow 0.1s;
+}
+.modal textarea {
+  height:auto;min-height:48px;padding:4px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;resize:vertical;line-height:1.5;
+  transition:border-color 0.1s,box-shadow 0.1s;
+}
+
+.dtbl input:focus, .dtbl select:focus, .dtbl textarea:focus,
+.std-table input:focus, .std-table select:focus,
+.data-table input:focus, .data-table select:focus,
+.info-table input:focus, .info-table select:focus,
+.detail-popup input:focus, .detail-popup select:focus, .detail-popup textarea:focus,
+.modal input:focus, .modal select:focus, .modal textarea:focus,
+.ef input:focus, .ef select:focus, .ef textarea:focus {
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 2px #d1dce8;
+}
+
+/* readonly — 배경 변경 */
+.dtbl input[readonly], .std-table input[readonly],
+.data-table input[readonly], .info-table input[readonly],
+.detail-popup input[readonly], .modal input[readonly],
+.ef input[readonly] {
+  background:#f8f9fa;color:var(--text-secondary);cursor:default;
+}
+
+/* ── 폼 행 ── */
 .form-row{display:flex;gap:var(--spacing-sm);align-items:center}
 .form-separator{color:var(--text-muted)}
 .form-hint{font-size:var(--font-size-xs);color:var(--text-muted);margin-top:4px}
@@ -285,8 +508,17 @@ select.form-select{appearance:none;-webkit-appearance:none;cursor:pointer;paddin
 .filter-bar__search{display:flex;flex-direction:column;gap:4px;flex:1;min-width:180px}
 .filter-bar__search label{font-size:var(--font-size-xs);font-weight:600;color:var(--text-muted);white-space:nowrap}
 .filter-bar__search .form-input{width:100%}
-.form-input--sm{padding:6px 10px;font-size:var(--font-size-xs);border:1px solid var(--border-medium);border-radius:var(--radius-md);font-family:inherit;background:var(--bg-primary);color:var(--text-primary);transition:border-color var(--transition-fast)}
-.form-input--sm:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--purple-100)}
+/* filter-bar 내부 인풋 sm 통일 */
+.filter-bar input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.filter-bar select{
+  height:30px;padding:3px 8px;font-size:12px;
+  border:1px solid var(--border-medium);border-radius:2px;
+  font-family:inherit;background:#fff;color:var(--text-primary);
+  box-sizing:border-box;
+}
+.filter-bar input:focus,.filter-bar select:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 2px #d1dce8;
+}
 .search-input{position:relative}
 .search-input input{padding-left:36px}
 .search-input::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:var(--font-size-sm)}
@@ -758,7 +990,12 @@ select.form-select{appearance:none;-webkit-appearance:none;cursor:pointer;paddin
 }
 .search-table tr:last-child .search-table__th,
 .search-table tr:last-child .search-table__td { border-bottom: none; }
-.fi { font-size: 13px !important; height: 30px; }
+.fi {
+  font-size: 12px !important; height: 30px; padding: 3px 8px;
+  border: 1px solid var(--border-medium); border-radius: 2px;
+  font-family: inherit; background: #fff; color: var(--text-primary);
+  box-sizing: border-box;
+}
 
 /* ── 검색/초기화 버튼 ── */
 .search-actions {

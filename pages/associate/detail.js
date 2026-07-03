@@ -9,6 +9,7 @@ import { Formatters } from '@utils/formatters.js';
 import { AssociateService } from '@services/associate.service.js';
 import { DocService, DOC_TYPES } from '@services/doc.service.js';
 import { CONSULTANTS, PROGRAMS, PROGRAM_GRADES } from '@config/constants.js';
+import { showRegModal } from './regModal.js';
 
 const params = new URLSearchParams(window.location.search);
 const memberId = parseInt(params.get('id'));
@@ -16,7 +17,7 @@ document.body.style.cssText = 'background:#f5f5f5;margin:0';
 document.getElementById('app').style.cssText = 'max-width:1400px;margin:0 auto;padding:16px 20px;min-height:100vh';
 const content = document.getElementById('app');
 const CALL_RESULTS = ['부재중','낮음(컨텍)','중간(컨텍)','높음(컨텍)','장기상담','방문상담'];
-let selectedProgram = '골드(사파이어)', selectedGrade = '', regIdOk = false;
+
 
 function getCallHist(id){ try{ return JSON.parse(localStorage.getItem('purples_call_history_'+id)||'[]'); }catch(e){ return []; } }
 function saveCallHist(id,r){ const h=getCallHist(id); h.unshift(r); localStorage.setItem('purples_call_history_'+id, JSON.stringify(h)); }
@@ -298,7 +299,7 @@ www.purples.co.kr</textarea>
   document.getElementById('btn-sms-call')?.addEventListener('click',()=>showSmsModal(['연락전송','SMS전송','SMS전송결과','주소안내']));
 
   document.getElementById('btn-call-direct')?.addEventListener('click',()=>Toast.show('전화 연결 (기능 준비중)','info'));
-  document.getElementById('btn-status')?.addEventListener('click',()=>Toast.show('회원상태 수정 (기능 준비중)','info'));
+  document.getElementById('btn-status')?.addEventListener('click',()=>{ window.location.href=`edit.html?id=${m.id}`; });
   document.getElementById('btn-register-regular')?.addEventListener('click',()=>showRegModal(m));
   document.getElementById('btn-reg')?.addEventListener('click',()=>showRegModal(m));
   document.getElementById('btn-call')?.addEventListener('click',()=>showCallModal(m));
@@ -531,56 +532,7 @@ function showCallModal(m){
     });
   },100);
 }
-function showRegModal(m){
-  selectedProgram='골드(사파이어)';selectedGrade='';regIdOk=false;
-  Modal.show({title:'정회원 등록',size:'xl',
-    content:`<style>.rr-chip{padding:6px 14px;border:1px solid var(--border-light);background:var(--bg-primary);font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--font-family)}.rr-chip:hover{border-color:var(--accent)}.rr-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}.rr-gc{display:none;padding:10px;background:var(--bg-secondary);border:1px solid var(--border-light);margin-top:8px}.rr-gc.show{display:block}.rr-t{width:100%;border-collapse:collapse;font-size:12px}.rr-t td{padding:5px 8px;border:1px solid var(--border-light);vertical-align:middle}.rr-t .lb{background:var(--bg-secondary);font-weight:600;white-space:nowrap;text-align:center;color:var(--text-secondary);width:90px}.rr-t input,.rr-t select{width:100%;padding:3px 5px;border:1px solid #ccc;font-size:11px;box-sizing:border-box}</style>
-      <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">기본정보</div>
-        <table class="rr-t"><tbody><tr><td class="lb">회원명</td><td><input value="${m.name}" disabled /></td><td class="lb">주민번호</td><td><div style="display:flex;gap:3px"><input maxlength="6" style="width:70px" /> - <input type="password" maxlength="7" style="width:80px" /></div></td></tr>
-        <tr><td class="lb">아이디 <span style="color:#e53e3e;font-size:10px">*</span></td><td colspan="3"><div style="max-width:400px"><div style="display:flex;gap:4px"><input id="rr-id" placeholder="영문, 숫자 조합 4~20자" style="flex:1" /><button class="btn btn--sm" id="btn-rr-id" style="font-size:10px;white-space:nowrap">중복확인</button></div><div id="rr-id-msg" style="min-height:18px;font-size:11px;padding:2px 0"></div></div></td></tr>
-        <tr><td class="lb">결혼형태</td><td><div style="display:flex;gap:12px;font-size:11px"><label><input type="radio" name="rr-m" checked /> 미혼</label><label><input type="radio" name="rr-m" /> 재혼</label><label><input type="radio" name="rr-m" /> 사별</label></div></td><td class="lb">지사코드</td><td><select><option>지사선택</option><option>서울</option><option>부산</option><option>대구</option></select></td></tr></tbody></table></div>
-      <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">프로그램 선택</div>
-        <table class="rr-t"><tbody><tr><td class="lb">프로그램</td><td colspan="3"><div style="display:flex;flex-wrap:wrap;gap:6px" id="rr-pgm"></div><div class="rr-gc" id="rr-ga"><div style="font-size:11px;font-weight:600;margin-bottom:6px">등급 선택 *</div><div style="display:flex;flex-wrap:wrap;gap:6px" id="rr-gc"></div></div></td></tr></tbody></table></div>
-      <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">서비스 / 결제</div>
-        <div style="display:flex;gap:16px"><div style="flex:1"><table class="rr-t"><tbody>
-          <tr><td class="lb">가입일</td><td><input type="date" value="${new Date().toISOString().slice(0,10)}" /></td></tr>
-          <tr><td class="lb">계약구분</td><td><select><option>1가입</option><option>2가입</option><option>3가입</option></select></td></tr>
-          <tr><td class="lb">서비스</td><td><div style="display:flex;gap:12px;font-size:11px;margin-bottom:6px"><label><input type="radio" name="rr-svc" value="기간제" checked /> 기간제</label><label><input type="radio" name="rr-svc" value="횟수제" /> 횟수제</label></div><div>개월: <select><option>12</option><option selected>24</option><option>36</option></select> 개월</div></td></tr>
-        </tbody></table></div><div style="flex:1"><table class="rr-t"><tbody>
-          <tr><td class="lb">주가입</td><td><input type="text" placeholder="0" style="text-align:right" /> 원</td></tr>
-          <tr><td class="lb">성혼비</td><td><input type="text" placeholder="0" style="text-align:right" /> 원</td></tr>
-          <tr><td class="lb">무이자</td><td><select><option>없음</option><option>3개월</option><option>6개월</option><option>12개월</option></select></td></tr>
-        </tbody></table></div></div></div>
-      <div><div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)">연락처</div>
-        <table class="rr-t"><tbody><tr><td class="lb">컨설턴트</td><td><input value="${m.consultant}" /></td><td class="lb">핸드폰</td><td><input value="${Formatters.phone(m.phone)}" /></td></tr><tr><td class="lb">이메일</td><td><input type="email" /></td><td class="lb">본적지</td><td><input /></td></tr></tbody></table></div>`,
-    footer:'<button class="btn btn--secondary" onclick="document.getElementById(\'modal-root\').innerHTML=\'\'">취소</button><button class="btn btn--primary" id="btn-rr-ok">정회원 등록</button>'
-  });
-  setTimeout(()=>{
-    const pc=document.getElementById('rr-pgm');
-    if(pc) pc.innerHTML=PROGRAMS.map(p=>`<button type="button" class="rr-chip ${p===selectedProgram?'active':''}" data-p="${p}">${p}${PROGRAM_GRADES[p]?' ▾':''}</button>`).join('');
-    function updGrade(){
-      const ga=document.getElementById('rr-ga'),gc=document.getElementById('rr-gc');
-      const gr=PROGRAM_GRADES[selectedProgram];
-      if(!gr){ga.classList.remove('show');gc.innerHTML='';return;}
-      ga.classList.add('show');
-      gc.innerHTML=gr.map(g=>`<button type="button" class="rr-chip ${selectedGrade===g?'active':''}" data-g="${g}">${g}</button>`).join('');
-      gc.querySelectorAll('.rr-chip').forEach(c=>c.onclick=()=>{selectedGrade=c.dataset.g;gc.querySelectorAll('.rr-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');});
-    }
-    pc?.querySelectorAll('.rr-chip').forEach(c=>c.onclick=()=>{selectedProgram=c.dataset.p;selectedGrade='';pc.querySelectorAll('.rr-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');updGrade();});
-    updGrade();
-    document.getElementById('btn-rr-id')?.addEventListener('click',()=>{
-      const v=document.getElementById('rr-id').value.trim(),msg=document.getElementById('rr-id-msg');
-      if(v.length<4){msg.textContent='4자 이상 입력';msg.style.color='#dc2626';return;}
-      regIdOk=true;msg.textContent='사용 가능';msg.style.color='#16a34a';Toast.show('사용 가능한 아이디입니다.','success');
-    });
-    document.getElementById('btn-rr-ok')?.addEventListener('click',()=>{
-      if(!regIdOk){Toast.show('아이디 중복확인을 진행해 주세요.','warning');return;}
-      if(PROGRAM_GRADES[selectedProgram]&&!selectedGrade){Toast.show('등급을 선택해 주세요.','warning');return;}
-      const pt=selectedGrade||selectedProgram;
-      if(confirm(`${m.name}님을 [${pt}] 프로그램으로 정회원 등록하시겠습니까?`)){Toast.show('정회원 등록이 완료되었습니다.','success');document.getElementById('modal-root').innerHTML='';}
-    });
-  },100);
-}
+
 
 async function showDocModal(m){
   const today=new Date().toISOString().slice(0,10);

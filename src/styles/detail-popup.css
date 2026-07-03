@@ -217,10 +217,9 @@ body.detail-popup {
 
 .detail-popup .tab-panel {
   display: none;
-  padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-top: none;
-  background: #fff;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .detail-popup .tab-panel.active {

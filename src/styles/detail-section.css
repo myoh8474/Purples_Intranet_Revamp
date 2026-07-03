@@ -5,9 +5,11 @@
 
 /* ── 섹션 카드 (.sec) ── */
 .sec {
-  margin-bottom: 4px !important;
+  margin-bottom: 8px !important;
   background: #fff;
   border: 1px solid var(--border-light);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   overflow: hidden;
 }
 
@@ -17,6 +19,9 @@
   font-weight: 800;
   font-size: 14px;
   color: #1e293b;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
 }
 
 .sec__header--flex {
@@ -40,10 +45,10 @@
 .dtbl .lbl,
 td.lbl,
 th.lbl {
-  background: var(--bg-secondary);
+  background: #eef0f3;
   font-weight: 600;
   font-size: 13px;
-  color: #888;
+  color: #555;
   text-align: center;
   white-space: nowrap;
   padding: 2px 8px !important;
@@ -71,6 +76,8 @@ td.val {
   max-height: 900px;
   background: #fff;
   border: 1px solid var(--border-light);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .mcard__header {
@@ -107,8 +114,8 @@ td.val {
 /* ── 상세페이지 헤더 바 ── */
 .detail-header-bar {
   padding: 10px 16px;
-  margin-bottom: 4px;
-  border-bottom: 2px solid #1e3a5f;
+  margin-bottom: 0;
+  border-bottom: 2px solid #666;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -155,8 +162,9 @@ td[data-history] .badge {
   cursor: pointer;
 }
 
-/* 상세페이지 탭 간격 축소 */
+/* 상세페이지 탭 간격 */
 .tabs__nav {
+  margin-top: 10px;
   margin-bottom: 0 !important;
 }
 
